@@ -1,0 +1,26 @@
+{
+    "name": "dialinno/jaal",
+    "description": "A JSON:API Abstraction for Laravel.",
+    "license": "MIT",
+    "type": "library",
+    "require": {
+        "laravel/framework": "^5.3"
+    },
+    "require-dev": {
+         "fzaninotto/faker": "~1.4",
+         "mockery/mockery": "0.9.*",
+         "phpunit/phpunit": "^5.0",
+         "orchestra/testbench": "^3.3",
+         "orchestra/database": "^3.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "DialInno\\Jaal\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "DialInno\\Jaal\\Tests\\": "tests/"
+        }
+    }
+}
