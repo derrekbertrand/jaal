@@ -29,7 +29,7 @@ class HttpTest extends TestCase
             ->seeJsonStructure([
                 'errors' => [
                     '*' => [
-                        'code',
+                        'status',
                         'title',
                         'detail',
                     ]

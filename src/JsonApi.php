@@ -8,10 +8,10 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection;
 use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
-use DialInno\Jaal\Errors\ResourceNotFoundError;
-use DialInno\Jaal\Errors\Error as JsonApiError;
-use DialInno\Jaal\Errors\RqlError;
 use DialInno\Jaal\Rql\RqlBuilder;
+use DialInno\Jaal\Objects\DocObject;
+use DialInno\Jaal\Objects\ErrorObject;
+use DialInno\Jaal\Objects\Errors\NotFoundErrorObject;
 
 abstract class JsonApi
 {
@@ -20,7 +20,7 @@ abstract class JsonApi
     protected $models = [];
     protected $model_ids = [];
     protected $nicknames = [];
-    protected $serializer;
+    protected $doc;
     protected static $instance = null;
 
     /**
@@ -44,8 +44,8 @@ abstract class JsonApi
         //shorthand for the config
         $this->config = config('jaal.'.static::$api_version);
 
-        //we keep an internal serializer so we can make a response
-        $this->serializer = new Serializer($this->config);
+        //we keep an internal doc so we can make a response
+        $this->doc = new DocObject($this);
 
         //get the callback
         $this->query_callable = $this->defaultQueryCallable();
@@ -108,7 +108,7 @@ abstract class JsonApi
     {
         //returns true if successful
         if (!($this->query_callable)($this->config, $this->models, $this->model_ids, $this->nicknames)->delete()) {
-            $this->serializer->addError(new ResourceNotFoundError());
+            $this->doc->addError(['title' => 'Resource Not Found', 'detail' => 'The resource does not exist.']);
         }
 
         return $this;
@@ -125,6 +125,8 @@ abstract class JsonApi
         //in the future, we might have them pass it in or something
         $request = request();
 
+        $this->doc->setMany();
+
         //create the base query
         $q = ($this->query_callable)($this->config, $this->models, $this->model_ids, $this->nicknames);
 
@@ -132,7 +134,7 @@ abstract class JsonApi
         try {
             $q = $this->filter($request, $q);
         } catch(\Exception $e) {
-            $this->serializer->addError(new RqlError($e));
+            $this->doc->addError(['title' => 'Filter Error', 'detail' => $e->getMessage()]);
         }
 
         //parse the sorting
@@ -140,8 +142,10 @@ abstract class JsonApi
         //parse the pagination
         $q = $this->paginate($request, $q);
 
-        //add the paginated response to the serializer
-        $this->serializer->addDataCollection($q->get());
+        //add the paginated response to the doc
+        $q->get()->each(function ($item, $key) {
+            $this->doc->addData($item);
+        });
 
         return $this;
     }
@@ -151,18 +155,17 @@ abstract class JsonApi
         $endpoints = new Collection();
 
 
-        return $this->getSerializer()->addDataCollection($endpoints)->getResponse();
+        return $this->getDoc()->addData($endpoints)->getResponse();
     }
 
     public function showToMany(string $nickname)
     {
-        //add the paginated response to the serializer
+        //add the paginated response to the doc
         //todo: add exception handling
-        $this->serializer->addDataCollection(
-            $this->paginate(($this->query_callable)($this->config, $this->models, $this->model_ids, $this->nicknames))->firstOrFail()
-                ->$nickname,
-            true
-        );
+        $this->paginate(($this->query_callable)($this->config, $this->models, $this->model_ids, $this->nicknames))
+            ->firstOrFail()->$nickname->each(function ($item, $key) {
+                $this->doc->addData($item);
+            });
 
         return $this;
     }
@@ -191,13 +194,13 @@ abstract class JsonApi
             $db_response->$nickname()->sync($ids);
 
             //todo: fix without using an array; it is an Eloquent integration
-            //$this->serializer->addArrayCollection(collect(request()->all()['data']), true);
+            //$this->doc->addArrayCollection(collect(request()->all()['data']), true);
         } catch (ModelNotFoundException $e) {
-            $this->serializer->addError(new ResourceNotFoundError());
+            $this->doc->addError(new ResourceNotFoundError());
             return $this;
         } catch (QueryException $e) {
             //dd($e->getPrevious()->errorInfo);
-            $this->serializer->addError(new DatabaseError());
+            $this->doc->addError(new DatabaseError());
             return $this;
         } catch (\Exception $e) {
             throw $e;
@@ -222,13 +225,13 @@ abstract class JsonApi
             //todo: check for failed update
             $db_response->$nickname()->detach($ids);
 
-            $this->serializer->addDataCollection($db_response->$nickname, true);
+            $this->doc->addDataCollection($db_response->$nickname, true);
         } catch (ModelNotFoundException $e) {
-            $this->serializer->addError(new ResourceNotFoundError());
+            $this->doc->addError(new ResourceNotFoundError());
             return $this;
         } catch (QueryException $e) {
             //dd($e->getPrevious()->errorInfo);
-            $this->serializer->addError(new DatabaseError());
+            $this->doc->addError(new DatabaseError());
             return $this;
         } catch (\Exception $e) {
             throw $e;
@@ -253,13 +256,13 @@ abstract class JsonApi
             //todo: check for failed update
             $db_response->$nickname()->syncWithoutDetaching($ids);
 
-            $this->serializer->addDataCollection($db_response->$nickname, true);
+            $this->doc->addDataCollection($db_response->$nickname, true);
         } catch (ModelNotFoundException $e) {
-            $this->serializer->addError(new ResourceNotFoundError());
+            $this->doc->addError(new ResourceNotFoundError());
             return $this;
         } catch (QueryException $e) {
             //dd($e->getPrevious()->errorInfo);
-            $this->serializer->addError(new DatabaseError());
+            $this->doc->addError(new DatabaseError());
             return $this;
         } catch (\Exception $e) {
             throw $e;
@@ -273,9 +276,9 @@ abstract class JsonApi
     {
         try {
             //add the model
-            $this->serializer->addDataObject(($this->query_callable)($this->config, $this->models, $this->model_ids, $this->nicknames)->firstOrFail());
+            $this->doc->addData(($this->query_callable)($this->config, $this->models, $this->model_ids, $this->nicknames)->firstOrFail());
         } catch (ModelNotFoundException $e) {
-            $this->serializer->addError(new ResourceNotFoundError());
+            $this->doc->tossError(new NotFoundErrorObject($this->doc));
             return $this;
         } catch (\Exception $e) {
             throw $e;
@@ -293,13 +296,13 @@ abstract class JsonApi
             $attr = count($attributes) ? $attributes : request()->all()['data']['attributes'];
 
             //run the query
-            $this->serializer->addDataObject($model::create($attr));
+            $this->doc->addDataObject($model::create($attr));
         } catch (ModelNotFoundException $e) {
-            $this->serializer->addError(new ResourceNotFoundError());
+            $this->doc->addError(new ResourceNotFoundError());
             return $this;
         } catch (QueryException $e) {
             //dd($e->getPrevious()->errorInfo);
-            $this->serializer->addError(new DatabaseError());
+            $this->doc->addError(new DatabaseError());
             return $this;
         } catch (\Exception $e) {
             throw $e;
@@ -320,13 +323,13 @@ abstract class JsonApi
             //todo: check for failed update
             $db_response->update($attr);
 
-            $this->serializer->addDataObject($db_response);
+            $this->doc->addDataObject($db_response);
         } catch (ModelNotFoundException $e) {
-            $this->serializer->addError(new ResourceNotFoundError());
+            $this->doc->addError(new ResourceNotFoundError());
             return $this;
         } catch (QueryException $e) {
             //dd($e->getPrevious()->errorInfo);
-            $this->serializer->addError(new DatabaseError());
+            $this->doc->addError(new DatabaseError());
             return $this;
         } catch (\Exception $e) {
             throw $e;
@@ -365,12 +368,12 @@ abstract class JsonApi
 
     public function getResponse()
     {
-        return $this->serializer->getResponse();
+        return $this->doc->getResponse();
     }
 
-    public function getSerializer()
+    public function getDoc()
     {
-        return $this->serializer;
+        return $this->doc;
     }
 
     public function inferQueryParam(Controller $controller)

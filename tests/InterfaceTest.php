@@ -36,7 +36,9 @@ class InterfaceTest extends TestCase
         $json = $this->contentAsObject($response);
 
         //we should have user 5 (index 4 in users array)
-        $this->assertEquals($users[5-1]->email, $json->data->attributes->email);
+        $this->assertEquals($users[5-1]->email,
+            $json->data->attributes->email
+        );
         //password isn't included in our response
         $this->assertObjectNotHasAttribute('password', $json->data->attributes);
     }
