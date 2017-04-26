@@ -3,9 +3,6 @@
 namespace DialInno\Jaal\Tests\Controllers;
 
 use Illuminate\Http\Request;
-use App\Http\Requests\StoreUserRequest;
-use App\Http\Requests\UpdateUserRequest;
-use DialInno\Jaal\JsonApi;
 use DialInno\Jaal\Tests\Requests\UserRequest;
 use DialInno\Jaal\Tests\Api\JsonApiV1;
 
@@ -29,14 +26,11 @@ class UserController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(StoreUserRequest $request)
+    public function store(UserRequest $request, JsonApiV1 $json_api)
     {
-        // $serializer = $this->json_api;
-
-        // //make sure password is set, and is blank for security
-        // $attributes = array_merge(request()->all()['data']['attributes'], ['password' => '']);
-
-        // return $serializer->storeModel($attributes)->getResponse();
+        return $json_api->inferQueryParam($this)
+            ->store(array_merge($request->all()['data']['attributes'],['password' => '']))
+            ->getResponse();
     }
 
     /**
@@ -45,7 +39,7 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show(UserRequest $request, JsonApiV1 $json_api)
+    public function show(Request $request, JsonApiV1 $json_api)
     {
         return $json_api->inferQueryParam($this)
             ->show()

@@ -56,18 +56,20 @@ class DocObject extends MetaObject {
         return $this;
     }
 
-    /**
-     * Send an error to the document root, constructing a path along the way.
+     /**
+     * Friendly wrapper to add an error.
      *
-     * @param  ErrorObject $error
-     * @param  string  $path
+     * @param  array|Collection|JsonSerializable|ErrorObject $error_data
      * @return ErrorObject
      */
-    public function tossError(ErrorObject $error, Collection $path = null)
+    public function addError($error_data)
     {
-        $this->errors->push($error);
+        if(!($error_data instanceof ErrorObject))
+            $error_data = new ErrorObject($this->getDoc(), $error_data);
 
-        return $error;
+        $this->errors->push($error_data);
+
+        return $error_data;
     }
 
     /**

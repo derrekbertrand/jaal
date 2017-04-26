@@ -38,30 +38,17 @@ class MetaObject implements Jsonable, \JsonSerializable {
     }
 
     /**
-     * Send an error to the document root, constructing a path along the way.
+     * Friendly wrapper to add an error.
      *
-     * @param  ErrorObject $error
-     * @param  string  $path
+     * @param  array|Collection|JsonSerializable|ErrorObject $error_data
      * @return ErrorObject
      */
-    public function tossError(ErrorObject $error, Collection $path = null)
+    public function addError($error_data)
     {
-        if($path === null)
-            $path = new Collection();
-
-        return $this->parent->tossError($error, $path->prepend(static::$obj_name));
-    }
-
-    /**
-     * Friendly wrapper around tossError.
-     *
-     * @param  array|Collection|JsonSerializable $error_data
-     * @param  Collection $path
-     * @return ErrorObject
-     */
-    public function addError($error_data, Collection $path = null)
-    {
-        return $this->tossError(new ErrorObject($this->getDoc(), $error_data), $path);
+        if($error_data instanceof ErrorObject)
+            return $this->parent->addError($error_data);
+        else
+            return $this->parent->addError(new ErrorObject($this->getDoc(), $error_data));
     }
 
     /**

@@ -225,7 +225,7 @@ abstract class JsonApi
             //todo: check for failed update
             $db_response->$nickname()->detach($ids);
 
-            $this->doc->addDataCollection($db_response->$nickname, true);
+            $this->doc->addData($db_response->$nickname, true);
         } catch (ModelNotFoundException $e) {
             $this->doc->addError(new ResourceNotFoundError());
             return $this;
@@ -256,7 +256,7 @@ abstract class JsonApi
             //todo: check for failed update
             $db_response->$nickname()->syncWithoutDetaching($ids);
 
-            $this->doc->addDataCollection($db_response->$nickname, true);
+            $this->doc->addData($db_response->$nickname, true);
         } catch (ModelNotFoundException $e) {
             $this->doc->addError(new ResourceNotFoundError());
             return $this;
@@ -278,7 +278,7 @@ abstract class JsonApi
             //add the model
             $this->doc->addData(($this->query_callable)($this->config, $this->models, $this->model_ids, $this->nicknames)->firstOrFail());
         } catch (ModelNotFoundException $e) {
-            $this->doc->tossError(new NotFoundErrorObject($this->doc));
+            $this->doc->addError(new NotFoundErrorObject($this->doc));
             return $this;
         } catch (\Exception $e) {
             throw $e;
@@ -296,7 +296,7 @@ abstract class JsonApi
             $attr = count($attributes) ? $attributes : request()->all()['data']['attributes'];
 
             //run the query
-            $this->doc->addDataObject($model::create($attr));
+            $this->doc->addData($model::create($attr));
         } catch (ModelNotFoundException $e) {
             $this->doc->addError(new ResourceNotFoundError());
             return $this;
@@ -323,7 +323,7 @@ abstract class JsonApi
             //todo: check for failed update
             $db_response->update($attr);
 
-            $this->doc->addDataObject($db_response);
+            $this->doc->addData($db_response);
         } catch (ModelNotFoundException $e) {
             $this->doc->addError(new ResourceNotFoundError());
             return $this;

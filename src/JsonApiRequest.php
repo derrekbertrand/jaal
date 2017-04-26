@@ -5,9 +5,9 @@ namespace DialInno\Jaal;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Http\Exceptions\HttpResponseException;
-use DialInno\Jaal\Errors\ValidationError;
-use DialInno\Jaal\Errors\AuthorizationError;
+use Illuminate\Http\Exception\HttpResponseException;
+use DialInno\Jaal\Objects\Errors\ValidationErrorObject;
+use DialInno\Jaal\Objects\Errors\AuthErrorObject;
 
 abstract class JsonApiRequest extends FormRequest
 {
@@ -70,7 +70,12 @@ abstract class JsonApiRequest extends FormRequest
         //add all errors from error bag
         foreach($validator->errors()->toArray() as $dot_path => $err)
             foreach($err as $error_text)
-                $json_api->getSerializer()->addError(new ValidationError($dot_path, $error_text));
+                $json_api->getDoc()->addError(new ValidationErrorObject($json_api->getDoc(), [
+                    'detail' => $error_text,
+                    'source' => [
+                        'pointer' => $dot_path
+                    ],
+                ]));
 
         throw new HttpResponseException($json_api->getResponse());
     }
@@ -86,7 +91,7 @@ abstract class JsonApiRequest extends FormRequest
     {
         $json_api = $this->getJsonApi();
 
-        $json_api->getSerializer()->addError(new AuthorizationError());
+        $json_api->getDoc()->addError(new AuthErrorObject($json_api->getDoc()));
 
         throw new HttpResponseException($json_api->getResponse());
     }
