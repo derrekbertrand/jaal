@@ -12,8 +12,22 @@ class HttpTest extends TestCase
 
     public function testUserEndpoints()
     {
+        //if not there, we must send a 404 back
+        $this->json('GET', '/api/v1/user/5')
+            ->assertResponseStatus(404)
+            ->seeJsonStructure([
+                'errors' => [
+                    '*' => [
+                        'status',
+                        'title',
+                        'detail',
+                    ]
+                ]
+            ]);
+
         //we should get a valid response
-        $this->get('/api/v1/user')
+        $this->json('GET', '/api/v1/user')
+            ->assertResponseStatus(200)
             ->seeJson([
                 'jsonapi' => [
                     'version' => '1.0'
@@ -21,7 +35,7 @@ class HttpTest extends TestCase
                 'data' => []
             ]);
 
-        //we should get a 400 for not structuring our data correctly
+        // //we should get a 400 for not structuring our data correctly
         $this->json('POST', '/api/v1/user', ['poop' => 'pee'])
             ->assertResponseStatus(400)
             ->seeJsonStructure([
@@ -32,19 +46,6 @@ class HttpTest extends TestCase
                         'detail'
                     ],
                 ],
-            ]);
-
-        //if not there, we must send a 404 back
-        $this->get('/api/v1/user/5')
-            ->assertResponseStatus(404)
-            ->seeJsonStructure([
-                'errors' => [
-                    '*' => [
-                        'status',
-                        'title',
-                        'detail',
-                    ]
-                ]
             ]);
 
         //we should get a 400 for not structuring our data correctly

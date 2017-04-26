@@ -8,14 +8,18 @@ use DialInno\Jaal\Tests\Api\JsonApiV1;
 
 class UserController extends Controller
 {
+    public function __construct()
+    {
+        $this->json_api = new JsonApiV1;
+    }
     /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(Request $request, JsonApiV1 $json_api)
+    public function index(Request $request)
     {
-        return $json_api->inferQueryParam($this)
+        return $this->json_api->inferQueryParam($this)
             ->index()
             ->getResponse();
     }
@@ -26,9 +30,9 @@ class UserController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(UserRequest $request, JsonApiV1 $json_api)
+    public function store(UserRequest $request)
     {
-        return $json_api->inferQueryParam($this)
+        return $this->json_api->inferQueryParam($this)
             ->store(array_merge($request->all()['data']['attributes'],['password' => '']))
             ->getResponse();
     }
@@ -39,9 +43,9 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show(Request $request, JsonApiV1 $json_api)
+    public function show(Request $request)
     {
-        return $json_api->inferQueryParam($this)
+        return $this->json_api->inferQueryParam($this)
             ->show()
             ->getResponse();
     }

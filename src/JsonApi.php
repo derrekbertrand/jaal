@@ -298,6 +298,7 @@ abstract class JsonApi
             //run the query
             $this->doc->addData($model::create($attr));
         } catch (ModelNotFoundException $e) {
+            //todo: this is not strictly accurate
             $this->doc->addError(new ResourceNotFoundError());
             return $this;
         } catch (QueryException $e) {

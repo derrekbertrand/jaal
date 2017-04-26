@@ -3,9 +3,6 @@
 namespace DialInno\Jaal\Tests;
 
 use DialInno\Jaal\Tests\Api\JsonApiV1;
-use DialInno\Jaal\Tests\Models\User;
-use DialInno\Jaal\Tests\Models\Skill;
-use DialInno\Jaal\Tests\Models\Post;
 use Illuminate\Http\Response;
 
 class TestCase extends \Orchestra\Testbench\TestCase
@@ -27,7 +24,6 @@ class TestCase extends \Orchestra\Testbench\TestCase
         \Route::group([
             'prefix' => 'api/v1',
             'as' => 'api.v1.',
-            'namespace' => 'DialInno\\Jaal\\Tests\\Controllers'
             ], function () {
                 JsonApiV1::routes();
         });
