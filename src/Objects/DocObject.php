@@ -86,7 +86,7 @@ class DocObject extends MetaObject {
         $resource = new ResourceObject($this, $data);
 
         //add to data
-        $this->data->push($data);
+        $this->data->push($resource);
     }
 
     public function setOne()
@@ -107,8 +107,9 @@ class DocObject extends MetaObject {
      */
     public function getResponse($options = 0)
     {
-        return response($this->toJson($options), intval($this->getHttpStatus()));
-        //todo: add header?
+        $out = $this->toJson($options);
+
+        return response($out, intval($this->getHttpStatus()));
     }
 
     /**
@@ -149,10 +150,14 @@ class DocObject extends MetaObject {
      */
     public function jsonSerialize()
     {
+        //todo: serialize everything, have it validate, then check errors
+
         //create a blank object to serialize
         $out = new Collection;
 
         $out['jsonapi'] = ['version' => '1.0'];
+
+        $data_arr = $this->serializeData();
 
         //todo: toplevel meta object
 
@@ -164,7 +169,7 @@ class DocObject extends MetaObject {
         //we don't have errors, display the data
         else
         {
-            $out['data'] = $this->serializeData();
+            $out['data'] = $data_arr;
         }
 
         //todo: links

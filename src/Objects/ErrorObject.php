@@ -10,6 +10,17 @@ use Illuminate\Support\Collection;
  */
 class ErrorObject extends MetaObject {
 
+    public function __construct(MetaObject $parent, $data)
+    {
+        parent::__construct($parent, $data);
+
+        $this->data = (new Collection([
+            'title' => 'Error',
+            'detail' => 'An error occurred.',
+            'status' => '400',
+        ]))->merge($this->data);
+    }
+
     public function getHttpStatus()
     {
         if($this->data->has('status'))
