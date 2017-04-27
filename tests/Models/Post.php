@@ -3,11 +3,11 @@
 namespace DialInno\Jaal\Tests\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use DialInno\Jaal\JsonApiSerializable;
+use DialInno\Jaal\SerializeModel;
 
 class Post extends Model
 {
-    use JsonApiSerializable;
+    use SerializeModel;
 
     public function op()
     {

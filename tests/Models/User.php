@@ -4,12 +4,12 @@ namespace DialInno\Jaal\Tests\Models;
 
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use DialInno\Jaal\JsonApiSerializable;
+use DialInno\Jaal\SerializeModel;
 
 class User extends Authenticatable
 {
     //use Notifiable;
-    use JsonApiSerializable;
+    use SerializeModel;
 
     /**
      * The attributes that are mass assignable.
