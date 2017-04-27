@@ -13,7 +13,7 @@ class ErrorObject extends MetaObject {
     public function getHttpStatus()
     {
         if($this->data->has('status'))
-            return $this->data->get('status');
+            return strval($this->data->get('status'));
         else
             return '400';
     }

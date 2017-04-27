@@ -10,9 +10,9 @@ use DialInno\Jaal\Tests\Models\Post;
 class HttpTest extends TestCase
 {
 
-    public function testUserEndpoints()
+    public function testUserShowNotFound()
     {
-        //if not there, we must send a 404 back
+        //no user, should throw an error
         $this->json('GET', '/api/v1/user/5')
             ->assertResponseStatus(404)
             ->seeJsonStructure([
@@ -24,7 +24,10 @@ class HttpTest extends TestCase
                     ]
                 ]
             ]);
+    }
 
+    public function testUserIndexEmptySet()
+    {
         //we should get a valid response
         $this->json('GET', '/api/v1/user')
             ->assertResponseStatus(200)
@@ -34,21 +37,11 @@ class HttpTest extends TestCase
                 ],
                 'data' => []
             ]);
+    }
 
-        // //we should get a 400 for not structuring our data correctly
-        $this->json('POST', '/api/v1/user', ['poop' => 'pee'])
-            ->assertResponseStatus(400)
-            ->seeJsonStructure([
-                'errors' => [
-                    '*' => [
-                        'status',
-                        'title',
-                        'detail'
-                    ],
-                ],
-            ]);
-
-        //we should get a 400 for not structuring our data correctly
+    public function testUserStore()
+    {
+        // good job!
         $this->json('POST', '/api/v1/user', [
             'data' => [
                 'type' => 'user',

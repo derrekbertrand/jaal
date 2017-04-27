@@ -34,13 +34,15 @@ class DocObject extends MetaObject {
     {
         if($this->errors->count())
             return $this->errors->reduce(function ($carry, $item) {
-                //default to the first one
+                //prime the system
                 if($carry === null)
                     return $item->getHttpStatus();
 
                 //if we have different errors, send a 400
                 if($item->getHttpStatus() !== $carry)
                     return '400';
+
+                return $item->getHttpStatus();
             });
         else
             return $this->code;

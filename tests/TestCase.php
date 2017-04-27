@@ -55,9 +55,4 @@ class TestCase extends \Orchestra\Testbench\TestCase
     {
         return json_decode($r->content());
     }
-
-    protected function getPackageProviders($app)
-    {
-        return ['DialInno\\Jaal\\Tests\\Providers\\TestServiceProvider'];
-    }
 }

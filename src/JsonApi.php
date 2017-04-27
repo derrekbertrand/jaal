@@ -21,7 +21,6 @@ abstract class JsonApi
     protected $model_ids = [];
     protected $nicknames = [];
     protected $doc;
-    protected static $instance = null;
 
     /**
      * Prepare a JsonApi object based on the model types passed in.
@@ -37,10 +36,6 @@ abstract class JsonApi
         if(!isset(static::$api_version) && !strlen(static::$api_version))
             throw new \Exception('JsonApi must define `protected static $api_version;`.');
 
-        //this is a singleton
-        if(static::$instance !== null)
-            return static::$instance;
-
         //shorthand for the config
         $this->config = config('jaal.'.static::$api_version);
 
@@ -53,7 +48,6 @@ abstract class JsonApi
         //just to check, you never know about people
         if(!is_callable($this->query_callable))
             throw new \Exception('defaultQueryCallable() must return a callable function.');
-
     }
 
     private function __clone() {}

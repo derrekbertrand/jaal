@@ -11,7 +11,8 @@
          "mockery/mockery": "0.9.*",
          "phpunit/phpunit": "^5.0",
          "orchestra/testbench": "^3.3",
-         "orchestra/database": "^3.3"
+         "orchestra/database": "^3.3",
+        "satooshi/php-coveralls": "^1.0"
     },
     "autoload": {
         "psr-4": {
