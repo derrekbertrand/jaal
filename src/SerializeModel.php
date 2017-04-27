@@ -2,10 +2,8 @@
 
 namespace DialInno\Jaal;
 
-trait JsonApiSerializable
+trait SerializeModel
 {
-    public $is_resource_id = false;
-
     /**
      * Get the model data.
      *
@@ -25,21 +23,18 @@ trait JsonApiSerializable
             snake_case((new \ReflectionClass($this))->getShortName());
 
         //add attributes
-        if(!$this->is_resource_id)
-        {
-            //construct a blacklist
-            $blacklist = $this->getHidden();
+        //construct a blacklist
+        $blacklist = $this->getHidden();
 
-            if(is_array($this->getKeyName()))
-                $blacklist = array_merge($blacklist, $this->getKeyName());
-            else
-                $blacklist[] = $this->getKeyName();
+        if(is_array($this->getKeyName()))
+            $blacklist = array_merge($blacklist, $this->getKeyName());
+        else
+            $blacklist[] = $this->getKeyName();
 
-            //filter based on that blacklist
-            $data_object['attributes'] = array_filter($this->getAttributes(), function ($key) use ($blacklist) {
-                return !in_array($key, $blacklist);
-            }, ARRAY_FILTER_USE_KEY);
-        }
+        //filter based on that blacklist
+        $data_object['attributes'] = array_filter($this->getAttributes(), function ($key) use ($blacklist) {
+            return !in_array($key, $blacklist);
+        }, ARRAY_FILTER_USE_KEY);
 
         return $data_object;
     }
