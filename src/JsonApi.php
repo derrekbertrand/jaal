@@ -21,7 +21,6 @@ abstract class JsonApi
     protected $model_ids = [];
     protected $nicknames = [];
     protected $doc;
-    protected static $instance = null;
 
     /**
      * Prepare a JsonApi object based on the model types passed in.
@@ -37,10 +36,6 @@ abstract class JsonApi
         if(!isset(static::$api_version) && !strlen(static::$api_version))
             throw new \Exception('JsonApi must define `protected static $api_version;`.');
 
-        //this is a singleton
-        if(static::$instance !== null)
-            return static::$instance;
-
         //shorthand for the config
         $this->config = config('jaal.'.static::$api_version);
 
@@ -53,7 +48,6 @@ abstract class JsonApi
         //just to check, you never know about people
         if(!is_callable($this->query_callable))
             throw new \Exception('defaultQueryCallable() must return a callable function.');
-
     }
 
     private function __clone() {}
@@ -225,7 +219,7 @@ abstract class JsonApi
             //todo: check for failed update
             $db_response->$nickname()->detach($ids);
 
-            $this->doc->addDataCollection($db_response->$nickname, true);
+            $this->doc->addData($db_response->$nickname, true);
         } catch (ModelNotFoundException $e) {
             $this->doc->addError(new ResourceNotFoundError());
             return $this;
@@ -256,7 +250,7 @@ abstract class JsonApi
             //todo: check for failed update
             $db_response->$nickname()->syncWithoutDetaching($ids);
 
-            $this->doc->addDataCollection($db_response->$nickname, true);
+            $this->doc->addData($db_response->$nickname, true);
         } catch (ModelNotFoundException $e) {
             $this->doc->addError(new ResourceNotFoundError());
             return $this;
@@ -278,7 +272,7 @@ abstract class JsonApi
             //add the model
             $this->doc->addData(($this->query_callable)($this->config, $this->models, $this->model_ids, $this->nicknames)->firstOrFail());
         } catch (ModelNotFoundException $e) {
-            $this->doc->tossError(new NotFoundErrorObject($this->doc));
+            $this->doc->addError(new NotFoundErrorObject($this->doc));
             return $this;
         } catch (\Exception $e) {
             throw $e;
@@ -296,8 +290,9 @@ abstract class JsonApi
             $attr = count($attributes) ? $attributes : request()->all()['data']['attributes'];
 
             //run the query
-            $this->doc->addDataObject($model::create($attr));
+            $this->doc->addData($model::create($attr));
         } catch (ModelNotFoundException $e) {
+            //todo: this is not strictly accurate
             $this->doc->addError(new ResourceNotFoundError());
             return $this;
         } catch (QueryException $e) {
@@ -323,7 +318,7 @@ abstract class JsonApi
             //todo: check for failed update
             $db_response->update($attr);
 
-            $this->doc->addDataObject($db_response);
+            $this->doc->addData($db_response);
         } catch (ModelNotFoundException $e) {
             $this->doc->addError(new ResourceNotFoundError());
             return $this;

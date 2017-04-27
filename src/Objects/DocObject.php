@@ -34,13 +34,15 @@ class DocObject extends MetaObject {
     {
         if($this->errors->count())
             return $this->errors->reduce(function ($carry, $item) {
-                //default to the first one
+                //prime the system
                 if($carry === null)
                     return $item->getHttpStatus();
 
                 //if we have different errors, send a 400
                 if($item->getHttpStatus() !== $carry)
                     return '400';
+
+                return $item->getHttpStatus();
             });
         else
             return $this->code;
@@ -56,18 +58,20 @@ class DocObject extends MetaObject {
         return $this;
     }
 
-    /**
-     * Send an error to the document root, constructing a path along the way.
+     /**
+     * Friendly wrapper to add an error.
      *
-     * @param  ErrorObject $error
-     * @param  string  $path
+     * @param  array|Collection|JsonSerializable|ErrorObject $error_data
      * @return ErrorObject
      */
-    public function tossError(ErrorObject $error, Collection $path = null)
+    public function addError($error_data)
     {
-        $this->errors->push($error);
+        if(!($error_data instanceof ErrorObject))
+            $error_data = new ErrorObject($this->getDoc(), $error_data);
 
-        return $error;
+        $this->errors->push($error_data);
+
+        return $error_data;
     }
 
     /**

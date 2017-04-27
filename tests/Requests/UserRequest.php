@@ -3,7 +3,7 @@
 namespace DialInno\Jaal\Tests\Requests;
 
 use DialInno\Jaal\JsonApiRequest;
-use DialInno\Jaal\JsonApi;
+use DialInno\Jaal\Tests\Api\JsonApiV1;
 
 class UserRequest extends JsonApiRequest
 {
@@ -14,10 +14,10 @@ class UserRequest extends JsonApiRequest
 
     public function getJsonApi()
     {
-        return new JsonApi('v1', ['user']);
+        return new JsonApiV1();
     }
 
-    public function rules()
+    public function dataRules()
     {
         return [
         ];

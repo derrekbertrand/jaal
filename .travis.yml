@@ -1,10 +1,21 @@
 language: php
 
+sudo: false
+
 php:
   - 7.0
   - 7.1
 
+env:
+  global:
+    - coverage=no
+
 matrix:
+  include:
+    - php: 7.1
+      env: setup=coveralls coverage=yes
+  allow_failures:
+    - env: setup=coveralls coverage=yes
   fast_finish: true
 
 # be polite; keep the cached packages
@@ -12,10 +23,15 @@ cache:
   directories:
     - $HOME/.composer/cache
 
-install:
+before_script:
   - travis_retry composer install --no-interaction --prefer-dist --no-suggest
 
-script: vendor/bin/phpunit
+script:
+  - if [[ $coverage = 'yes' ]]; then vendor/bin/phpunit -c phpunit.xml --coverage-clover build/logs/clover.xml; fi
+  - if [[ $coverage = 'no' ]]; then vendor/bin/phpunit -c phpunit.xml; fi
+
+after_script:
+  - if [[ $coverage = 'yes' ]]; then php vendor/bin/coveralls -v; fi
 
 notifications:
   email: false
