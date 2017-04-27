@@ -12,7 +12,7 @@ env:
 
 matrix:
   include:
-    - php: 7.0
+    - php: 7.1
       env: setup=coveralls coverage=yes
   allow_failures:
     - env: setup=coveralls coverage=yes
