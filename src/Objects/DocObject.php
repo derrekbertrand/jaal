@@ -36,13 +36,13 @@ class DocObject extends MetaObject {
             return $this->errors->reduce(function ($carry, $item) {
                 //prime the system
                 if($carry === null)
-                    return $item->getHttpStatus();
+                    return $item->getStatus();
 
                 //if we have different errors, send a 400
-                if($item->getHttpStatus() !== $carry)
+                if($item->getStatus() !== $carry)
                     return '400';
 
-                return $item->getHttpStatus();
+                return $item->getStatus();
             });
         else
             return $this->code;
@@ -158,6 +158,7 @@ class DocObject extends MetaObject {
         $out['jsonapi'] = ['version' => '1.0'];
 
         $data_arr = $this->serializeData();
+        $error_arr = [];
 
         //todo: toplevel meta object
 

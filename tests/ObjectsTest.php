@@ -94,4 +94,47 @@ class ObjectsTest extends TestCase
         $this->assertContains('foo is not a valid member of a resource object.', $response->getContent());
         $this->assertContains('Type is required for a resource object.', $response->getContent());
     }
+
+    public function testAddCollectionObject()
+    {
+        $jsonapi = new JsonApiV1;
+        $doc = $jsonapi->getDoc();
+
+        $doc->addError(new \Illuminate\Support\Collection);
+
+        $response = $jsonapi->getResponse();
+
+        $this->assertEquals(400, $response->getStatusCode());
+        $this->assertContains('An error occurred.', $response->getContent());
+    }
+
+    public function testAddBadObject()
+    {
+        $jsonapi = new JsonApiV1;
+        $doc = $jsonapi->getDoc();
+
+        $this->expectException(\Exception::class);
+
+        $doc->addError(new \Exception());
+    }
+
+    public function testBadMemberNameUnderscore()
+    {
+        $jsonapi = new JsonApiV1;
+        $doc = $jsonapi->getDoc();
+
+        $this->expectException(\Exception::class);
+
+        $doc->addError(['_foo' => 'bar']);
+    }
+
+    public function testBadMemberNamePeriod()
+    {
+        $jsonapi = new JsonApiV1;
+        $doc = $jsonapi->getDoc();
+
+        $this->expectException(\Exception::class);
+
+        $doc->addError(['foo.bar' => 'baz']);
+    }
 }

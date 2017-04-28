@@ -4,6 +4,7 @@ namespace DialInno\Jaal\Objects;
 
 use DialInno\Jaal\JsonApi;
 use Illuminate\Support\Collection;
+use DialInno\Jaal\Objects\Errors\SerializationErrorObject;
 
 /**
  * Responsible for serializing a error object.
@@ -21,25 +22,13 @@ class ErrorObject extends MetaObject {
         ]))->merge($this->data);
     }
 
-    public function getHttpStatus()
+    public function getStatus()
     {
-        if($this->data->has('status'))
-            return strval($this->data->get('status'));
-        else
-            return '400';
+        return strval($this->data->get('status', '400'));
     }
 
-    protected function validateMembers()
+    public function jsonSerialize()
     {
-        $this->data->each(function ($item, $key) {
-            //if it is not in the allowed members list, complain
-            if(array_search($key, ['id', 'links', 'status', 'code', 'title', 'detail', 'source', 'meta']) === false)
-                $this->addError([
-                        'title' => 'Invalid Member',
-                        'detail' => $key.' is not a valid member name.'
-                    ],
-                    new Collection([$key])
-                );
-        });
+        return $this->data->only(['id', 'links', 'status', 'code', 'title', 'detail', 'source', 'meta']);
     }
 }
