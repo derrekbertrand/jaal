@@ -8,6 +8,7 @@ use DialInno\Jaal\Tests\Models\User;
 use DialInno\Jaal\Tests\Models\Skill;
 use DialInno\Jaal\Tests\Models\Post;
 use DialInno\Jaal\Objects\Errors\NotFoundErrorObject;
+use DialInno\Jaal\Objects\Errors\ValidationErrorObject;
 
 class ObjectsTest extends TestCase
 {
@@ -18,7 +19,7 @@ class ObjectsTest extends TestCase
 
         $doc->addError(new NotFoundErrorObject($doc));
 
-        $response = $jsonapi->getResponse();
+        $response = $jsonapi->getDoc()->getResponse();
 
         $this->assertEquals(404, $response->getStatusCode());
         $this->assertContains('The resource could not be found.', $response->getContent());
@@ -31,7 +32,7 @@ class ObjectsTest extends TestCase
 
         $doc->addError([]);
 
-        $response = $jsonapi->getResponse();
+        $response = $jsonapi->getDoc()->getResponse();
 
         $this->assertEquals(400, $response->getStatusCode());
         $this->assertContains('An error occurred.', $response->getContent());
@@ -47,7 +48,7 @@ class ObjectsTest extends TestCase
             'detail' => 'The system failed unexpectedly.',
         ]);
 
-        $response = $jsonapi->getResponse();
+        $response = $jsonapi->getDoc()->getResponse();
 
         $this->assertEquals(500, $response->getStatusCode());
         $this->assertContains('The system failed unexpectedly.', $response->getContent());
@@ -65,7 +66,7 @@ class ObjectsTest extends TestCase
 
         $doc->addError(new NotFoundErrorObject($doc));
 
-        $response = $jsonapi->getResponse();
+        $response = $jsonapi->getDoc()->getResponse();
 
         $this->assertEquals(400, $response->getStatusCode());
         $this->assertContains('The system failed unexpectedly.', $response->getContent());
@@ -87,12 +88,27 @@ class ObjectsTest extends TestCase
 
         $doc->addData(['foo' => 'bar']);
 
-        $response = $jsonapi->getResponse();
+        $response = $jsonapi->getDoc()->getResponse();
 
         $this->assertEquals(500, $response->getStatusCode());
         $this->assertContains('ID is required for a resource object.', $response->getContent());
         $this->assertContains('foo is not a valid member of a resource object.', $response->getContent());
         $this->assertContains('Type is required for a resource object.', $response->getContent());
+    }
+
+    public function testValidationError()
+    {
+        $jsonapi = new JsonApiV1;
+        $doc = $jsonapi->getDoc();
+
+        $doc->addError(new ValidationErrorObject($doc, [
+            'detail' => 'The field is required.'
+        ]));
+
+        $response = $jsonapi->getDoc()->getResponse();
+
+        $this->assertEquals(400, $response->getStatusCode());
+        $this->assertContains('The field is required.', $response->getContent());
     }
 
     public function testAddCollectionObject()
@@ -102,7 +118,7 @@ class ObjectsTest extends TestCase
 
         $doc->addError(new \Illuminate\Support\Collection);
 
-        $response = $jsonapi->getResponse();
+        $response = $jsonapi->getDoc()->getResponse();
 
         $this->assertEquals(400, $response->getStatusCode());
         $this->assertContains('An error occurred.', $response->getContent());

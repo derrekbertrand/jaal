@@ -10,22 +10,29 @@ use Illuminate\Support\Collection;
  */
 class DocObject extends MetaObject {
 
+    const DOC_NONE = 0;
+    const DOC_ONE = 1;
+    const DOC_MANY = 2;
+    const DOC_ONE_IDENT = 3;
+    const DOC_MANY_IDENT = 4;
+    const DOC_TYPE_MAX = 4;
+
     protected $errors;
 
     protected $json_api = null;
 
     protected $code = 200;
 
-    protected $doc_type = 0;
-    protected $is_many = false;
+    protected $doc_type;
+
     protected $data;
     protected $links;
     protected $included;
 
-    public function __construct(JsonApi $json_api)
+    public function __construct(JsonApi $json_api, int $doc_type = 0)
     {
         $this->json_api = $json_api;
-        $this->doc_type = 0;
+        $this->doc_type = $doc_type;
         $this->errors = new Collection;
         $this->data = new Collection;
     }
@@ -89,16 +96,6 @@ class DocObject extends MetaObject {
         $this->data->push($resource);
     }
 
-    public function setOne()
-    {
-        $this->is_many = false;
-    }
-
-    public function setMany()
-    {
-        $this->is_many = true;
-    }
-
     /**
      * Get a response object; takes json options.
      *
@@ -123,24 +120,19 @@ class DocObject extends MetaObject {
         return json_encode($this->jsonSerialize(), $options);
     }
 
-    /**
-     * Helper function to serialize the data portion of the document.
-     *
-     * @return null|array
-     */
-    public function serializeData()
+    public function isOne()
     {
-        if($this->is_many)
-        {
-            return $this->data->jsonSerialize();
-        }
-        else
-        {
-            if($this->data->count())
-                return $this->data[0]->jsonSerialize();
-            else
-                return null;
-        }
+        return ($this->doc_type === self::DOC_ONE) || ($this->doc_type === self::DOC_ONE_IDENT);
+    }
+
+    public function isMany()
+    {
+        return ($this->doc_type === self::DOC_MANY) || ($this->doc_type === self::DOC_MANY_IDENT);
+    }
+
+    public function isIdent()
+    {
+        return ($this->doc_type === self::DOC_ONE_IDENT) || ($this->doc_type === self::DOC_MANY_IDENT);
     }
 
     /**
@@ -156,9 +148,20 @@ class DocObject extends MetaObject {
         $out = new Collection;
 
         $out['jsonapi'] = ['version' => '1.0'];
-
-        $data_arr = $this->serializeData();
         $error_arr = [];
+        $data_arr = [];
+
+        if($this->isMany())
+        {
+            $data_arr = $this->data->jsonSerialize();
+        }
+        else if($this->isOne())
+        {
+            if($this->data->count())
+                $data_arr = $this->data[0]->jsonSerialize();
+            else
+                $data_arr = null;
+        }
 
         //todo: toplevel meta object
 
@@ -170,7 +173,8 @@ class DocObject extends MetaObject {
         //we don't have errors, display the data
         else
         {
-            $out['data'] = $data_arr;
+            if($this->isMany() || $this->isOne())
+                $out['data'] = $data_arr;
         }
 
         //todo: links

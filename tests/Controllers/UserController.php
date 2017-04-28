@@ -21,6 +21,7 @@ class UserController extends Controller
     {
         return $this->json_api->inferQueryParam($this)
             ->index()
+            ->getDoc()
             ->getResponse();
     }
 
@@ -34,6 +35,7 @@ class UserController extends Controller
     {
         return $this->json_api->inferQueryParam($this)
             ->store(array_merge($request->all()['data']['attributes'],['password' => '']))
+            ->getDoc()
             ->getResponse();
     }
 
@@ -47,6 +49,7 @@ class UserController extends Controller
     {
         return $this->json_api->inferQueryParam($this)
             ->show()
+            ->getDoc()
             ->getResponse();
     }
 
@@ -70,10 +73,11 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy(UserRequest $request, $id)
+    public function destroy(Request $request, $id)
     {
-        // $serializer = $this->json_api([$id]);
-
-        // return $serializer->destroyModel()->getResponse();
+        return $this->json_api->inferQueryParam($this)
+            ->destroy()
+            ->getDoc()
+            ->getResponse();
     }
 }

@@ -17,8 +17,6 @@ class ResourceIdentifierObject extends ResourceObject {
      */
     public function jsonSerialize()
     {
-        $this->validateMembers();
-
         return $this->data->only(['id', 'type']);
     }
 }
