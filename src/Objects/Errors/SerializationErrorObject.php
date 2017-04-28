@@ -15,7 +15,7 @@ class SerializationErrorObject extends ErrorObject {
     {
         parent::__construct($parent, $data);
 
-        $this->data->merge([
+        $this->data = $this->data->merge([
             'title' => 'Serialization Error',
             'status' => '500'
         ]);

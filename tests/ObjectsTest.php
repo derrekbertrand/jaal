@@ -89,8 +89,9 @@ class ObjectsTest extends TestCase
 
         $response = $jsonapi->getResponse();
 
-        $this->assertEquals(400, $response->getStatusCode());
-        $this->assertContains('The system failed unexpectedly.', $response->getContent());
-        $this->assertContains('The resource could not be found.', $response->getContent());
+        $this->assertEquals(500, $response->getStatusCode());
+        $this->assertContains('ID is required for a resource object.', $response->getContent());
+        $this->assertContains('foo is not a valid member of a resource object.', $response->getContent());
+        $this->assertContains('Type is required for a resource object.', $response->getContent());
     }
 }
