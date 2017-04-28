@@ -43,15 +43,24 @@ class HttpTest extends TestCase
     {
         // good job!
         $this->json('POST', '/api/v1/user', [
-            'data' => [
-                'type' => 'user',
-                'attributes' => [
-                    'first_name' => 'Richard',
-                    'last_name' => 'Stallman',
-                    'email' => 'rms@example.com'
-                ],
-            ]
-        ])
-        ->assertResponseStatus(200);
+                'data' => [
+                    'type' => 'user',
+                    'attributes' => [
+                        'first_name' => 'Richard',
+                        'last_name' => 'Stallman',
+                        'email' => 'rms@example.com'
+                    ],
+                ]
+            ])
+            ->assertResponseStatus(200);
+    }
+
+    public function testUserDelete()
+    {
+        $u = factory(User::class)->create();
+
+        //assert that we can delete
+        $response = $this->json('DELETE', '/api/v1/user/1')
+            ->assertResponseStatus(200);
     }
 }

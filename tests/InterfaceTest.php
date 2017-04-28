@@ -22,7 +22,7 @@ class InterfaceTest extends TestCase
 
         //get the first 15
         $ja = new JsonApiV1();
-        $response = $ja->setModels(['user'])->index()->getResponse();
+        $response = $ja->setModels(['user'])->index()->getDoc()->getResponse();
         $json = $this->contentAsObject($response);
 
         //assert that we have the first 15 results
@@ -32,6 +32,7 @@ class InterfaceTest extends TestCase
         $ja = new JsonApiV1();
         $response = $ja->setModels(['user'])->setModelIds([5])
             ->show()
+            ->getDoc()
             ->getResponse();
         $json = $this->contentAsObject($response);
 

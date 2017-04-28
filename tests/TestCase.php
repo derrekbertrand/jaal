@@ -53,6 +53,6 @@ class TestCase extends \Orchestra\Testbench\TestCase
 
     protected function contentAsObject(Response $r)
     {
-        return json_decode($r->content());
+        return json_decode($r->getContent());
     }
 }

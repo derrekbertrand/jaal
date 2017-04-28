@@ -30,11 +30,9 @@ class MetaObject implements Jsonable, \JsonSerializable {
         //not sure what to do with anything else
         else
             throw new \Exception('Jaal objects must be created from an array, collection, or JsonSerializable object.');
-    }
 
-    public function getHttpStatus()
-    {
-        return $this->parent->getHttpStatus();
+        //validate after adding
+        $this->validateMembers();
     }
 
     /**
@@ -68,12 +66,7 @@ class MetaObject implements Jsonable, \JsonSerializable {
 
             //throw exception if it is bad
             if(preg_match($member_regex, $key) !== 1)
-                $this->addError([
-                        'title' => 'Invalid Member',
-                        'detail' => $key.' is not a valid member name.'
-                    ],
-                    new Collection([$key])
-                );
+                throw new \Exception($key.' is not a valid strict member name.');
         });
     }
 
@@ -95,8 +88,6 @@ class MetaObject implements Jsonable, \JsonSerializable {
      */
     public function jsonSerialize()
     {
-        $this->validateMembers();
-
         return $this->data->all();
     }
 }

@@ -20,5 +20,7 @@ class NotFoundErrorObject extends ErrorObject {
             'detail' => 'The resource could not be found.',
             'status' => '404'
         ]);
+
+        //we do not validate, because it is hard coded
     }
 }

@@ -10,22 +10,29 @@ use Illuminate\Support\Collection;
  */
 class DocObject extends MetaObject {
 
+    const DOC_NONE = 0;
+    const DOC_ONE = 1;
+    const DOC_MANY = 2;
+    const DOC_ONE_IDENT = 3;
+    const DOC_MANY_IDENT = 4;
+    const DOC_TYPE_MAX = 4;
+
     protected $errors;
 
     protected $json_api = null;
 
     protected $code = 200;
 
-    protected $doc_type = 0;
-    protected $is_many = false;
+    protected $doc_type;
+
     protected $data;
     protected $links;
     protected $included;
 
-    public function __construct(JsonApi $json_api)
+    public function __construct(JsonApi $json_api, int $doc_type = 0)
     {
         $this->json_api = $json_api;
-        $this->doc_type = 0;
+        $this->doc_type = $doc_type;
         $this->errors = new Collection;
         $this->data = new Collection;
     }
@@ -36,13 +43,13 @@ class DocObject extends MetaObject {
             return $this->errors->reduce(function ($carry, $item) {
                 //prime the system
                 if($carry === null)
-                    return $item->getHttpStatus();
+                    return $item->getStatus();
 
                 //if we have different errors, send a 400
-                if($item->getHttpStatus() !== $carry)
+                if($item->getStatus() !== $carry)
                     return '400';
 
-                return $item->getHttpStatus();
+                return $item->getStatus();
             });
         else
             return $this->code;
@@ -86,17 +93,7 @@ class DocObject extends MetaObject {
         $resource = new ResourceObject($this, $data);
 
         //add to data
-        $this->data->push($data);
-    }
-
-    public function setOne()
-    {
-        $this->is_many = false;
-    }
-
-    public function setMany()
-    {
-        $this->is_many = true;
+        $this->data->push($resource);
     }
 
     /**
@@ -107,8 +104,9 @@ class DocObject extends MetaObject {
      */
     public function getResponse($options = 0)
     {
-        return response($this->toJson($options), intval($this->getHttpStatus()));
-        //todo: add header?
+        $out = $this->toJson($options);
+
+        return response($out, intval($this->getHttpStatus()));
     }
 
     /**
@@ -122,24 +120,19 @@ class DocObject extends MetaObject {
         return json_encode($this->jsonSerialize(), $options);
     }
 
-    /**
-     * Helper function to serialize the data portion of the document.
-     *
-     * @return null|array
-     */
-    public function serializeData()
+    public function isOne()
     {
-        if($this->is_many)
-        {
-            return $this->data->jsonSerialize();
-        }
-        else
-        {
-            if($this->data->count())
-                return $this->data[0]->jsonSerialize();
-            else
-                return null;
-        }
+        return ($this->doc_type === self::DOC_ONE) || ($this->doc_type === self::DOC_ONE_IDENT);
+    }
+
+    public function isMany()
+    {
+        return ($this->doc_type === self::DOC_MANY) || ($this->doc_type === self::DOC_MANY_IDENT);
+    }
+
+    public function isIdent()
+    {
+        return ($this->doc_type === self::DOC_ONE_IDENT) || ($this->doc_type === self::DOC_MANY_IDENT);
     }
 
     /**
@@ -149,10 +142,26 @@ class DocObject extends MetaObject {
      */
     public function jsonSerialize()
     {
+        //todo: serialize everything, have it validate, then check errors
+
         //create a blank object to serialize
         $out = new Collection;
 
         $out['jsonapi'] = ['version' => '1.0'];
+        $error_arr = [];
+        $data_arr = [];
+
+        if($this->isMany())
+        {
+            $data_arr = $this->data->jsonSerialize();
+        }
+        else if($this->isOne())
+        {
+            if($this->data->count())
+                $data_arr = $this->data[0]->jsonSerialize();
+            else
+                $data_arr = null;
+        }
 
         //todo: toplevel meta object
 
@@ -164,7 +173,8 @@ class DocObject extends MetaObject {
         //we don't have errors, display the data
         else
         {
-            $out['data'] = $this->serializeData();
+            if($this->isMany() || $this->isOne())
+                $out['data'] = $data_arr;
         }
 
         //todo: links

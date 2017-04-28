@@ -20,6 +20,18 @@ class UserRequest extends JsonApiRequest
     public function dataRules()
     {
         return [
+            'email' => 'required|email|max:127',
+            'first_name' => 'required|max:127',
+            'last_name' => 'required|max:127'
+        ];
+    }
+
+    public function dataAttributes()
+    {
+        return [
+            'email' => 'E-Mail',
+            'first_name' => 'Given Name',
+            'last_name' => 'Surname'
         ];
     }
 }

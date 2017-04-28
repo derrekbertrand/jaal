@@ -100,9 +100,11 @@ abstract class JsonApi
      */
     public function destroy()
     {
+        $this->doc = new DocObject($this, DocObject::DOC_NONE);
+
         //returns true if successful
         if (!($this->query_callable)($this->config, $this->models, $this->model_ids, $this->nicknames)->delete()) {
-            $this->doc->addError(['title' => 'Resource Not Found', 'detail' => 'The resource does not exist.']);
+            $this->doc->addError(new NotFoundErrorObject($doc));
         }
 
         return $this;
@@ -119,7 +121,7 @@ abstract class JsonApi
         //in the future, we might have them pass it in or something
         $request = request();
 
-        $this->doc->setMany();
+        $this->doc = new DocObject($this, DocObject::DOC_MANY);
 
         //create the base query
         $q = ($this->query_callable)($this->config, $this->models, $this->model_ids, $this->nicknames);
@@ -149,7 +151,7 @@ abstract class JsonApi
         $endpoints = new Collection();
 
 
-        return $this->getDoc()->addData($endpoints)->getResponse();
+        return $this->addData($endpoints)->getResponse();
     }
 
     public function showToMany(string $nickname)
@@ -268,6 +270,8 @@ abstract class JsonApi
 
     public function show()
     {
+        $this->doc = new DocObject($this, DocObject::DOC_ONE);
+
         try {
             //add the model
             $this->doc->addData(($this->query_callable)($this->config, $this->models, $this->model_ids, $this->nicknames)->firstOrFail());
@@ -283,6 +287,8 @@ abstract class JsonApi
 
     public function store(array $attributes = [])
     {
+        $this->doc = new DocObject($this, DocObject::DOC_ONE);
+
         try {
             //get FQCL of model
             $model = $this->config['models'][$this->models[0]];
@@ -308,6 +314,8 @@ abstract class JsonApi
 
     public function update(array $attributes = [])
     {
+        $this->doc = new DocObject($this, DocObject::DOC_ONE);
+
         try {
             //get the query.
             $db_response = ($this->query_callable)($this->config, $this->models, $this->model_ids, $this->nicknames)->firstOrFail();
@@ -361,11 +369,6 @@ abstract class JsonApi
         return $this;
     }
 
-    public function getResponse()
-    {
-        return $this->doc->getResponse();
-    }
-
     public function getDoc()
     {
         return $this->doc;
@@ -377,26 +380,6 @@ abstract class JsonApi
         $this->setModels(explode('.', array_search(get_class($controller), $this->config['routes'])));
 
         return $this;
-    }
-
-    protected function search(Request $request, Builder $query)
-    {
-        //the current model is the last model
-        $model = $this->config['models'][$this->models[count($this->models)-1]];
-
-        //must have a search query
-        if(!strlen($request->input('filter.search')))
-            return $query;
-
-        try {
-            $query = $model::jsonApiSearch($query, explode(' ', $request->input('filter.search')));
-        } catch(\Exception $e)
-        {
-            // might fail, due to the method not existing, but don't fret
-            //todo: handle some edge cases here; not everybody wants this behavior
-        }
-
-        return $query;
     }
 
     protected function filter(Request $request, Builder $query)
