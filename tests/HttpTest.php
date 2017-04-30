@@ -63,4 +63,11 @@ class HttpTest extends TestCase
         $response = $this->json('DELETE', '/api/v1/user/1')
             ->assertResponseStatus(200);
     }
+
+    public function testUserDeleteNotFound()
+    {
+        //assert that we can delete
+        $response = $this->json('DELETE', '/api/v1/user/1')
+            ->assertResponseStatus(404);
+    }
 }

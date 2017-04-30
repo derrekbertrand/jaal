@@ -102,8 +102,9 @@ abstract class JsonApi
         $this->doc = new DocObject($this, DocObject::DOC_NONE);
 
         //returns true if successful
+        //todo: might not always be accurate
         if (!($this->query_callable)($this->config, $this->models, $this->model_ids, $this->nicknames)->delete()) {
-            $this->doc->addError(new NotFoundErrorObject($doc));
+            $this->doc->addError(new NotFoundErrorObject($this->doc));
         }
 
         return $this;
