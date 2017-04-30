@@ -12,6 +12,14 @@ use DialInno\Jaal\Objects\Errors\ValidationErrorObject;
 
 class ObjectsTest extends TestCase
 {
+
+    public function testBadApi()
+    {
+        $this->expectException(\Exception::class);
+
+        new \DialInno\Jaal\Tests\Api\BadApi;
+    }
+
     public function test404Error()
     {
         $jsonapi = new JsonApiV1;

@@ -47,6 +47,8 @@ abstract class JsonApiRequest extends FormRequest
             'data.attributes' => 'Data Object Attributes'
         ];
 
+        //todo: the data attributes passed back is a whitelist
+
         //combine the rules into one master list
         if(method_exists($this, 'dataAttributes'))
             foreach($this->container->call([$this, 'dataAttributes']) as $k => $v)

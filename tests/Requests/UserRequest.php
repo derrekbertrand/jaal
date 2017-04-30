@@ -22,7 +22,7 @@ class UserRequest extends JsonApiRequest
         return [
             'email' => 'required|email|max:127',
             'first_name' => 'required|max:127',
-            'last_name' => 'required|max:127'
+            'last_name' => 'required|max:127',
         ];
     }
 

@@ -60,11 +60,12 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(UpdateUserRequest $request, $id)
+    public function update(UserRequest $request, $id)
     {
-        // $serializer = $this->json_api([$id]);
-
-        // return $serializer->updateModel()->getResponse();
+        return $this->json_api->inferQueryParam($this)
+            ->update()
+            ->getDoc()
+            ->getResponse();
     }
 
     /**

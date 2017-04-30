@@ -32,7 +32,7 @@ abstract class JsonApi
      */
     public function __construct()
     {
-        if(!isset(static::$api_version) && !strlen(static::$api_version))
+        if(!property_exists($this, 'api_version'))
             throw new \Exception('JsonApi must define `protected static $api_version;`.');
 
         //shorthand for the config
@@ -328,7 +328,7 @@ abstract class JsonApi
 
             $this->doc->addData($db_response);
         } catch (ModelNotFoundException $e) {
-            $this->doc->addError(new ResourceNotFoundError());
+            $this->doc->addError(new NotFoundErrorObject($this->doc));
             return $this;
         } catch (QueryException $e) {
             //dd($e->getPrevious()->errorInfo);

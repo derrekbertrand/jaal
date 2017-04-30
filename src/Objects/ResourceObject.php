@@ -15,7 +15,6 @@ class ResourceObject extends MetaObject {
 
     protected function validateMembers()
     {
-        //todo: not required if generated client side...
         if(!$this->data->has('id'))
             $this->addError(new SerializationErrorObject($this->getDoc(), [
                 'detail' => 'ID is required for a resource object.'
