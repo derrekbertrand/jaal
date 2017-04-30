@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection;
 use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
-use DialInno\Jaal\Rql\RqlBuilder;
 use DialInno\Jaal\Objects\DocObject;
 use DialInno\Jaal\Objects\ErrorObject;
 use DialInno\Jaal\Objects\Errors\NotFoundErrorObject;
@@ -387,7 +386,8 @@ abstract class JsonApi
         if(!strlen($request->input('filter.rql')))
             return $query;
 
-        $query = RqlBuilder::append($query, $request->input('filter.rql'))->getBuilder();
+        //todo: add query builder
+        //$query = RqlBuilder::append($query, $request->input('filter.rql'))->getBuilder();
 
         return $query;
     }
