@@ -41,7 +41,6 @@ class HttpTest extends TestCase
 
     public function testUserStore()
     {
-        // good job!
         $this->json('POST', '/api/v1/user', [
                 'data' => [
                     'type' => 'user',
@@ -53,6 +52,21 @@ class HttpTest extends TestCase
                 ]
             ])
             ->assertResponseStatus(200);
+    }
+
+    public function testUserStoreValidationErrors()
+    {
+        $this->json('POST', '/api/v1/user', [
+                'data' => [
+                    'type' => 'user',
+                    'attributes' => [
+                        'first' => 'Richard',
+                        'last' => 'Stallman',
+                        'email' => 'rmsexample.com'
+                    ],
+                ]
+            ])
+            ->assertResponseStatus(400);
     }
 
     public function testUserDelete()

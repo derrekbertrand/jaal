@@ -15,9 +15,9 @@ class ValidationErrorObject extends ErrorObject {
     {
         parent::__construct($parent, $data);
 
-        $this->data = (new Collection([
+        $this->data = $this->data->merge([
             'title' => 'Validation Error',
             'status' => '400'
-        ]))->merge($this->data);
+        ]);
     }
 }

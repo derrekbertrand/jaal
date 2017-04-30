@@ -77,7 +77,7 @@ abstract class JsonApiRequest extends FormRequest
                     ],
                 ]));
 
-        throw new HttpResponseException($json_api->getResponse());
+        throw new HttpResponseException($json_api->getDoc()->getResponse());
     }
 
     /**
@@ -93,7 +93,7 @@ abstract class JsonApiRequest extends FormRequest
 
         $json_api->getDoc()->addError(new AuthErrorObject($json_api->getDoc()));
 
-        throw new HttpResponseException($json_api->getResponse());
+        throw new HttpResponseException($json_api->getDoc()->getResponse());
     }
 
     /**
