@@ -90,7 +90,10 @@ class DocObject extends MetaObject {
      */
     public function addData($data)
     {
-        $resource = new ResourceObject($this, $data);
+        if($this->isIdent())
+            $resource = new ResourceIdentifierObject($this, $data);
+        else
+            $resource = new ResourceObject($this, $data);
 
         //add to data
         $this->data->push($resource);

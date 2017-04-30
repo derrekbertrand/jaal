@@ -81,4 +81,12 @@ class UserController extends Controller
             ->getDoc()
             ->getResponse();
     }
+
+    public function showPosts()
+    {
+        return $this->json_api->inferQueryParam($this)
+            ->showToMany('posts')
+            ->getDoc()
+            ->getResponse();
+    }
 }

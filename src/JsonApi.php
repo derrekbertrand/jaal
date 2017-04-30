@@ -156,10 +156,12 @@ abstract class JsonApi
 
     public function showToMany(string $nickname)
     {
+        $this->doc = new DocObject($this, DocObject::DOC_MANY_IDENT);
+
         //add the paginated response to the doc
         //todo: add exception handling
-        $this->paginate(($this->query_callable)($this->config, $this->models, $this->model_ids, $this->nicknames))
-            ->firstOrFail()->$nickname->each(function ($item, $key) {
+        $this->paginate(request(), ($this->query_callable)($this->config, $this->models, $this->model_ids, $this->nicknames))
+            ->firstOrFail()->$nickname()->select('id')->each(function ($item, $key) {
                 $this->doc->addData($item);
             });
 
@@ -171,7 +173,7 @@ abstract class JsonApi
         return $this->showToMany($nickname);
     }
 
-    public function updateManyToMany(string $nickname, array $ids = [])
+    public function updateManyToMany(string $nickname)
     {
         try {
             //get the query.

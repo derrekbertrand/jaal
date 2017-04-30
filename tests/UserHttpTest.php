@@ -117,7 +117,6 @@ class UserHttpTest extends TestCase
 
     public function testUserSort()
     {
-        User::unguard();
         User::create([
             'first_name' => 'Alfred',
             'last_name' => 'Pennyworth',
@@ -142,7 +141,6 @@ class UserHttpTest extends TestCase
             'email' => 'dg@batcave.org',
             'password' => '',
         ]);
-        User::reguard();
 
         $response = $this->call('GET', '/api/v1/user', ['sort' => '-last_name,email']);
         $this->assertEquals(200, $response->status());
@@ -154,5 +152,15 @@ class UserHttpTest extends TestCase
         $this->assertEquals(3, $json->data[1]->id);
         $this->assertEquals(1, $json->data[2]->id);
         $this->assertEquals(4, $json->data[3]->id);
+    }
+
+    public function testUserIndexPostRelationship()
+    {
+        $u = factory(User::class)->create();
+
+        factory(Post::class, 20)->create(['user_id' => $u->id]);
+
+        $response = dd($this->get('/api/v1/user/1/relationships/posts', ['page' => ['limit' => '25']]));
+        $this->assertEquals(200, $response->status());
     }
 }
