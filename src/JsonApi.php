@@ -15,7 +15,6 @@ use DialInno\Jaal\Objects\Errors\NotFoundErrorObject;
 abstract class JsonApi
 {
     protected $config = null;
-    protected $query_callable;
     protected $models = [];
     protected $model_ids = [];
     protected $nicknames = [];
@@ -40,56 +39,44 @@ abstract class JsonApi
 
         //we keep an internal doc so we can make a response
         $this->doc = new DocObject($this);
-
-        //get the callback
-        $this->query_callable = $this->defaultQueryCallable();
-
-        //just to check, you never know about people
-        if(!is_callable($this->query_callable))
-            throw new \Exception('defaultQueryCallable() must return a callable function.');
     }
 
-    private function __clone() {}
-    private function __wakeup() {}
-
-    protected function defaultQueryCallable()
+    protected function baseQuery()
     {
-        return function ($config, $models, $ids, $nicknames) {
-            //we work from outside in
-            $models = array_reverse($models);
-            $ids = array_reverse($ids);
-            $nicknames = array_reverse($nicknames);
+        //we work from outside in
+        $models = array_reverse($this->models);
+        $ids = array_reverse($this->model_ids);
+        $nicknames = array_reverse($this->nicknames);
 
-            //keep track of the top model
+        //keep track of the top model
+        $assoc_model = array_shift($models);
+
+        //trivial case
+        $q = $this->config['models'][$assoc_model]::query();
+
+        //if we are looking for a specific instance
+        if (count($ids) > count($models)) {
+            $m = $this->config['models'][$assoc_model];
+            $m = new $m;
+
+            $q->where($m->getKeyName(), array_shift($ids));
+        }
+
+        //each model's relation
+        while (count($models)) {
+            //get the new model
             $assoc_model = array_shift($models);
+            $nickname = array_shift($nicknames);
 
-            //trivial case
-            $q = $config['models'][$assoc_model]::query();
-
-            //if we are looking for a specific instance
-            if (count($ids) > count($models)) {
-                $m = $config['models'][$assoc_model];
+            $q->whereHas(camel_case($nickname), function ($query) use ($assoc_model, &$models, &$ids) {
+                $m = $this->config['models'][$assoc_model];
                 $m = new $m;
 
-                $q->where($m->getKeyName(), array_shift($ids));
-            }
+                $query->where($m->getKeyName(), array_shift($ids));
+            });
+        }
 
-            //each model's relation
-            while (count($models)) {
-                //get the new model
-                $assoc_model = array_shift($models);
-                $nickname = array_shift($nicknames);
-
-                $q->whereHas(camel_case($nickname), function ($query) use ($config, $assoc_model, &$models, &$ids) {
-                    $m = $config['models'][$assoc_model];
-                    $m = new $m;
-
-                    $query->where($m->getKeyName(), array_shift($ids));
-                });
-            }
-
-            return $q;
-        };
+        return $q;
     }
 
     /**
@@ -103,7 +90,7 @@ abstract class JsonApi
 
         //returns true if successful
         //todo: might not always be accurate
-        if (!($this->query_callable)($this->config, $this->models, $this->model_ids, $this->nicknames)->delete()) {
+        if (!$this->baseQuery()->delete()) {
             $this->doc->addError(new NotFoundErrorObject($this->doc));
         }
 
@@ -124,7 +111,7 @@ abstract class JsonApi
         $this->doc = new DocObject($this, DocObject::DOC_MANY);
 
         //create the base query
-        $q = ($this->query_callable)($this->config, $this->models, $this->model_ids, $this->nicknames);
+        $q = $this->baseQuery();
 
         //handle filters
         try {
@@ -146,21 +133,13 @@ abstract class JsonApi
         return $this;
     }
 
-    public function indexEndpoints()
-    {
-        $endpoints = new Collection();
-
-
-        return $this->addData($endpoints)->getResponse();
-    }
-
     public function showToMany(string $nickname)
     {
         $this->doc = new DocObject($this, DocObject::DOC_MANY_IDENT);
 
         //add the paginated response to the doc
         //todo: add exception handling
-        $this->paginate(request(), ($this->query_callable)($this->config, $this->models, $this->model_ids, $this->nicknames))
+        $this->paginate(request(), $this->baseQuery())
             ->firstOrFail()->$nickname()->select('id')->each(function ($item, $key) {
                 $this->doc->addData($item);
             });
@@ -179,7 +158,7 @@ abstract class JsonApi
 
         try {
             //get the query.
-            $db_response = ($this->query_callable)($this->config, $this->models, $this->model_ids, $this->nicknames)->firstOrFail();
+            $db_response = $this->baseQuery()->firstOrFail();
 
             //drag the ids out of the request
             if(!count($ids))
@@ -217,7 +196,7 @@ abstract class JsonApi
 
         try {
             //get the query.
-            $db_response = ($this->query_callable)($this->config, $this->models, $this->model_ids, $this->nicknames)->firstOrFail();
+            $db_response = $this->baseQuery()->firstOrFail();
 
             //drag the ids out of the request
             if(!count($ids))
@@ -251,7 +230,7 @@ abstract class JsonApi
 
         try {
             //get the query.
-            $db_response = ($this->query_callable)($this->config, $this->models, $this->model_ids, $this->nicknames)->firstOrFail();
+            $db_response = $this->baseQuery()->firstOrFail();
 
             //drag the ids out of the request
             if(!count($ids))
@@ -288,7 +267,7 @@ abstract class JsonApi
 
         try {
             //get the query.
-            $db_response = ($this->query_callable)($this->config, $this->models, $this->model_ids, $this->nicknames)->firstOrFail();
+            $db_response = $this->baseQuery()->firstOrFail();
 
             //drag the ids out of the request
             if(!count($ids))
@@ -323,7 +302,7 @@ abstract class JsonApi
 
         try {
             //add the model
-            $this->doc->addData(($this->query_callable)($this->config, $this->models, $this->model_ids, $this->nicknames)->firstOrFail());
+            $this->doc->addData($this->baseQuery()->firstOrFail());
         } catch (ModelNotFoundException $e) {
             $this->doc->addError(new NotFoundErrorObject($this->doc));
             return $this;
@@ -367,7 +346,7 @@ abstract class JsonApi
 
         try {
             //get the query.
-            $db_response = ($this->query_callable)($this->config, $this->models, $this->model_ids, $this->nicknames)->firstOrFail();
+            $db_response = $this->baseQuery()->firstOrFail();
 
             //drag the attributes out of the request
             $attr = count($attributes) ? $attributes : request()->all()['data']['attributes'];
@@ -386,13 +365,6 @@ abstract class JsonApi
         } catch (\Exception $e) {
             throw $e;
         }
-
-        return $this;
-    }
-
-    public function setQueryCallable(callable $baseQueryCallable)
-    {
-        $this->query_callable = $baseQueryCallable;
 
         return $this;
     }
@@ -496,10 +468,10 @@ abstract class JsonApi
         if(!isset(static::$api_version) && !strlen(static::$api_version))
             throw new \Exception('JsonApi must define `protected static $api_version;`.');
 
-        Route::get(null, [
-            'as' => 'index-endpoints',
-            'uses' => '\\'.static::class.'@indexEndpoints',
-        ]);
+        // Route::get(null, [
+        //     'as' => 'index-endpoints',
+        //     'uses' => '\\'.static::class.'@indexEndpoints',
+        // ]);
 
         //get the group they want
         $routes = config('jaal.'.static::$api_version.'.routes');
