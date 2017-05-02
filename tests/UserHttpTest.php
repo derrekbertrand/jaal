@@ -154,13 +154,197 @@ class UserHttpTest extends TestCase
         $this->assertEquals(4, $json->data[3]->id);
     }
 
+    //==================================================================================================================
+    // POST RELATIONSHIP
+    //==================================================================================================================
+
     public function testUserIndexPostRelationship()
     {
         $u = factory(User::class)->create();
 
         factory(Post::class, 20)->create(['user_id' => $u->id]);
 
-        $response = dd($this->get('/api/v1/user/1/relationships/posts', ['page' => ['limit' => '25']]));
+        $response = $this->call('GET', '/api/v1/user/1/relationships/posts', ['page' => ['limit' => '25']]);
         $this->assertEquals(200, $response->status());
+
+        $json = $this->contentAsObject($response);
+
+        $this->assertEquals(20, count($json->data));
+    }
+
+    public function testUserIndexPostEmptyRelationship()
+    {
+        $u = factory(User::class)->create();
+
+        $response = $this->call('GET', '/api/v1/user/1/relationships/posts', ['page' => ['limit' => '25']]);
+        $this->assertEquals(200, $response->status());
+
+        $json = $this->contentAsObject($response);
+
+        $this->assertEquals(0, count($json->data));
+    }
+
+    public function testUserStorePostsRelationship()
+    {
+        $u1 = factory(User::class)->create();
+        $u2 = factory(User::class)->create();
+
+        $posts = factory(Post::class, 20)->create(['user_id' => $u2->id]);
+
+        // $response = $this->post('/api/v1/user/1/relationships/posts', [
+        //     'data' => [
+        //         ['id' => '1', 'type' => 'post'],
+        //         ['id' => '2', 'type' => 'post'],
+        //         ['id' => '3', 'type' => 'post'],
+        //     ],
+        // ]);
+        // $this->assertEquals(200, $response->status());
+
+        // $json = $this->contentAsObject($response);
+
+        // $this->assertEquals(3, count($json->data));
+    }
+
+    // public function testUserUpdateSkillsRelationship()
+    // {
+    //     $u = factory(User::class)->create();
+
+    //     $skills = factory(Skill::class, 20)->create();
+
+    //     $u->skills()->sync($skills);
+
+    //     $response = $this->call('PATCH', '/api/v1/user/1/relationships/skills', [
+    //         'data' => [
+    //             ['id' => '1', 'type' => 'skill'],
+    //             ['id' => '2', 'type' => 'skill'],
+    //             ['id' => '3', 'type' => 'skill'],
+    //         ],
+    //     ]);
+    //     $this->assertEquals(200, $response->status());
+
+    //     $json = $this->contentAsObject($response);
+
+    //     $this->assertEquals(3, count($json->data));
+    // }
+
+    // public function testUserDestroySkillsRelationship()
+    // {
+    //     $u = factory(User::class)->create();
+
+    //     $skills = factory(Skill::class, 20)->create();
+
+    //     $u->skills()->sync($skills);
+
+    //     $response = $this->call('DELETE', '/api/v1/user/1/relationships/skills', [
+    //         'data' => [
+    //             ['id' => '1', 'type' => 'skill'],
+    //             ['id' => '2', 'type' => 'skill'],
+    //             ['id' => '3', 'type' => 'skill'],
+    //         ],
+    //     ]);
+    //     $this->assertEquals(200, $response->status());
+
+    //     $json = $this->contentAsObject($response);
+
+    //     $this->assertEquals(17, count($json->data));
+    // }
+
+    //==================================================================================================================
+    // SKILL RELATIONSHIP
+    //==================================================================================================================
+
+    public function testUserIndexSkillRelationship()
+    {
+        $u = factory(User::class)->create();
+
+        $skills = factory(Skill::class, 20)->create();
+
+        $u->skills()->sync($skills);
+
+        $response = $this->call('GET', '/api/v1/user/1/relationships/skills', ['page' => ['limit' => '25']]);
+        $this->assertEquals(200, $response->status());
+
+        $json = $this->contentAsObject($response);
+
+        $this->assertEquals(20, count($json->data));
+    }
+
+    public function testUserIndexSkillEmptyRelationship()
+    {
+        $u = factory(User::class)->create();
+
+        $response = $this->call('GET', '/api/v1/user/1/relationships/skills', ['page' => ['limit' => '25']]);
+        $this->assertEquals(200, $response->status());
+
+        $json = $this->contentAsObject($response);
+
+        $this->assertEquals(0, count($json->data));
+    }
+
+    public function testUserStoreSkillsRelationship()
+    {
+        $u1 = factory(User::class)->create();
+        $u2 = factory(User::class)->create();
+
+        $skills = factory(Skill::class, 20)->create();
+
+        $u2->skills()->sync($skills);
+
+        $response = $this->call('POST', '/api/v1/user/1/relationships/skills', [
+            'data' => [
+                ['id' => '1', 'type' => 'skill'],
+                ['id' => '2', 'type' => 'skill'],
+                ['id' => '3', 'type' => 'skill'],
+            ],
+        ]);
+        $this->assertEquals(200, $response->status());
+
+        $json = $this->contentAsObject($response);
+
+        $this->assertEquals(3, count($json->data));
+    }
+
+    public function testUserUpdateSkillsRelationship()
+    {
+        $u = factory(User::class)->create();
+
+        $skills = factory(Skill::class, 20)->create();
+
+        $u->skills()->sync($skills);
+
+        $response = $this->call('PATCH', '/api/v1/user/1/relationships/skills', [
+            'data' => [
+                ['id' => '1', 'type' => 'skill'],
+                ['id' => '2', 'type' => 'skill'],
+                ['id' => '3', 'type' => 'skill'],
+            ],
+        ]);
+        $this->assertEquals(200, $response->status());
+
+        $json = $this->contentAsObject($response);
+
+        $this->assertEquals(3, count($json->data));
+    }
+
+    public function testUserDestroySkillsRelationship()
+    {
+        $u = factory(User::class)->create();
+
+        $skills = factory(Skill::class, 20)->create();
+
+        $u->skills()->sync($skills);
+
+        $response = $this->call('DELETE', '/api/v1/user/1/relationships/skills', [
+            'data' => [
+                ['id' => '1', 'type' => 'skill'],
+                ['id' => '2', 'type' => 'skill'],
+                ['id' => '3', 'type' => 'skill'],
+            ],
+        ]);
+        $this->assertEquals(200, $response->status());
+
+        $json = $this->contentAsObject($response);
+
+        $this->assertEquals(17, count($json->data));
     }
 }

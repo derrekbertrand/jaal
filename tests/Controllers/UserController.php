@@ -82,10 +82,70 @@ class UserController extends Controller
             ->getResponse();
     }
 
+    //==================================================================================================================
+
     public function showPosts()
     {
         return $this->json_api->inferQueryParam($this)
             ->showToMany('posts')
+            ->getDoc()
+            ->getResponse();
+    }
+
+    public function storePosts()
+    {
+        return $this->json_api->inferQueryParam($this)
+            ->storeToMany('posts')
+            ->getDoc()
+            ->getResponse();
+    }
+
+    public function updatePosts()
+    {
+        return $this->json_api->inferQueryParam($this)
+            ->updateToMany('posts')
+            ->getDoc()
+            ->getResponse();
+    }
+
+    public function destroyPosts()
+    {
+        return $this->json_api->inferQueryParam($this)
+            ->destroyToMany('posts')
+            ->getDoc()
+            ->getResponse();
+    }
+
+    //==================================================================================================================
+
+    public function showSkills()
+    {
+        return $this->json_api->inferQueryParam($this)
+            ->showManyToMany('skills')
+            ->getDoc()
+            ->getResponse();
+    }
+
+    public function storeSkills()
+    {
+        return $this->json_api->inferQueryParam($this)
+            ->storeManyToMany('skills')
+            ->getDoc()
+            ->getResponse();
+    }
+
+    public function updateSkills()
+    {
+        return $this->json_api->inferQueryParam($this)
+            ->updateManyToMany('skills')
+            ->getDoc()
+            ->getResponse();
+    }
+
+    public function destroySkills()
+    {
+        return $this->json_api->inferQueryParam($this)
+            ->destroyManyToMany('skills')
             ->getDoc()
             ->getResponse();
     }

@@ -17,7 +17,8 @@ trait SerializeModel
         $data_object = [];
 
         //set meta attributes
-        $data_object['id'] = $this->getAttribute($this->getKeyName());
+        //todo: check for composite keys?
+        $data_object['id'] = strval($this->getAttribute($this->getKeyName()));
         $data_object['type'] = isset($this->jsonApiType) ?
             $this->jsonApiType :
             snake_case((new \ReflectionClass($this))->getShortName());
