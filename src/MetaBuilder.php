@@ -15,9 +15,10 @@ use DialInno\Jaal\Objects\Errors\NotFoundErrorObject;
 class MetaBuilder
 {
     protected $config;
-    protected $models = [];
-    protected $model_ids = [];
-    protected $nicknames = [];
+    protected $json_api;
+    protected $models = []; //model's type identifiers (1 - n)
+    protected $model_ids = []; //the ids used for lookup ()
+    protected $nicknames = []; //the relation names (count($models)-1)
 
     /**
      * Prepare a JsonApi object based on the model types passed in.
@@ -28,9 +29,10 @@ class MetaBuilder
      *
      * @return JsonApi
      */
-    public function __construct(array $config)
+    public function __construct(JsonApi $json_api)
     {
         //shorthand for the config
+        $this->json_api = $json_api;
         $this->config = $config;
     }
 
@@ -82,15 +84,15 @@ class MetaBuilder
      */
     public function destroy()
     {
-        $this->doc = new DocObject($this, DocObject::DOC_NONE);
+        $doc = new DocObject($this->json_api, DocObject::DOC_NONE);
 
         //returns true if successful
         //todo: might not always be accurate
         if (!($this->query_callable)($this->config, $this->models, $this->model_ids, $this->nicknames)->delete()) {
-            $this->doc->addError(new NotFoundErrorObject($this->doc));
+            $doc->addError(new NotFoundErrorObject($doc));
         }
 
-        return $this;
+        return $doc;
     }
 
     /**
@@ -100,11 +102,8 @@ class MetaBuilder
      */
     public function index()
     {
-        //get the default request
-        //in the future, we might have them pass it in or something
+        $doc = new DocObject($this->json_api, DocObject::DOC_MANY);
         $request = request();
-
-        $this->doc = new DocObject($this, DocObject::DOC_MANY);
 
         //create the base query
         $q = ($this->query_callable)($this->config, $this->models, $this->model_ids, $this->nicknames);
@@ -113,7 +112,7 @@ class MetaBuilder
         try {
             $q = $this->filter($request, $q);
         } catch(\Exception $e) {
-            $this->doc->addError(['title' => 'Filter Error', 'detail' => $e->getMessage()]);
+            $doc->addError(['title' => 'Filter Error', 'detail' => $e->getMessage()]);
         }
 
         //parse the sorting
@@ -123,10 +122,10 @@ class MetaBuilder
 
         //add the paginated response to the doc
         $q->get()->each(function ($item, $key) {
-            $this->doc->addData($item);
+            $doc->addData($item);
         });
 
-        return $this;
+        return $doc;
     }
 
     public function indexEndpoints()
@@ -139,16 +138,16 @@ class MetaBuilder
 
     public function showToMany(string $nickname)
     {
-        $this->doc = new DocObject($this, DocObject::DOC_MANY_IDENT);
+        $doc = new DocObject($this->json_api, DocObject::DOC_MANY_IDENT);
 
         //add the paginated response to the doc
         //todo: add exception handling
         $this->paginate(request(), ($this->query_callable)($this->config, $this->models, $this->model_ids, $this->nicknames))
             ->firstOrFail()->$nickname()->select('id')->each(function ($item, $key) {
-                $this->doc->addData($item);
+                $doc->addData($item);
             });
 
-        return $this;
+        return $doc;
     }
 
     public function showManyToMany(string $nickname)
@@ -158,7 +157,7 @@ class MetaBuilder
 
     public function updateManyToMany(string $nickname, array $ids = [])
     {
-        $this->doc = new DocObject($this, DocObject::DOC_MANY_IDENT);
+        $doc = new DocObject($this->json_api, DocObject::DOC_MANY_IDENT);
 
         try {
             //get the query.
@@ -177,26 +176,26 @@ class MetaBuilder
             $db_response->$nickname()->sync($ids);
 
             foreach($db_response->$nickname as $relation)
-                $this->doc->addData($relation);
+                $doc->addData($relation);
         } catch (ModelNotFoundException $e) {
-            $this->doc->addError(new ResourceNotFoundError());
-            return $this;
+            $doc->addError(new ResourceNotFoundError());
+            return $doc;
         } catch (QueryException $e) {
             //dd($e->getPrevious()->errorInfo);
-            $this->doc->addError(new DatabaseError());
-            return $this;
+            $doc->addError(new DatabaseError());
+            return $doc;
         } catch (\Exception $e) {
             throw $e;
         }
 
-        return $this;
+        return $doc;
     }
 
     public function destroyManyToMany(string $nickname, array $ids = [])
     {
         //todo: modification functions on relations need to not dump the whole damn relationship
 
-        $this->doc = new DocObject($this, DocObject::DOC_MANY_IDENT);
+        $doc = new DocObject($this->json_api, DocObject::DOC_MANY_IDENT);
 
         try {
             //get the query.
@@ -213,24 +212,24 @@ class MetaBuilder
             $db_response->$nickname()->detach($ids);
 
             foreach($db_response->$nickname as $relation)
-                $this->doc->addData($relation);
+                $doc->addData($relation);
         } catch (ModelNotFoundException $e) {
-            $this->doc->addError(new ResourceNotFoundError());
-            return $this;
+            $doc->addError(new ResourceNotFoundError());
+            return $doc;
         } catch (QueryException $e) {
             //dd($e->getPrevious()->errorInfo);
-            $this->doc->addError(new DatabaseError());
-            return $this;
+            $doc->addError(new DatabaseError());
+            return $doc;
         } catch (\Exception $e) {
             throw $e;
         }
 
-        return $this;
+        return $doc;
     }
 
     public function storeToMany(string $nickname, array $ids = [])
     {
-        $this->doc = new DocObject($this, DocObject::DOC_MANY_IDENT);
+        $doc = new DocObject($this->json_api, DocObject::DOC_MANY_IDENT);
 
         try {
             //get the query.
@@ -250,24 +249,24 @@ class MetaBuilder
             $foreign_model::whereIn($foreign_model->getKeyName(), $ids)->update([$fk => $db_response->id]);
 
             foreach($db_response->$nickname as $relation)
-                $this->doc->addData($relation);
+                $doc->addData($relation);
         } catch (ModelNotFoundException $e) {
-            $this->doc->addError(new ResourceNotFoundError());
-            return $this;
+            $doc->addError(new ResourceNotFoundError());
+            return $doc;
         } catch (QueryException $e) {
             //dd($e->getPrevious()->errorInfo);
-            $this->doc->addError(new DatabaseError());
-            return $this;
+            $doc->addError(new DatabaseError());
+            return $doc;
         } catch (\Exception $e) {
             throw $e;
         }
 
-        return $this;
+        return $doc;
     }
 
     public function storeManyToMany(string $nickname, array $ids = [])
     {
-        $this->doc = new DocObject($this, DocObject::DOC_MANY_IDENT);
+        $doc = new DocObject($this->json_api, DocObject::DOC_MANY_IDENT);
 
         try {
             //get the query.
@@ -284,42 +283,42 @@ class MetaBuilder
             $db_response->$nickname()->syncWithoutDetaching($ids);
 
             foreach($db_response->$nickname as $relation)
-                $this->doc->addData($relation);
+                $doc->addData($relation);
         } catch (ModelNotFoundException $e) {
-            $this->doc->addError(new ResourceNotFoundError());
-            return $this;
+            $doc->addError(new ResourceNotFoundError());
+            return $doc;
         } catch (QueryException $e) {
             //dd($e->getPrevious()->errorInfo);
-            $this->doc->addError(new DatabaseError());
-            return $this;
+            $doc->addError(new DatabaseError());
+            return $doc;
         } catch (\Exception $e) {
             throw $e;
         }
 
-        return $this;
+        return $doc;
     }
 
 
     public function show()
     {
-        $this->doc = new DocObject($this, DocObject::DOC_ONE);
+        $doc = new DocObject($this->json_api, DocObject::DOC_ONE);
 
         try {
             //add the model
-            $this->doc->addData(($this->query_callable)($this->config, $this->models, $this->model_ids, $this->nicknames)->firstOrFail());
+            $doc->addData(($this->query_callable)($this->config, $this->models, $this->model_ids, $this->nicknames)->firstOrFail());
         } catch (ModelNotFoundException $e) {
-            $this->doc->addError(new NotFoundErrorObject($this->doc));
-            return $this;
+            $doc->addError(new NotFoundErrorObject($doc));
+            return $doc;
         } catch (\Exception $e) {
             throw $e;
         }
 
-        return $this;
+        return $doc;
     }
 
     public function store(array $attributes = [])
     {
-        $this->doc = new DocObject($this, DocObject::DOC_ONE);
+        $doc = new DocObject($this->json_api, DocObject::DOC_ONE);
 
         try {
             //get FQCL of model
@@ -328,25 +327,25 @@ class MetaBuilder
             $attr = count($attributes) ? $attributes : request()->all()['data']['attributes'];
 
             //run the query
-            $this->doc->addData($model::create($attr));
+            $doc->addData($model::create($attr));
         } catch (ModelNotFoundException $e) {
             //todo: this is not strictly accurate
-            $this->doc->addError(new ResourceNotFoundError());
-            return $this;
+            $doc->addError(new ResourceNotFoundError());
+            return $doc;
         } catch (QueryException $e) {
             //dd($e->getPrevious()->errorInfo);
-            $this->doc->addError(new DatabaseError());
-            return $this;
+            $doc->addError(new DatabaseError());
+            return $doc;
         } catch (\Exception $e) {
             throw $e;
         }
 
-        return $this;
+        return $doc;
     }
 
     public function update(array $attributes = [])
     {
-        $this->doc = new DocObject($this, DocObject::DOC_ONE);
+        $doc = new DocObject($this->json_api, DocObject::DOC_ONE);
 
         try {
             //get the query.
@@ -358,26 +357,19 @@ class MetaBuilder
             //todo: check for failed update
             $db_response->update($attr);
 
-            $this->doc->addData($db_response);
+            $doc->addData($db_response);
         } catch (ModelNotFoundException $e) {
-            $this->doc->addError(new NotFoundErrorObject($this->doc));
-            return $this;
+            $doc->addError(new NotFoundErrorObject($doc));
+            return $doc;
         } catch (QueryException $e) {
             //dd($e->getPrevious()->errorInfo);
-            $this->doc->addError(new DatabaseError());
-            return $this;
+            $doc->addError(new DatabaseError());
+            return $doc;
         } catch (\Exception $e) {
             throw $e;
         }
 
-        return $this;
-    }
-
-    public function setQueryCallable(callable $baseQueryCallable)
-    {
-        $this->query_callable = $baseQueryCallable;
-
-        return $this;
+        return $doc;
     }
 
     public function setModelIds(array $modelIds)
@@ -401,12 +393,7 @@ class MetaBuilder
         return $this;
     }
 
-    public function getDoc()
-    {
-        return $this->doc;
-    }
-
-    public function inferQueryParam(Controller $controller)
+    public function setFromController(Controller $controller)
     {
         $this->setModelIds(array_values(\Route::getCurrentRoute()->parameters()));
         $this->setModels(explode('.', array_search(get_class($controller), $this->config['routes'])));
@@ -462,62 +449,5 @@ class MetaBuilder
         }
 
         return $query;
-    }
-
-    /**
-     * Generate a set of routes based on the eloquent jsonify config.
-     *
-     * @return null
-     */
-    public static function routes()
-    {
-        if(!isset(static::$api_version) && !strlen(static::$api_version))
-            throw new \Exception('JsonApi must define `protected static $api_version;`.');
-
-        Route::get(null, [
-            'as' => 'index-endpoints',
-            'uses' => '\\'.static::class.'@indexEndpoints',
-        ]);
-
-        //get the group they want
-        $routes = config('jaal.'.static::$api_version.'.routes');
-        $relationships = config('jaal.'.static::$api_version.'.relationships');
-
-        //define the common routes
-        foreach ($routes as $name => $controller) {
-            Route::resource($name, '\\'.$controller, ['except' => ['create', 'edit']]);
-        }
-
-        //define relationship routes
-        foreach ($relationships as $from => $all_relations) {
-            foreach ($all_relations as $nickname => $rel_type) {
-                $controller = config('jaal.'.static::$api_version.'.routes.'.$from);
-
-                Route::get("$from/{{$from}}/relationships/$nickname", [
-                    'as' => "$from.relationships.$nickname.show",
-                    'uses' => '\\'.$controller.'@show'.studly_case($nickname)
-                ]);
-
-                Route::patch("$from/{{$from}}/relationships/$nickname", [
-                    'as' => "$from.relationships.$nickname.update",
-                    'uses' => '\\'.$controller.'@update'.studly_case($nickname)
-                ]);
-
-                //if it is a to-many type, then we need to respond to these also
-                if ($rel_type != 'to-one') {
-                    //post for add only
-                    Route::post("$from/{{$from}}/relationships/$nickname", [
-                        'as' => "$from.relationships.$nickname.store",
-                        'uses' => '\\'.$controller.'@store'.studly_case($nickname)
-                    ]);
-
-                    //delete for drop only
-                    Route::delete("$from/{{$from}}/relationships/$nickname", [
-                        'as' => "$from.relationships.$nickname.destroy",
-                        'uses' => '\\'.$controller.'@destroy'.studly_case($nickname)
-                    ]);
-                }
-            }
-        }
     }
 }

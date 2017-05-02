@@ -423,6 +423,11 @@ abstract class JsonApi
         return $this->doc;
     }
 
+    public function getConfig()
+    {
+        return $this->config;
+    }
+
     public function inferQueryParam(Controller $controller)
     {
         $this->setModelIds(array_values(\Route::getCurrentRoute()->parameters()));
