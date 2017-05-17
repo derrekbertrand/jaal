@@ -140,9 +140,47 @@ abstract class JsonApi
         //add the paginated response to the doc
         //todo: add exception handling
         $this->paginate(request(), $this->baseQuery())
-            ->firstOrFail()->$nickname()->select('id')->each(function ($item, $key) {
+            ->firstOrFail()->$nickname->each(function ($item, $key) {
                 $this->doc->addData($item);
             });
+
+        return $this;
+    }
+
+    public function showToOne(string $nickname)
+    {
+        $this->doc = new DocObject($this, DocObject::DOC_ONE_IDENT);
+        $res = null;
+
+        //add the paginated response to the doc
+        try {
+            $res = $this->baseQuery()->firstOrFail()->$nickname;
+        } catch (ModelNotFoundException $e) {
+            $this->doc->addError(new NotFoundErrorObject($this->doc));
+        } catch (\Exception $e) {
+            dd($e);
+        }
+
+        if($res !== null)
+            $this->doc->addData($res);
+
+        return $this;
+    }
+
+    public function updateToOne(string $nickname, $id = null)
+    {
+        $this->doc = new DocObject($this, DocObject::DOC_ONE_IDENT);
+        $body = json_decode(request()->getContent(), true);
+
+        //if we don't have an id, and we do have one in the body...
+        if($id === null && array_key_exists('data', $body) && array_key_exists('id', $body['data']))
+            $id = $body['data']['id'];
+
+        $res = $this->baseQuery()->firstOrFail();
+        $res->$nickname()->associate($id)->save();
+
+        if($id !== null)
+            $this->doc->addData($res->$nickname);
 
         return $this;
     }
@@ -163,7 +201,7 @@ abstract class JsonApi
             //drag the ids out of the request
             if(!count($ids))
             {
-                foreach(request()->all()['data'] as $rid)
+                foreach(json_decode(request()->getContent(), true)['data'] as $rid)
                     $ids[] = $rid['id'];
             }
 
@@ -201,7 +239,7 @@ abstract class JsonApi
             //drag the ids out of the request
             if(!count($ids))
             {
-                foreach(request()->all()['data'] as $rid)
+                foreach(json_decode(request()->getContent(), true)['data'] as $rid)
                     $ids[] = $rid['id'];
             }
 
@@ -235,7 +273,7 @@ abstract class JsonApi
             //drag the ids out of the request
             if(!count($ids))
             {
-                foreach(request()->all()['data'] as $rid)
+                foreach(json_decode(request()->getContent(), true)['data'] as $rid)
                     $ids[] = $rid['id'];
             }
 
@@ -272,7 +310,7 @@ abstract class JsonApi
             //drag the ids out of the request
             if(!count($ids))
             {
-                foreach(request()->all()['data'] as $rid)
+                foreach(json_decode(request()->getContent(), true)['data'] as $rid)
                     $ids[] = $rid['id'];
             }
 
@@ -321,7 +359,7 @@ abstract class JsonApi
             //get FQCL of model
             $model = $this->config['models'][$this->models[0]];
 
-            $attr = count($attributes) ? $attributes : request()->all()['data']['attributes'];
+            $attr = count($attributes) ? $attributes : json_decode(request()->getContent(), true)['data']['attributes'];
 
             //run the query
             $this->doc->addData($model::create($attr));
@@ -349,7 +387,7 @@ abstract class JsonApi
             $db_response = $this->baseQuery()->firstOrFail();
 
             //drag the attributes out of the request
-            $attr = count($attributes) ? $attributes : request()->all()['data']['attributes'];
+            $attr = count($attributes) ? $attributes : json_decode(request()->getContent(), true)['data']['attributes'];
 
             //todo: check for failed update
             $db_response->update($attr);
@@ -398,6 +436,17 @@ abstract class JsonApi
     public function getConfig()
     {
         return $this->config;
+    }
+
+    public function inferAll()
+    {
+        $caller = debug_backtrace(false, 2)[1];
+
+        $this->setModelIds(array_values(\Route::getCurrentRoute()->parameters()));
+        $this->setModels(explode('.', array_search($caller['class'], $this->config['routes'])));
+        $this->{$caller['function']}();
+
+        return $this;
     }
 
     public function inferQueryParam(Controller $controller)

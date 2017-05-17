@@ -290,18 +290,16 @@ class UserHttpTest extends TestCase
 
         $u2->skills()->sync($skills);
 
-        $response = $this->call('POST', '/api/v1/user/1/relationships/skills', [
+        $response = $this->json('POST', '/api/v1/user/1/relationships/skills', [
             'data' => [
                 ['id' => '1', 'type' => 'skill'],
                 ['id' => '2', 'type' => 'skill'],
                 ['id' => '3', 'type' => 'skill'],
             ],
         ]);
-        $this->assertEquals(200, $response->status());
+        $this->assertResponseStatus(200);
 
-        $json = $this->contentAsObject($response);
-
-        $this->assertEquals(3, count($json->data));
+        $this->assertEquals(3, $u1->skills->count());
     }
 
     public function testUserUpdateSkillsRelationship()
@@ -312,18 +310,16 @@ class UserHttpTest extends TestCase
 
         $u->skills()->sync($skills);
 
-        $response = $this->call('PATCH', '/api/v1/user/1/relationships/skills', [
+        $response = $this->json('PATCH', '/api/v1/user/1/relationships/skills', [
             'data' => [
                 ['id' => '1', 'type' => 'skill'],
                 ['id' => '2', 'type' => 'skill'],
                 ['id' => '3', 'type' => 'skill'],
             ],
         ]);
-        $this->assertEquals(200, $response->status());
+        $this->assertResponseStatus(200);
 
-        $json = $this->contentAsObject($response);
-
-        $this->assertEquals(3, count($json->data));
+        $this->assertEquals(3, $u->skills->count());
     }
 
     public function testUserDestroySkillsRelationship()
@@ -334,17 +330,15 @@ class UserHttpTest extends TestCase
 
         $u->skills()->sync($skills);
 
-        $response = $this->call('DELETE', '/api/v1/user/1/relationships/skills', [
+        $response = $this->json('DELETE', '/api/v1/user/1/relationships/skills', [
             'data' => [
                 ['id' => '1', 'type' => 'skill'],
                 ['id' => '2', 'type' => 'skill'],
                 ['id' => '3', 'type' => 'skill'],
             ],
         ]);
-        $this->assertEquals(200, $response->status());
+        $this->assertResponseStatus(200);
 
-        $json = $this->contentAsObject($response);
-
-        $this->assertEquals(17, count($json->data));
+        $this->assertEquals(17, $u->skills->count());
     }
 }

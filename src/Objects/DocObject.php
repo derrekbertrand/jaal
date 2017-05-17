@@ -81,6 +81,11 @@ class DocObject extends MetaObject {
         return $error_data;
     }
 
+    public function errorCount()
+    {
+        return $this->errors->count();
+    }
+
     /**
      * Add data to the document.
      *
