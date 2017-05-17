@@ -3,7 +3,7 @@
 namespace DialInno\Jaal\Tests;
 
 use DialInno\Jaal\Tests\Api\JsonApiV1;
-use Illuminate\Http\Response;
+use Illuminate\Foundation\Testing\TestResponse;
 
 class TestCase extends \Orchestra\Testbench\TestCase
 {
@@ -51,13 +51,24 @@ class TestCase extends \Orchestra\Testbench\TestCase
         \Schema::enableForeignKeyConstraints();
     }
 
-    protected function contentAsObject(Response $r)
+    protected function contentAsObject(TestResponse $r)
     {
         return json_decode($r->getContent());
     }
 
+    /**
+     * Get package providers.
+     *
+     * @param  \Illuminate\Foundation\Application  $app
+     *
+     * @return array
+     */
     protected function getPackageProviders($app)
     {
-        return ['Orchestra\Database\ConsoleServiceProvider'];
+        return [
+            \Orchestra\Database\ConsoleServiceProvider::class,
+            //'Cartalyst\Sentry\SentryServiceProvider',
+            //'YourProject\YourPackage\YourPackageServiceProvider',
+        ];
     }
 }

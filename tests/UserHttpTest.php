@@ -14,29 +14,14 @@ class UserHttpTest extends TestCase
     {
         //no user, should throw an error
         $this->json('GET', '/api/v1/user/5')
-            ->assertResponseStatus(404)
-            ->seeJsonStructure([
-                'errors' => [
-                    '*' => [
-                        'status',
-                        'title',
-                        'detail',
-                    ]
-                ]
-            ]);
+            ->assertStatus(404);
     }
 
     public function testUserIndexEmptySet()
     {
         //we should get a valid response
         $this->json('GET', '/api/v1/user')
-            ->assertResponseStatus(200)
-            ->seeJson([
-                'jsonapi' => [
-                    'version' => '1.0'
-                ],
-                'data' => []
-            ]);
+            ->assertStatus(200);
     }
 
     public function testUserStore()
@@ -51,7 +36,7 @@ class UserHttpTest extends TestCase
                     ],
                 ]
             ])
-            ->assertResponseStatus(200);
+            ->assertStatus(200);
     }
 
     public function testUserStoreValidationErrors()
@@ -66,7 +51,7 @@ class UserHttpTest extends TestCase
                     ],
                 ]
             ])
-            ->assertResponseStatus(400);
+            ->assertStatus(400);
     }
 
     public function testUserDelete()
@@ -74,13 +59,13 @@ class UserHttpTest extends TestCase
         $u = factory(User::class)->create();
 
         $response = $this->json('DELETE', '/api/v1/user/1')
-            ->assertResponseStatus(200);
+            ->assertStatus(200);
     }
 
     public function testUserDeleteNotFound()
     {
         $response = $this->json('DELETE', '/api/v1/user/1')
-            ->assertResponseStatus(404);
+            ->assertStatus(404);
     }
 
     public function testUserUpdate()
@@ -97,7 +82,7 @@ class UserHttpTest extends TestCase
                     ],
                 ],
             ])
-            ->assertResponseStatus(200);
+            ->assertStatus(200);
     }
 
     public function testUserUpdateNotFound()
@@ -112,7 +97,7 @@ class UserHttpTest extends TestCase
                     ],
                 ],
             ])
-            ->assertResponseStatus(404);
+            ->assertStatus(404);
     }
 
     public function testUserSort()
@@ -297,7 +282,7 @@ class UserHttpTest extends TestCase
                 ['id' => '3', 'type' => 'skill'],
             ],
         ]);
-        $this->assertResponseStatus(200);
+        $response->assertStatus(200);
 
         $this->assertEquals(3, $u1->skills->count());
     }
@@ -317,7 +302,7 @@ class UserHttpTest extends TestCase
                 ['id' => '3', 'type' => 'skill'],
             ],
         ]);
-        $this->assertResponseStatus(200);
+        $response->assertStatus(200);
 
         $this->assertEquals(3, $u->skills->count());
     }
@@ -337,7 +322,7 @@ class UserHttpTest extends TestCase
                 ['id' => '3', 'type' => 'skill'],
             ],
         ]);
-        $this->assertResponseStatus(200);
+        $response->assertStatus(200);
 
         $this->assertEquals(17, $u->skills->count());
     }

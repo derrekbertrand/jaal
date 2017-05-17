@@ -5,7 +5,7 @@ namespace DialInno\Jaal;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Http\Exception\HttpResponseException;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use DialInno\Jaal\Objects\Errors\ValidationErrorObject;
 use DialInno\Jaal\Objects\Errors\AuthErrorObject;
 
