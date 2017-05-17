@@ -55,4 +55,9 @@ class TestCase extends \Orchestra\Testbench\TestCase
     {
         return json_decode($r->getContent());
     }
+
+    protected function getPackageProviders($app)
+    {
+        return ['Orchestra\Database\ConsoleServiceProvider'];
+    }
 }
