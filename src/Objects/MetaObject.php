@@ -14,12 +14,13 @@ class MetaObject implements Jsonable, \JsonSerializable {
     protected static $obj_name = 'meta';
 
     protected $data;
-
+    protected $meta;
     protected $parent;
 
     public function __construct(MetaObject $parent, $data)
     {
         $this->parent = $parent;
+        $this->meta = new Collection;
 
         if($data instanceof Collection)
             $this->data = $data;
@@ -47,6 +48,26 @@ class MetaObject implements Jsonable, \JsonSerializable {
             return $this->parent->addError($error_data);
         else
             return $this->parent->addError(new ErrorObject($this->getDoc(), $error_data));
+    }
+
+    /**
+     * Friendly wrapper to add meta object.
+     *
+     * @param  array|Collection|JsonSerializable|ErrorObject $meta_data
+     */
+    public function addMeta($meta_data)
+    {
+        if($meta_data instanceof \JsonSerializable)
+            $meta_data = new Collection($meta_data->jsonSerialize());
+        else if(is_array($meta_data))
+            $meta_data = new Collection($meta_data);
+        //not sure what to do with anything else
+        else if(!($meta_data instanceof Collection))
+            throw new \Exception('Jaal meta-objects must be created from an array, collection, or JsonSerializable object.');
+
+        $this->meta = $this->meta->merge($meta_data);
+
+        return $this;
     }
 
     /**

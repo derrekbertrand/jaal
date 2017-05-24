@@ -28,13 +28,15 @@ class DocObject extends MetaObject {
     protected $data;
     protected $links;
     protected $included;
+    protected $meta;
 
     public function __construct(JsonApi $json_api, int $doc_type = 0)
     {
-        $this->json_api = $json_api;
+        $this->data = new Collection;
         $this->doc_type = $doc_type;
         $this->errors = new Collection;
-        $this->data = new Collection;
+        $this->json_api = $json_api;
+        $this->meta = new Collection;
     }
 
     public function getHttpStatus()
@@ -172,6 +174,8 @@ class DocObject extends MetaObject {
         }
 
         //todo: toplevel meta object
+        if($this->meta->count())
+            $out['meta'] = $this->meta->jsonSerialize();
 
         //if we have errors, ignore the data
         if($this->errors->count())

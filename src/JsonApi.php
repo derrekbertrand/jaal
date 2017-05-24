@@ -18,6 +18,7 @@ abstract class JsonApi
     protected $models = [];
     protected $model_ids = [];
     protected $nicknames = [];
+    protected $sparse_fields = [];
     protected $doc;
 
     /**
@@ -61,6 +62,11 @@ abstract class JsonApi
 
             $q->where($m->getKeyName(), array_shift($ids));
         }
+
+        //do sparse fields on the main model
+        //todo: sparse fields on other models?
+        if(isset($this->sparse_fields[$assoc_model]))
+            call_user_func_array([$q, 'select'], $this->sparse_fields[$assoc_model]);
 
         //each model's relation
         while (count($models)) {
@@ -110,6 +116,13 @@ abstract class JsonApi
 
         $this->doc = new DocObject($this, DocObject::DOC_MANY);
 
+        //handle sparse fields
+        try {
+            $this->sparse($request);
+        } catch(\Exception $e) {
+            $this->doc->addError(['title' => 'Sparse Fieldset Error', 'detail' => $e->getMessage()]);
+        }
+
         //create the base query
         $q = $this->baseQuery();
 
@@ -121,9 +134,18 @@ abstract class JsonApi
         }
 
         //parse the sorting
-        $q = $this->sort($request, $q);
+        try {
+            $q = $this->sort($request, $q);
+        } catch(\Exception $e) {
+            $this->doc->addError(['title' => 'Sorting Error', 'detail' => $e->getMessage()]);
+        }
+
         //parse the pagination
-        $q = $this->paginate($request, $q);
+        try {
+            $q = $this->paginate($request, $q);
+        } catch(\Exception $e) {
+            $this->doc->addError(['title' => 'Pagination Error', 'detail' => $e->getMessage()]);
+        }
 
         //add the paginated response to the doc
         $q->get()->each(function ($item, $key) {
@@ -468,17 +490,49 @@ abstract class JsonApi
         return $query;
     }
 
+    protected function sparse(Request $request)
+    {
+        $types = $request->input('fields', null);
+
+        //todo: default sparse fields per model
+        if(is_null($types))
+            return;
+
+        foreach($types as $type => $fields_str)
+        {
+            if(strlen($fields_str))
+                $this->sparse_fields[$type] = array_unique(array_merge(['id'], explode(',', $fields_str)));
+            else
+                $this->sparse_fields[$type] = ['id'];
+        }
+    }
+
+    public function withPaginationMetadata()
+    {
+        $page_offset = max(0,intval(request()->input('page.offset', 0)));
+
+        //run the base query with count()
+        $count = $this->baseQuery()->count();
+
+        //todo: add pagination links to base doc
+
+        //add total to metadata
+        $this->getDoc()->addMeta([
+            'record_total' => $count,
+            'record_offset' => $page_offset,
+        ]);
+
+        return $this;
+    }
+
     /**
      *
      */
     protected function paginate(Request $request, Builder $query)
     {
-        $page_offset = (int) $request->input('page.offset', 0);
-        $page_limit = (int) $request->input('page.limit', 15);
+        $page_offset = max(0,intval($request->input('page.offset', 0)));
+        $page_limit = min(200,max(10, intval($request->input('page.limit', 15))));
 
-        //todo: bounds check page limit
-
-        // return $query->take($page_size)->skip(($page_number-1)*$page_size);
         return $query->take($page_limit)->skip($page_offset);
     }
 

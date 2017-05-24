@@ -41,6 +41,9 @@ class ResourceObject extends MetaObject {
      */
     public function jsonSerialize()
     {
+        if(!count($this->data['attributes']))
+            return $this->data->only(['id', 'type', 'relationships', 'links', 'meta']);
+
         return $this->data->only(['id', 'type', 'attributes', 'relationships', 'links', 'meta']);
     }
 }
