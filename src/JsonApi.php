@@ -481,8 +481,8 @@ abstract class JsonApi
 
     protected function filter(Request $request, Builder $query)
     {
-        if(!strlen($request->input('filter.rql')))
-            return $query;
+        if(strlen($request->input('filter.search', '')))
+            $query = $this->search($query, $this->models[count($this->models)-1], explode(' ', substr($request->input('filter.search'),0,31)));
 
         //todo: add query builder
         //$query = RqlBuilder::append($query, $request->input('filter.rql'))->getBuilder();
@@ -616,5 +616,20 @@ abstract class JsonApi
                 }
             }
         }
+    }
+
+    /**
+     * Search using a query string.
+     *
+     * @param Builder $query
+     * @param string $type
+     * @param array $search
+     * @return Builder
+     */
+    protected function search($query, $type, $search)
+    {
+        //by deafult, we just ignore search queries
+        //this behavior can be easily overriden on a per API basis
+        return $query;
     }
 }
