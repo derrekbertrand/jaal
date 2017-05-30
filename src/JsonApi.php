@@ -507,24 +507,6 @@ abstract class JsonApi
         }
     }
 
-    public function withPaginationMetadata()
-    {
-        $page_offset = max(0,intval(request()->input('page.offset', 0)));
-
-        //run the base query with count()
-        $count = $this->baseQuery()->count();
-
-        //todo: add pagination links to base doc
-
-        //add total to metadata
-        $this->getDoc()->addMeta([
-            'record_total' => $count,
-            'record_offset' => $page_offset,
-        ]);
-
-        return $this;
-    }
-
     /**
      *
      */
@@ -533,15 +515,31 @@ abstract class JsonApi
         $page_offset = max(0,intval($request->input('page.offset', 0)));
         $page_limit = min(200,max(10, intval($request->input('page.limit', 15))));
 
-        return $query->take($page_limit)->skip($page_offset);
+        $query = $query->take($page_limit)->skip($page_offset);
+
+        if(in_array($this->models[0], $this->config['pagination_data']))
+        {
+            //run the base query with count()
+            $count = $query->count();
+
+            //todo: add pagination links to base doc
+
+            //add total to metadata
+            $this->getDoc()->addMeta([
+                'record_total' => $count,
+                'record_offset' => $page_offset,
+            ]);
+        }
+
+        return $query;
     }
 
     protected function sort(Request $request, Builder $query)
     {
-        $sort_str = $request->input('sort', null);
+        $sort_str = $request->input('sort', '');
 
         //todo: default sorting per model
-        if(is_null($sort_str))
+        if(!strlen($sort_str))
             return $query;
 
         //get all the things we need to sort by
