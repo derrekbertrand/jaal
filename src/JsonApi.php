@@ -94,9 +94,13 @@ abstract class JsonApi
     {
         $this->doc = new DocObject($this, DocObject::DOC_NONE);
 
-        //returns true if successful
-        //todo: might not always be accurate
-        if (!$this->baseQuery()->delete()) {
+        //todo: differentiate between a not found and a failed delete
+        try {
+            //returns true if successful
+            if (!$this->baseQuery()->firstOrFail()->delete()) {
+                throw new \Exception();
+            }
+        } catch (\Exception $e) {
             $this->doc->addError(new NotFoundErrorObject($this->doc));
         }
 
