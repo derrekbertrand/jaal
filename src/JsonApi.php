@@ -515,8 +515,6 @@ abstract class JsonApi
         $page_offset = max(0,intval($request->input('page.offset', 0)));
         $page_limit = min(200,max(10, intval($request->input('page.limit', 15))));
 
-        $query = $query->take($page_limit)->skip($page_offset);
-
         if(in_array($this->models[0], $this->config['pagination_data']))
         {
             //run the base query with count()
@@ -530,6 +528,8 @@ abstract class JsonApi
                 'record_offset' => $page_offset,
             ]);
         }
+
+        $query = $query->take($page_limit)->skip($page_offset);
 
         return $query;
     }
