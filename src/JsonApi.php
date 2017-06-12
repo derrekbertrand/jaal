@@ -192,7 +192,7 @@ abstract class JsonApi
     public function updateToOne(string $nickname, $id = null)
     {
         $this->doc = new DocObject($this, DocObject::DOC_ONE_IDENT);
-        $body = json_decode(request()->getContent(), true);
+        $body = json_decode(request()->getContent(), true) ?: request()->all();
 
         //if we don't have an id, and we do have one in the body...
         if($id === null && array_key_exists('data', $body) && array_key_exists('id', $body['data']))
@@ -223,7 +223,8 @@ abstract class JsonApi
             //drag the ids out of the request
             if(!count($ids))
             {
-                foreach(json_decode(request()->getContent(), true)['data'] as $rid)
+                $body = json_decode(request()->getContent(), true) ?: request()->all();
+                foreach($body['data'] as $rid)
                     $ids[] = $rid['id'];
             }
 
@@ -261,7 +262,8 @@ abstract class JsonApi
             //drag the ids out of the request
             if(!count($ids))
             {
-                foreach(json_decode(request()->getContent(), true)['data'] as $rid)
+                $body = json_decode(request()->getContent(), true) ?: request()->all();
+                foreach($body['data'] as $rid)
                     $ids[] = $rid['id'];
             }
 
@@ -295,7 +297,8 @@ abstract class JsonApi
             //drag the ids out of the request
             if(!count($ids))
             {
-                foreach(json_decode(request()->getContent(), true)['data'] as $rid)
+                $body = json_decode(request()->getContent(), true) ?: request()->all();
+                foreach($body['data'] as $rid)
                     $ids[] = $rid['id'];
             }
 
@@ -332,7 +335,8 @@ abstract class JsonApi
             //drag the ids out of the request
             if(!count($ids))
             {
-                foreach(json_decode(request()->getContent(), true)['data'] as $rid)
+                $body = json_decode(request()->getContent(), true) ?: request()->all();
+                foreach($body['data'] as $rid)
                     $ids[] = $rid['id'];
             }
 
@@ -381,7 +385,8 @@ abstract class JsonApi
             //get FQCL of model
             $model = $this->config['models'][$this->models[0]];
 
-            $attr = count($attributes) ? $attributes : json_decode(request()->getContent(), true)['data']['attributes'];
+            $body = json_decode(request()->getContent(), true) ?: request()->all();
+            $attr = count($attributes) ? $attributes : $body['data']['attributes'];
 
             //run the query
             $this->doc->addData($model::create($attr));
@@ -409,7 +414,8 @@ abstract class JsonApi
             $db_response = $this->baseQuery()->firstOrFail();
 
             //drag the attributes out of the request
-            $attr = count($attributes) ? $attributes : json_decode(request()->getContent(), true)['data']['attributes'];
+            $body = json_decode(request()->getContent(), true) ?: request()->all();
+            $attr = count($attributes) ? $attributes : $body['data']['attributes'];
 
             //todo: check for failed update
             $db_response->update($attr);
