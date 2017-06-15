@@ -165,8 +165,14 @@ abstract class JsonApi
 
         //add the paginated response to the doc
         //todo: add exception handling
-        $this->paginate(request(), $this->baseQuery())
-            ->firstOrFail()->$nickname->each(function ($item, $key) {
+        $this->paginate(
+            request(),
+            $this->baseQuery()
+                ->firstOrFail()
+                ->$nickname()
+                ->getQuery()
+            )
+            ->each(function ($item, $key) {
                 $this->doc->addData($item);
             });
 
