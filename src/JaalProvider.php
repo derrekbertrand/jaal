@@ -6,6 +6,17 @@ use Illuminate\Support\ServiceProvider;
 
 class JaalProvider extends ServiceProvider
 {
+
+    /**
+     * Commands to register.
+     *
+     * @var commands
+     */
+    protected $commands =[
+
+        Commands\ApiMakeCommand::class
+
+    ];
     /**
      * Bootstrap the application services.
      *
@@ -13,9 +24,7 @@ class JaalProvider extends ServiceProvider
      */
     public function boot()
     {
-        $this->publishes([
-            __DIR__.'/../config/jaal.php' => 'jaal.php'
-        ]);
+        //
     }
 
     /**
@@ -25,6 +34,6 @@ class JaalProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        $this->commands($this->commands);
     }
 }
