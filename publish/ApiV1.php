@@ -1,9 +1,10 @@
 <?php
 
 namespace App\Http;
-/*This is the class that is used as a template for make command*/
-class ApiV1 extends \DialInno\Jaal\JsonApi {
 
+/*This is the class that is used as a template for make command*/
+class ApiV1 extends \DialInno\Jaal\JsonApi
+{
     public static $api_version = 'v1';
 
     /**
@@ -18,7 +19,7 @@ class ApiV1 extends \DialInno\Jaal\JsonApi {
 
     /**
      * This is a name-value association of a JSON:API 'type' and the
-     * controller Laravel should use to respond to requests about that
+     * controller Laravel should use to respond to requests a{$className}bout that
      * Model. This is used to construct routes automatically.
      *
      * For nested resources, use dot delimited syntax.
@@ -62,5 +63,4 @@ class ApiV1 extends \DialInno\Jaal\JsonApi {
         //     'users' => 'many-to-many',
         // ]
     ];
-
 }
