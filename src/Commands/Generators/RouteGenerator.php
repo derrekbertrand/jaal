@@ -36,11 +36,12 @@ class RouteGenerator extends Generator
             $this->command->error("It seems app/Http/{$classNameWanted}.php's api routes are already defined in routes/api.php");
         } else {
             //Not the cleanest way --Todo: cleanup -left align?
-            $content = "
-            Route::group(['prefix' => 'v1','as' => 'api.v1.','namespace' => 'Api'], function () {
-                App\Http\\{$classNameWanted}::routes();
-            });";
-
+        $content =<<<PHP
+Route::group(['prefix' => 'v1','as' => 'api.v1.','namespace' => 'Api'], function () { 
+    App\Http\\{$classNameWanted}::routes();
+});
+PHP;
+          
             //tack on at the end of the routes file.
             $routes = $routesFileContents."\n".$content;
             //save the file
