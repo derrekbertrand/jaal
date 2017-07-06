@@ -13,7 +13,7 @@ class RouteGenerator extends Generator
      * Register the routes if the class doesnt exist
      *
      * @var array $api_info
-     * 
+     *
      **/
     public function generate(array $api_info)
     {
@@ -21,9 +21,9 @@ class RouteGenerator extends Generator
     }
 
     /**
-     * Register routes for a given api class
+     * Register routes for the given api info
      *
-     * @var array $className
+     * @var array $api_info
      **/
     private function registerRoutes(array $api_info)
     {
@@ -32,19 +32,21 @@ class RouteGenerator extends Generator
         $routesFileContents = $this->files->get($apiBasePath);
 
         $full_name = $api_info['full_name'];
-        //remove brackets that show up during classNameWanted output...TODO //cleanup, shouldnt have to do this??
-        $routeSignature = str_replace("{","","\App\Http\{$full_name}::routes();");
 
-        $routeSignature = str_replace("}","",$routeSignature);
+        $routeSignature = "\App\Http\\$full_name::routes();";
+
 
         //check if app/Http/${classNameWanted}.php has routes registered...TODO cleanup
         if ($this->files->exists(app_path("Http\\".$full_name.".php")) && str_contains($routesFileContents, $routeSignature)) {
-            $this->command->error("It seems app/Http/{$full_name}.php's api routes are already defined in routes/api.php");
+            $this->command->error("It seems app/Http/\\$full_name.php's api routes are already defined in routes/api.php");
         } else {
-        //Not the cleanest way but keeps text formatted
-        $formattedApiName = kebab_case($api_info['name']);
-        $content =<<<PHP
-Route::group(['prefix' => '{$api_info['version']}','as' => '{$formattedApiName}.{$api_info['version']}.','namespace' => 'Api'], function () { 
+            
+            //create a api kebab case name for as in route definition e.g 'as'=>'api-name-v1'
+            $formattedApiName = kebab_case($api_info['name']);
+
+            //Not the cleanest way but keeps text formatted
+            $content =<<<PHP
+Route::group(['prefix' => '{$api_info['version']}','as' => '{$formattedApiName}.{$api_info['version']}.','namespace' => '{$api_info['name']}'], function () { 
     \App\Http\\{$full_name}::routes();
 });
 PHP;
@@ -54,7 +56,8 @@ PHP;
             //save the file
             $this->files->put($apiBasePath, $routes);
 
-            $this->command->info("Succesfully registered app/Http/{$full_name}.php's api version: '{$api_info['version']}' routes!");
+            $this->command->info("Succesfully registered app/Http/{$full_name}.php's routes! api version: '{$api_info['version']}'");
         }
     }
+
 }

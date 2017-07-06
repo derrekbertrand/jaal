@@ -15,11 +15,27 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 abstract class JsonApi
 {
+    //validate the class...move to middleware?
     use ValidatesApiClasses;
+    /**
+    * The name of the calling api class
+    * @var array
+    **/
+    protected $class_name;
+    /**
+     * The current request models were
+     * working with
+     * @var array
+     **/
+    protected $current_models;
 
-    protected $api_class;
+     /**
+     * The current request models were
+     * working with
+     * @var array
+     **/
+    protected $current_models_ids;
     protected $doc;
-    protected $model_ids = [];
     protected $nicknames = [];
     protected $sparse_fields = [];
     
@@ -35,30 +51,31 @@ abstract class JsonApi
      */
     public function __construct()
     {
-        $this->api_class = get_called_class();
-       
-        //fail if a static $api_version is not set
-        $this->hasPropertiesSetOrFail($this->api_class);
+
         //we keep an internal doc so we can make a response
         $this->doc = new DocObject($this);
-    }
 
-    public function getCaller(){
-        return $this->caller;
+        $this->class_name = get_called_class();
+ 
+        //verify class properties are set or fail...this can probably be moved into middlware
+        $this->hasPropertiesSetOrFail($this->class_name);
+
     }
 
     protected function baseQuery()
     {
         //we work from outside in
-        $models = array_reverse($this->models);
-        $ids = array_reverse($this->model_ids);
-        $nicknames = array_reverse($this->nicknames);
+        $models = array_reverse($this->current_models);
 
+        $ids = array_reverse($this->current_model_ids);
+
+        $nicknames = array_reverse($this->nicknames);
+    
         //keep track of the top model
         $assoc_model = array_shift($models);
-
+        dd("Left off in baseQuery()");
         //trivial case
-        $q = $this->config['models'][$assoc_model]::query();
+        $q = static::$models[$assoc_model]::query();
 
         //if we are looking for a specific instance
         if (count($ids) > count($models)) {
@@ -124,6 +141,8 @@ abstract class JsonApi
         //in the future, we might have them pass it in or something
         $request = request();
 
+
+
         $this->doc = new DocObject($this, DocObject::DOC_MANY);
 
         //handle sparse fields
@@ -135,7 +154,7 @@ abstract class JsonApi
 
         //create the base query
         $q = $this->baseQuery();
-
+        dd($q);
         //handle filters
         try {
             $q = $this->filter($request, $q);
@@ -458,11 +477,29 @@ abstract class JsonApi
         return $this;
     }
 
-    public function setModelIds(array $modelIds)
-    {
-        $this->model_ids = $modelIds;
+    /**
+     * Set the current request's models
+     * we are working with.
+     *
+     * @var array $api_models
+     *  
+     **/
 
-        return $this;
+    public function setCurrentRequestModels(array $api_models)
+    {
+        $this->current_models = $api_models;
+    }
+    /**
+     * Set the current request's models id's
+     * we are working with.
+     *
+     * @var array $api_models
+     *  
+     **/
+    public function setCurrentRequestModelIds(array $modelIds)
+    {
+        
+        $this->current_model_ids = $modelIds;
     }
 
     public function setNicknames(array $nicknames)
@@ -478,20 +515,15 @@ abstract class JsonApi
     }
     /**
      * Infer all of the data
-     * Set any ids's 
      *
      **/
-    
     public function inferAll()
     {
-        
-        $caller = debug_backtrace(false, 2)[1]["class"];
+       
+        $caller = debug_backtrace(false, 2)[1];
 
-        $this->setModelIds(array_values(\Route::getCurrentRoute()->parameters()));
-
-        dd(explode('.', array_search($caller, static::$models)));
-
-
+        $this->setCurrentRequestModelIds(array_values(\Route::getCurrentRoute()->parameters()));
+        $this->setCurrentRequestModels(explode('.', array_search($caller['class'], static::$routes)));
         $this->{$caller['function']}();
 
         return $this;
@@ -525,7 +557,6 @@ abstract class JsonApi
         if (is_null($types)) {
             return;
         }
-
         foreach ($types as $type => $fields_str) {
             if (strlen($fields_str)) {
                 $this->sparse_fields[$type] = array_unique(array_merge(['id'], explode(',', $fields_str)));
@@ -596,10 +627,6 @@ abstract class JsonApi
     {
         $api = new static;
         //make sure this class has all the properties it needs.
-        // Route::get(null, [
-        //     'as' => 'index-endpoints',
-        //     'uses' => '\\'.static::class.'@indexEndpoints',
-        // ]);
 
         //get the group they want
         $routes = is_array(static::$routes) && !empty(static::$routes) ? static::$routes :[];
@@ -618,8 +645,9 @@ abstract class JsonApi
 
         //define relationship routes
         foreach ($relationships as $from => $all_relations) {
+
             foreach ($all_relations as $nickname => $rel_type) {
-                $controller = config('jaal.'.static::$version.'.routes.'.$from);
+                $controller = static::$routes[$from];
 
                 Route::get("$from/{{$from}}/relationships/$nickname", [
                     'as' => "$from.relationships.$nickname.show",
@@ -638,7 +666,6 @@ abstract class JsonApi
                         'as' => "$from.relationships.$nickname.store",
                         'uses' => '\\'.$controller.'@store'.studly_case($nickname)
                     ]);
-
                     //delete for drop only
                     Route::delete("$from/{{$from}}/relationships/$nickname", [
                         'as' => "$from.relationships.$nickname.destroy",
@@ -647,6 +674,7 @@ abstract class JsonApi
                 }
             }
         }
+        
     }
 
     /**

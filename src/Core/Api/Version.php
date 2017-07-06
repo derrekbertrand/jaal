@@ -7,8 +7,10 @@ class Version
 
 	public function __construct(string $version)
 	{
-        //construct a version number remove any chars that are not numbers or a .
+        //construct a version number remove any chars that are not numbers or a dot
 		$this->version =  preg_replace("/[^0-9\.]/","", (string)$version);
+        //then make sure it isnt completly empty
+        $this->version = $this->version == "" ? "1" : $this->version;
 
 	}
 

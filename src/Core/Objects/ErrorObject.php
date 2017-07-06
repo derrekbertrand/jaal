@@ -9,9 +9,9 @@ use Illuminate\Support\Collection;
 /**
  * Responsible for serializing a error object.
  */
-class ErrorObject extends MetaObject {
+class ErrorObject extends GenericObject {
 
-    public function __construct(MetaObject $parent, $data)
+    public function __construct(GenericObject $parent, $data)
     {
         parent::__construct($parent, $data);
 
@@ -22,11 +22,19 @@ class ErrorObject extends MetaObject {
         ]))->merge($this->data);
     }
 
+    /**
+     * Return the statuscode
+     * @return string  
+     **/
     public function getStatus()
     {
         return strval($this->data->get('status', '400'));
     }
-
+    
+    /**
+     * Return the statuscode
+     * @return string  
+     **/
     public function jsonSerialize()
     {
         return $this->data->only(['id', 'links', 'status', 'code', 'title', 'detail', 'source', 'meta']);

@@ -21,32 +21,11 @@ abstract class Generator
      * @var \Illuminate\Filesystem\Filesystem
      */
     protected $files;
-
-    /**
-     * The version of the api/resource
-     *
-     * @var DialInno\Jaal\Core\Api\Version;
-     */
-    protected $version;
-
     public function __construct(Filesystem $files, Command $command)
     {
         $this->files = $files;
         $this->command= $command;
-
     }
-
-    /**
-     * get the version of the api/resource
-     *
-     * @return DialInno\Jaal\Core\Api\Version;
-     */
-    public function getVersion()
-    {
-        return $this->version;
-    }
-     
-
     /**
      * Generate the api class resource
      * @var $api_info

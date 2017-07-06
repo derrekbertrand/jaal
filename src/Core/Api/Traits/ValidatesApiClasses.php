@@ -2,11 +2,11 @@
 
 namespace DialInno\Jaal\Core\Api\Traits;
 
-use DialInno\Jaal\Core\Errors\Exceptions\ApiModelsUndefinedException;
-use DialInno\Jaal\Core\Errors\Exceptions\ApiRoutesUndefinedException;
-use DialInno\Jaal\Core\Errors\Exceptions\ApiVersionUndefinedException;
-use DialInno\Jaal\Core\Errors\Exceptions\ApiPropertiesUndefinedException;
-use DialInno\Jaal\Core\Errors\Exceptions\ApiRelationshipsUndefinedException;
+use DialInno\Jaal\Core\Errors\Exceptions\Config\ApiModelsUndefinedException;
+use DialInno\Jaal\Core\Errors\Exceptions\Config\ApiRoutesUndefinedException;
+use DialInno\Jaal\Core\Errors\Exceptions\Config\ApiVersionUndefinedException;
+use DialInno\Jaal\Core\Errors\Exceptions\Config\ApiPropertiesUndefinedException;
+use DialInno\Jaal\Core\Errors\Exceptions\Config\ApiRelationshipsUndefinedException;
 
 trait ValidatesApiClasses
 {

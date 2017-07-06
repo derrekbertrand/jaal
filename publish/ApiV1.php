@@ -1,11 +1,16 @@
 <?php
 
 namespace App\Http;
+use \DialInno\Jaal\Core\Api\JsonApi;
 
-/*This is the class that is used as a template for make command*/
-class ApiV1 extends \DialInno\Jaal\Core\Api\JsonApi
+class ApiV1 extends JsonApi
 {
-    public static $version = '1.0';
+    /**
+     * The version of the api.
+     *
+     * @var string
+     **/
+    public static $version = 'v1';
 
     /**
      * This array is serailized into every JSON response sent back to the 
@@ -39,7 +44,6 @@ class ApiV1 extends \DialInno\Jaal\Core\Api\JsonApi
      *
      * @var array
      **/
-    //Todo...existing model property..named api_models for now.
     protected static $models = [
         'user'  => \DialInno\Jaal\Tests\Models\User::class,
         // 'post'  => \DialInno\Jaal\Tests\Models\Post::class,

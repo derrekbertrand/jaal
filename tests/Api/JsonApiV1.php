@@ -6,6 +6,6 @@ use DialInno\Jaal\JsonApi;
 
 class JsonApiV1 extends JsonApi
 {
-    public static $api_version = 'v1';
+    public static $version = 'v1';
     // public $api_route_prefix = 'api.v1.';
 }

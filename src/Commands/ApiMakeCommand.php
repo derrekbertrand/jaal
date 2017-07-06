@@ -70,15 +70,17 @@ class ApiMakeCommand extends Command
     public function handle()
     {
 
-
+        //what were working with
         $args = $this->arguments();
 
         $generators = static::$generators;
 
         $options =$this->options();
 
+        //check if the options and args are available
         if (array_key_exists('api_name', $args) && array_key_exists('api_version', $options)){
 
+            //if so set up a version
             $api_version = new Version($options['api_version']);
 
             $api_info = [

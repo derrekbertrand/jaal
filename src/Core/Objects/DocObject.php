@@ -2,13 +2,15 @@
 
 namespace DialInno\Jaal\Core\Objects;
 
-use DialInno\Jaal\Core\Api\JsonApi;
 use Illuminate\Support\Collection;
+use DialInno\Jaal\Core\Api\JsonApi;
+use DialInno\Jaal\Core\Objects\GenericObject;
+use DialInno\Jaal\Core\Errors\Exceptions\ApiException;
 
 /**
  * Responsible for serializing a document and preparing a response.
  */
-class DocObject extends MetaObject {
+class DocObject extends GenericObject {
 
     const DOC_NONE = 0;
     const DOC_ONE = 1;
@@ -75,8 +77,8 @@ class DocObject extends MetaObject {
      */
     public function addError($error_data)
     {
-        if(!($error_data instanceof ErrorObject))
-            $error_data = new ErrorObject($this->getDoc(), $error_data);
+        if(!($error_data instanceof ApiException))
+            $error_data = new ApiException($this->getDoc(), $error_data);
 
         $this->errors->push($error_data);
 
