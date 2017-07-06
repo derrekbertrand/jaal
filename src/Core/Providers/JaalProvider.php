@@ -1,6 +1,6 @@
 <?php
 
-namespace DialInno\Jaal;
+namespace DialInno\Jaal\Core\Providers;
 
 use Illuminate\Support\ServiceProvider;
 
@@ -14,7 +14,7 @@ class JaalProvider extends ServiceProvider
      */
     protected $commands =[
 
-        Commands\ApiMakeCommand::class
+        \DialInno\Jaal\Commands\ApiMakeCommand::class
 
     ];
     /**

@@ -12,7 +12,7 @@ class ClassGenerator extends Generator
      *
      * @var static $apiClassPath
      */
-    protected static $apiClassPath = __DIR__."/../../../publish/ApiV1.php";
+    protected static $apiClassTemplatePath = __DIR__."/../../../publish/ApiV1.php";
     /**
      * The filesystem instance.
      *
@@ -41,9 +41,12 @@ class ClassGenerator extends Generator
      **/
     private function createClass(string $classNameWanted)
     {
+
+
         //was a class name given?
-        $classNameWanted = $classNameWanted == null ? "ApiV1" :$classNameWanted;
+        $classNameWanted = $classNameWanted == null ? "ApiV{$this->version->getFormattedForClassNameVersion()}" :$classNameWanted;
         //default to saving to the app/Http/ dir.
+
         $class_path =app_path("Http/{$classNameWanted}.php");
         //Next verify class doesnt already exits
         if (!$this->files->exists($class_path)) {
@@ -51,6 +54,11 @@ class ClassGenerator extends Generator
             $newClass = $this->files->get(static::$apiClassTemplatePath);
             //Replace the default ApiV1 if needed--Todo cleanup
             $newClass = str_replace('ApiV1', $classNameWanted, $newClass);
+
+            //reformat the version back to 1.*.* if needed
+            $version = $this->version->getSemanticVersion();
+            
+            $newClass = str_replace("public static \$api_version = 'v1';","public static \$api_version = '{$version}';",$newClass);
             //replace the contents of the actual file
             $this->files->put($class_path, $newClass);
 

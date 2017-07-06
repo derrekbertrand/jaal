@@ -1,9 +1,9 @@
 <?php
 
-namespace DialInno\Jaal\Objects;
+namespace DialInno\Jaal\Core\Objects;
 
-use DialInno\Jaal\JsonApi;
-use DialInno\Jaal\Objects\Errors\SerializationErrorObject;
+use DialInno\Jaal\Core\Api\JsonApi;
+use DialInno\Jaal\Core\Objects\Errors\SerializationErrorObject;
 use Illuminate\Support\Collection;
 
 /**

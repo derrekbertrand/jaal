@@ -1,8 +1,8 @@
 <?php
 
-namespace DialInno\Jaal\Objects\Errors;
+namespace DialInno\Jaal\Core\Errors;
 
-use DialInno\Jaal\JsonApi;
+use DialInno\Jaal\Core\JsonApi;
 use Illuminate\Support\Collection;
 use DialInno\Jaal\Objects\ErrorObject;
 use DialInno\Jaal\Objects\MetaObject;

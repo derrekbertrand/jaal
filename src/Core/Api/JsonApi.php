@@ -1,25 +1,28 @@
 <?php
 
-namespace DialInno\Jaal;
+namespace DialInno\Jaal\Core\Api;
 
+use DialInno\Jaal\Core\Objects\DocObject;
+use DialInno\Jaal\Core\Objects\ErrorObject;
+use DialInno\Jaal\Core\Objects\Errors\NotFoundErrorObject;
+use DialInno\Jaal\Core\Api\Traits\ValidatesApiClasses;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Support\Collection;
-use Illuminate\Routing\Controller;
-use Illuminate\Http\Request;
-use DialInno\Jaal\Objects\DocObject;
-use DialInno\Jaal\Objects\ErrorObject;
-use DialInno\Jaal\Objects\Errors\NotFoundErrorObject;
 
 abstract class JsonApi
 {
-    protected $config = null;
-    protected $models = [];
+    use ValidatesApiClasses;
+
+    protected $api_class;
+    protected $doc;
     protected $model_ids = [];
     protected $nicknames = [];
     protected $sparse_fields = [];
-    protected $doc;
+    
 
     /**
      * Prepare a JsonApi object based on the model types passed in.
@@ -32,15 +35,16 @@ abstract class JsonApi
      */
     public function __construct()
     {
-        if (!property_exists($this, 'api_version')) {
-            throw new \Exception('JsonApi must define `protected static $api_version;`.');
-        }
-
-        //shorthand for the config
-        $this->config = config('jaal.'.static::$api_version);
-
+        $this->api_class = get_called_class();
+       
+        //fail if a static $api_version is not set
+        $this->hasPropertiesSetOrFail($this->api_class);
         //we keep an internal doc so we can make a response
         $this->doc = new DocObject($this);
+    }
+
+    public function getCaller(){
+        return $this->caller;
     }
 
     protected function baseQuery()
@@ -461,13 +465,6 @@ abstract class JsonApi
         return $this;
     }
 
-    public function setModels(array $models)
-    {
-        $this->models = $models;
-
-        return $this;
-    }
-
     public function setNicknames(array $nicknames)
     {
         $this->nicknames = $nicknames;
@@ -479,18 +476,22 @@ abstract class JsonApi
     {
         return $this->doc;
     }
-
-    public function getConfig()
-    {
-        return $this->config;
-    }
-
+    /**
+     * Infer all of the data
+     * Set any ids's 
+     *
+     **/
+    
     public function inferAll()
     {
-        $caller = debug_backtrace(false, 2)[1];
+        
+        $caller = debug_backtrace(false, 2)[1]["class"];
 
         $this->setModelIds(array_values(\Route::getCurrentRoute()->parameters()));
-        $this->setModels(explode('.', array_search($caller['class'], $this->config['routes'])));
+
+        dd(explode('.', array_search($caller, static::$models)));
+
+
         $this->{$caller['function']}();
 
         return $this;
@@ -593,20 +594,24 @@ abstract class JsonApi
      */
     public static function routes()
     {
-        if (!isset(static::$api_version) && !strlen(static::$api_version)) {
-            throw new \Exception('JsonApi must define `protected static $api_version;`.');
-        }
-
+        $api = new static;
+        //make sure this class has all the properties it needs.
         // Route::get(null, [
         //     'as' => 'index-endpoints',
         //     'uses' => '\\'.static::class.'@indexEndpoints',
         // ]);
 
         //get the group they want
-        $routes = config('jaal.'.static::$api_version.'.routes');
-        $relationships = config('jaal.'.static::$api_version.'.relationships');
+        $routes = is_array(static::$routes) && !empty(static::$routes) ? static::$routes :[];
+
+        $relationships = is_array(static::$relationships) && !empty(static::$relationships) ? static::$relationships :[];
+
+
+        //LEFT OFF Here
+
 
         //define the common routes
+
         foreach ($routes as $name => $controller) {
             Route::resource($name, '\\'.$controller, ['except' => ['create', 'edit']]);
         }
@@ -614,7 +619,7 @@ abstract class JsonApi
         //define relationship routes
         foreach ($relationships as $from => $all_relations) {
             foreach ($all_relations as $nickname => $rel_type) {
-                $controller = config('jaal.'.static::$api_version.'.routes.'.$from);
+                $controller = config('jaal.'.static::$version.'.routes.'.$from);
 
                 Route::get("$from/{{$from}}/relationships/$nickname", [
                     'as' => "$from.relationships.$nickname.show",
