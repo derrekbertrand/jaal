@@ -23,48 +23,45 @@ class ClassGenerator extends Generator
     /**
      * Generate the class if it doesnt exist
      *
-     * @var string $classNameWanted
+     * @var array $api_info
      * @var  Illuminate\Console\Command $command
      *
      **/
-    public function generate(string $classNameWanted)
+    public function generate(array $api_info)
     {
-        $this->createClass($classNameWanted);
+        $this->createClass($api_info);
     }
 
     /**
      * Create a class if it doesnt exist
      *
      *
-     * @var string $className
+     * @var array $api_info
      * @var Illuminate\Console\Command $command
      **/
-    private function createClass(string $classNameWanted)
+    private function createClass(array $api_info)
     {
 
 
         //was a class name given?
-        $classNameWanted = $classNameWanted == null ? "ApiV{$this->version->getFormattedForClassNameVersion()}" :$classNameWanted;
+        $generatedClassName = $api_info['name'] == null ? "ApiV{$api_info['version']}" :$api_info['full_name'];
         //default to saving to the app/Http/ dir.
 
-        $class_path =app_path("Http/{$classNameWanted}.php");
+        $class_path =app_path("Http/{$generatedClassName}.php");
         //Next verify class doesnt already exits
         if (!$this->files->exists($class_path)) {
             //get the template
             $newClass = $this->files->get(static::$apiClassTemplatePath);
             //Replace the default ApiV1 if needed--Todo cleanup
-            $newClass = str_replace('ApiV1', $classNameWanted, $newClass);
-
-            //reformat the version back to 1.*.* if needed
-            $version = $this->version->getSemanticVersion();
+            $newClass = str_replace('ApiV1', $generatedClassName, $newClass);
             
-            $newClass = str_replace("public static \$api_version = 'v1';","public static \$api_version = '{$version}';",$newClass);
+            $newClass = str_replace("public static \$api_version = 'v1';","public static \$api_version = '{$api_info['version']}';",$newClass);
             //replace the contents of the actual file
             $this->files->put($class_path, $newClass);
 
-            $this->command->info("Succesfully created app/Http/{$classNameWanted}.php!");
+            $this->command->info("Succesfully created app/Http/{$generatedClassName}.php!");
         } else {
-            $this->command->error("The class app/Http/{$classNameWanted}.php already exists!");
+            $this->command->error("The class app/Http/{$generatedClassName}.php already exists!");
         }
     }
 }

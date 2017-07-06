@@ -29,11 +29,11 @@ abstract class Generator
      */
     protected $version;
 
-    public function __construct(Filesystem $files, Command $command, Version $version)
+    public function __construct(Filesystem $files, Command $command)
     {
         $this->files = $files;
         $this->command= $command;
-        $this->version = $version;
+
     }
 
     /**
@@ -49,8 +49,8 @@ abstract class Generator
 
     /**
      * Generate the api class resource
-     * @var $classNameWanted
+     * @var $api_info
      *
      **/
-    abstract public function generate(string $classNameWanted);
+    abstract public function generate(array $api_info);
 }

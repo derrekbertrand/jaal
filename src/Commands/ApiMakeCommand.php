@@ -81,16 +81,19 @@ class ApiMakeCommand extends Command
 
             $api_version = new Version($options['api_version']);
 
-            //SomeNameV* : . are replaced with _
-            $classNameWanted = $args['api_name']."V{$api_version->getFormattedForClassNameVersion()}";
-
+            $api_info = [
+                'name'=>$args['api_name'],
+                'full_name'=>$args['api_name']."V{$api_version->getFormattedForClassNameVersion()}",
+                'version'=>"v{$api_version->getSemanticVersion()}",
+                'version_name'=>"V{$api_version->getFormattedForClassNameVersion()}"
+            ];
             foreach ($generators as $class) {
                
                 $generator = new $class($this->files, $this, $api_version);
 
                 if ($generator instanceof \DialInno\Jaal\Commands\Generators\Generator) {
 
-                    $generator->generate($classNameWanted);
+                    $generator->generate($api_info);
                 } else {
                     $this->error("Config Error:{$class} is not a valid Generator object. {$class} not processed!");
                 }
