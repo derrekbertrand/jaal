@@ -32,8 +32,9 @@ abstract class JsonApi
      */
     public function __construct()
     {
-        if(!property_exists($this, 'api_version'))
+        if (!property_exists($this, 'api_version')) {
             throw new \Exception('JsonApi must define `protected static $api_version;`.');
+        }
 
         //shorthand for the config
         $this->config = config('jaal.'.static::$api_version);
@@ -65,8 +66,9 @@ abstract class JsonApi
 
         //do sparse fields on the main model
         //todo: sparse fields on other models?
-        if(isset($this->sparse_fields[$assoc_model]))
+        if (isset($this->sparse_fields[$assoc_model])) {
             call_user_func_array([$q, 'select'], $this->sparse_fields[$assoc_model]);
+        }
 
         //each model's relation
         while (count($models)) {
@@ -123,7 +125,7 @@ abstract class JsonApi
         //handle sparse fields
         try {
             $this->sparse($request);
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
             $this->doc->addError(['title' => 'Sparse Fieldset Error', 'detail' => $e->getMessage()]);
         }
 
@@ -133,21 +135,21 @@ abstract class JsonApi
         //handle filters
         try {
             $q = $this->filter($request, $q);
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
             $this->doc->addError(['title' => 'Filter Error', 'detail' => $e->getMessage()]);
         }
 
         //parse the sorting
         try {
             $q = $this->sort($request, $q);
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
             $this->doc->addError(['title' => 'Sorting Error', 'detail' => $e->getMessage()]);
         }
 
         //parse the pagination
         try {
             $q = $this->paginate($request, $q);
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
             $this->doc->addError(['title' => 'Pagination Error', 'detail' => $e->getMessage()]);
         }
 
@@ -193,8 +195,9 @@ abstract class JsonApi
             dd($e);
         }
 
-        if($res !== null)
+        if ($res !== null) {
             $this->doc->addData($res);
+        }
 
         return $this;
     }
@@ -205,14 +208,16 @@ abstract class JsonApi
         $body = json_decode(request()->getContent(), true) ?: request()->all();
 
         //if we don't have an id, and we do have one in the body...
-        if($id === null && array_key_exists('data', $body) && array_key_exists('id', $body['data']))
+        if ($id === null && array_key_exists('data', $body) && array_key_exists('id', $body['data'])) {
             $id = $body['data']['id'];
+        }
 
         $res = $this->baseQuery()->firstOrFail();
         $res->$nickname()->associate($id)->save();
 
-        if($id !== null)
+        if ($id !== null) {
             $this->doc->addData($res->$nickname);
+        }
 
         return $this;
     }
@@ -231,11 +236,11 @@ abstract class JsonApi
             $db_response = $this->baseQuery()->firstOrFail();
 
             //drag the ids out of the request
-            if(!count($ids))
-            {
+            if (!count($ids)) {
                 $body = json_decode(request()->getContent(), true) ?: request()->all();
-                foreach($body['data'] as $rid)
+                foreach ($body['data'] as $rid) {
                     $ids[] = $rid['id'];
+                }
             }
 
             //todo: check for failed update
@@ -243,8 +248,9 @@ abstract class JsonApi
             //this passes back meta info about the query
             $db_response->$nickname()->sync($ids);
 
-            foreach($db_response->$nickname as $relation)
+            foreach ($db_response->$nickname as $relation) {
                 $this->doc->addData($relation);
+            }
         } catch (ModelNotFoundException $e) {
             $this->doc->addError(new ResourceNotFoundError());
             return $this;
@@ -270,18 +276,19 @@ abstract class JsonApi
             $db_response = $this->baseQuery()->firstOrFail();
 
             //drag the ids out of the request
-            if(!count($ids))
-            {
+            if (!count($ids)) {
                 $body = json_decode(request()->getContent(), true) ?: request()->all();
-                foreach($body['data'] as $rid)
+                foreach ($body['data'] as $rid) {
                     $ids[] = $rid['id'];
+                }
             }
 
             //todo: check for failed update
             $db_response->$nickname()->detach($ids);
 
-            foreach($db_response->$nickname as $relation)
+            foreach ($db_response->$nickname as $relation) {
                 $this->doc->addData($relation);
+            }
         } catch (ModelNotFoundException $e) {
             $this->doc->addError(new ResourceNotFoundError());
             return $this;
@@ -305,11 +312,11 @@ abstract class JsonApi
             $db_response = $this->baseQuery()->firstOrFail();
 
             //drag the ids out of the request
-            if(!count($ids))
-            {
+            if (!count($ids)) {
                 $body = json_decode(request()->getContent(), true) ?: request()->all();
-                foreach($body['data'] as $rid)
+                foreach ($body['data'] as $rid) {
                     $ids[] = $rid['id'];
+                }
             }
 
             //todo: check for failed update
@@ -318,8 +325,9 @@ abstract class JsonApi
 
             $foreign_model::whereIn($foreign_model->getKeyName(), $ids)->update([$fk => $db_response->id]);
 
-            foreach($db_response->$nickname as $relation)
+            foreach ($db_response->$nickname as $relation) {
                 $this->doc->addData($relation);
+            }
         } catch (ModelNotFoundException $e) {
             $this->doc->addError(new ResourceNotFoundError());
             return $this;
@@ -343,18 +351,19 @@ abstract class JsonApi
             $db_response = $this->baseQuery()->firstOrFail();
 
             //drag the ids out of the request
-            if(!count($ids))
-            {
+            if (!count($ids)) {
                 $body = json_decode(request()->getContent(), true) ?: request()->all();
-                foreach($body['data'] as $rid)
+                foreach ($body['data'] as $rid) {
                     $ids[] = $rid['id'];
+                }
             }
 
             //todo: check for failed update
             $db_response->$nickname()->syncWithoutDetaching($ids);
 
-            foreach($db_response->$nickname as $relation)
+            foreach ($db_response->$nickname as $relation) {
                 $this->doc->addData($relation);
+            }
         } catch (ModelNotFoundException $e) {
             $this->doc->addError(new ResourceNotFoundError());
             return $this;
@@ -497,8 +506,9 @@ abstract class JsonApi
 
     protected function filter(Request $request, Builder $query)
     {
-        if(strlen($request->input('filter.search', '')))
-            $query = $this->search($query, $this->models[count($this->models)-1], explode(' ', substr($request->input('filter.search'),0,31)));
+        if (strlen($request->input('filter.search', ''))) {
+            $query = $this->search($query, $this->models[count($this->models)-1], explode(' ', substr($request->input('filter.search'), 0, 31)));
+        }
 
         //todo: add query builder
         //$query = RqlBuilder::append($query, $request->input('filter.rql'))->getBuilder();
@@ -511,15 +521,16 @@ abstract class JsonApi
         $types = $request->input('fields', null);
 
         //todo: default sparse fields per model
-        if(is_null($types))
+        if (is_null($types)) {
             return;
+        }
 
-        foreach($types as $type => $fields_str)
-        {
-            if(strlen($fields_str))
+        foreach ($types as $type => $fields_str) {
+            if (strlen($fields_str)) {
                 $this->sparse_fields[$type] = array_unique(array_merge(['id'], explode(',', $fields_str)));
-            else
+            } else {
                 $this->sparse_fields[$type] = ['id'];
+            }
         }
     }
 
@@ -528,11 +539,10 @@ abstract class JsonApi
      */
     protected function paginate(Request $request, Builder $query)
     {
-        $page_offset = max(0,intval($request->input('page.offset', 0)));
-        $page_limit = min(200,max(10, intval($request->input('page.limit', 15))));
+        $page_offset = max(0, intval($request->input('page.offset', 0)));
+        $page_limit = min(200, max(10, intval($request->input('page.limit', 15))));
 
-        if(in_array($this->models[0], $this->config['pagination_data']))
-        {
+        if (in_array($this->models[0], $this->config['pagination_data'])) {
             //run the base query with count()
             $count = $query->count();
 
@@ -555,21 +565,22 @@ abstract class JsonApi
         $sort_str = $request->input('sort', '');
 
         //todo: default sorting per model
-        if(!strlen($sort_str))
+        if (!strlen($sort_str)) {
             return $query;
+        }
 
         //get all the things we need to sort by
         $sort_arr = explode(',', $sort_str);
 
-        foreach($sort_arr as $sort)
-        {
+        foreach ($sort_arr as $sort) {
             //todo: whitelist
 
             //ascending or descending
-            if(mb_substr($sort, 0, 1, 'utf-8') !== '-')
+            if (mb_substr($sort, 0, 1, 'utf-8') !== '-') {
                 $query = $query->orderBy($sort, 'asc');
-            else
+            } else {
                 $query = $query->orderBy(mb_substr($sort, 1, null, 'utf-8'), 'desc');
+            }
         }
 
         return $query;
@@ -582,8 +593,9 @@ abstract class JsonApi
      */
     public static function routes()
     {
-        if(!isset(static::$api_version) && !strlen(static::$api_version))
+        if (!isset(static::$api_version) && !strlen(static::$api_version)) {
             throw new \Exception('JsonApi must define `protected static $api_version;`.');
+        }
 
         // Route::get(null, [
         //     'as' => 'index-endpoints',
