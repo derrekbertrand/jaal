@@ -56,9 +56,6 @@ abstract class JsonApi
         $this->doc = new DocObject($this);
 
         $this->class_name = get_called_class();
- 
-        //verify class properties are set or fail...this can probably be moved into middlware
-        $this->hasPropertiesSetOrFail($this->class_name);
 
     }
 
@@ -73,13 +70,14 @@ abstract class JsonApi
     
         //keep track of the top model
         $assoc_model = array_shift($models);
-        dd("Left off in baseQuery()");
+       
         //trivial case
         $q = static::$models[$assoc_model]::query();
 
         //if we are looking for a specific instance
         if (count($ids) > count($models)) {
-            $m = $this->config['models'][$assoc_model];
+            $m = static::$models[$assoc_model];
+
             $m = new $m;
 
             $q->where($m->getKeyName(), array_shift($ids));
@@ -98,9 +96,8 @@ abstract class JsonApi
             $nickname = array_shift($nicknames);
 
             $q->whereHas(camel_case($nickname), function ($query) use ($assoc_model, &$models, &$ids) {
-                $m = $this->config['models'][$assoc_model];
+                $m = static::$models [$assoc_model];
                 $m = new $m;
-
                 $query->where($m->getKeyName(), array_shift($ids));
             });
         }
@@ -140,9 +137,6 @@ abstract class JsonApi
         //get the default request
         //in the future, we might have them pass it in or something
         $request = request();
-
-
-
         $this->doc = new DocObject($this, DocObject::DOC_MANY);
 
         //handle sparse fields
@@ -154,7 +148,7 @@ abstract class JsonApi
 
         //create the base query
         $q = $this->baseQuery();
-        dd($q);
+       
         //handle filters
         try {
             $q = $this->filter($request, $q);
@@ -574,7 +568,7 @@ abstract class JsonApi
         $page_offset = max(0, intval($request->input('page.offset', 0)));
         $page_limit = min(200, max(10, intval($request->input('page.limit', 15))));
 
-        if (in_array($this->models[0], $this->config['pagination_data'])) {
+        if (in_array($this->current_models[0], static::$pagination_data)) {
             //run the base query with count()
             $count = $query->count();
 

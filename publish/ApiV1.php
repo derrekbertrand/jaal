@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http;
+
 use \DialInno\Jaal\Core\Api\JsonApi;
 
 class ApiV1 extends JsonApi
@@ -13,7 +14,7 @@ class ApiV1 extends JsonApi
     public static $version = 'v1';
 
     /**
-     * This array is serailized into every JSON response sent back to the 
+     * This array is serailized into every JSON response sent back to the
      * client. Use it to add copyright and disclaimer data to your APIs
      *
      * @var array
@@ -67,4 +68,11 @@ class ApiV1 extends JsonApi
         //     'users' => 'many-to-many',
         // ]
     ];
+    /**
+     * List which model types include pagination data. This should not be
+     * done on models that have large numbers of records..
+     *
+     * @var array
+     **/
+    protected static $pagination_data = ['user'];
 }

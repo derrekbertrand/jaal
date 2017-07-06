@@ -4,32 +4,69 @@ namespace DialInno\Jaal\Core\Objects;
 
 use Illuminate\Support\Collection;
 use DialInno\Jaal\Core\Api\JsonApi;
+use DialInno\Jaal\Core\Objects\ErrorObject;
 use DialInno\Jaal\Core\Objects\GenericObject;
 use DialInno\Jaal\Core\Errors\Exceptions\ApiException;
 
 /**
  * Responsible for serializing a document and preparing a response.
  */
-class DocObject extends GenericObject {
+class DocObject extends GenericObject
+{
 
+    /**
+     * constants to describe the document data
+     **/
     const DOC_NONE = 0;
     const DOC_ONE = 1;
     const DOC_MANY = 2;
     const DOC_ONE_IDENT = 3;
     const DOC_MANY_IDENT = 4;
     const DOC_TYPE_MAX = 4;
-
+    /**
+     * Document errors
+     * @var Illuminate\Database\Eloquent\Collection $errors
+     **/
     protected $errors;
+    /**
+     * List which model types include pagination data. This should not be
+     * done on models that have large numbers of records..
+     *
+     * @var DialInno\Jaal\Core\Api\JsonApi $api
+     **/
+    protected $api = null;
 
-    protected $json_api = null;
-
+    /**
+     * Default status of 200
+     * @var int $code
+     **/
     protected $code = 200;
-
+    /**
+     * the Document type
+     * @var int $doc_type
+     **/
     protected $doc_type;
 
+    /**
+     * The document data
+     * @var Illuminate\Database\Eloquent\Collection $data
+     **/
     protected $data;
+
+    /**
+     * The document links
+     * @var ?
+     **/
     protected $links;
+    /**
+     * The document included data
+     * @var ?
+     **/
     protected $included;
+    /**
+     * The document meta
+     * @var Illuminate\Database\Eloquent\Collection $data
+     **/
     protected $meta;
 
     public function __construct(JsonApi $json_api, int $doc_type = 0)
@@ -41,22 +78,29 @@ class DocObject extends GenericObject {
         $this->meta = new Collection;
     }
 
+    /**
+     * Get document http status
+     * @var string code
+     **/
     public function getHttpStatus()
     {
-        if($this->errors->count())
+        if ($this->errors->count()) {
             return $this->errors->reduce(function ($carry, $item) {
                 //prime the system
-                if($carry === null)
+                if ($carry === null) {
                     return $item->getStatus();
+                }
 
                 //if we have different errors, send a 400
-                if($item->getStatus() !== $carry)
+                if ($item->getStatus() !== $carry) {
                     return '400';
+                }
 
                 return $item->getStatus();
             });
-        else
+        } else {
             return $this->code;
+        }
     }
 
     /**
@@ -77,8 +121,9 @@ class DocObject extends GenericObject {
      */
     public function addError($error_data)
     {
-        if(!($error_data instanceof ApiException))
-            $error_data = new ApiException($this->getDoc(), $error_data);
+        if (!($error_data instanceof ErrorObject)) {
+            $error_data = new ErrorObject($this->getDoc(), $error_data);
+        }
 
         $this->errors->push($error_data);
 
@@ -99,10 +144,11 @@ class DocObject extends GenericObject {
      */
     public function addData($data)
     {
-        if($this->isIdent())
+        if ($this->isIdent()) {
             $resource = new ResourceIdentifierObject($this, $data);
-        else
+        } else {
             $resource = new ResourceObject($this, $data);
+        }
 
         //add to data
         $this->data->push($resource);
@@ -116,8 +162,8 @@ class DocObject extends GenericObject {
      */
     public function getResponse($options = 0)
     {
-        $out = $this->toJson($options);
 
+        $out = $this->toJson($options);
         return response($out, intval($this->getHttpStatus()));
     }
 
@@ -162,33 +208,32 @@ class DocObject extends GenericObject {
         $out['jsonapi'] = ['version' => '1.0'];
         $error_arr = [];
         $data_arr = [];
-
-        if($this->isMany())
-        {
+        dd($this->data);
+        if ($this->isMany()) {
             $data_arr = $this->data->jsonSerialize();
-        }
-        else if($this->isOne())
-        {
-            if($this->data->count())
+        } elseif ($this->isOne()) {
+            if ($this->data->count()) {
                 $data_arr = $this->data[0]->jsonSerialize();
-            else
+            } else {
                 $data_arr = null;
+            }
         }
 
         //todo: toplevel meta object
-        if($this->meta->count())
+        if ($this->meta->count()) {
+
             $out['meta'] = $this->meta->jsonSerialize();
+        }
 
         //if we have errors, ignore the data
-        if($this->errors->count())
-        {
+        if ($this->errors->count()) {
             $out['errors'] = $this->errors->jsonSerialize();
         }
         //we don't have errors, display the data
-        else
-        {
-            if($this->isMany() || $this->isOne())
+        else {
+            if ($this->isMany() || $this->isOne()) {
                 $out['data'] = $data_arr;
+            }
         }
 
         //todo: links

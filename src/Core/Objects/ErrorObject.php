@@ -15,6 +15,8 @@ class ErrorObject extends GenericObject {
     {
         parent::__construct($parent, $data);
 
+        $this->parent = $parent;
+        
         $this->data = (new Collection([
             'title' => 'Error',
             'detail' => 'An error occurred.',

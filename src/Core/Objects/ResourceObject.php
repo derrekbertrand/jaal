@@ -2,14 +2,15 @@
 
 namespace DialInno\Jaal\Core\Objects;
 
-use DialInno\Jaal\Core\Api\JsonApi;
-use DialInno\Jaal\Core\Objects\Errors\SerializationErrorObject;
 use Illuminate\Support\Collection;
+use DialInno\Jaal\Core\Api\JsonApi;
+use DialInno\Jaal\Core\Objects\GenericObject;
+use DialInno\Jaal\Core\Objects\Errors\SerializationErrorObject;
 
 /**
  * Responsible for serializing a resource object.
  */
-class ResourceObject extends MetaObject {
+class ResourceObject extends GenericObject {
 
     protected static $obj_name = 'resource';
 
