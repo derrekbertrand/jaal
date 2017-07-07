@@ -5,12 +5,11 @@ namespace DialInno\Jaal\Core\Objects;
 use DialInno\Jaal\JsonApi;
 use Illuminate\Support\Collection;
 
-
 /**
  * Responsible for serializing a error object.
  */
-class ErrorObject extends GenericObject {
-
+class ErrorObject extends GenericObject
+{
     public function __construct(GenericObject $parent, $data)
     {
         parent::__construct($parent, $data);
@@ -26,7 +25,7 @@ class ErrorObject extends GenericObject {
 
     /**
      * Return the statuscode
-     * @return string  
+     * @return string
      **/
     public function getStatus()
     {
@@ -35,7 +34,7 @@ class ErrorObject extends GenericObject {
     
     /**
      * Return the statuscode
-     * @return string  
+     * @return string
      **/
     public function jsonSerialize()
     {

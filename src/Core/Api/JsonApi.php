@@ -15,28 +15,38 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 abstract class JsonApi
 {
-    //validate the class...move to middleware?
+    //TODO- Remove this completely or see if the new middleware could use it?
     use ValidatesApiClasses;
-    /**
-    * The name of the calling api class
-    * @var array
-    **/
-    protected $class_name;
-    /**
-     * The current request models were
-     * working with
-     * @var array
-     **/
-    protected $current_models;
 
-     /**
-     * The current request models were
-     * working with
-     * @var array
+    /**
+     * The name of the calling api_class
+     * @var string $api_class
      **/
-    protected $current_models_ids;
+    protected $api_class;
+    /**
+     * The document object
+     * @var DialInno\Jaal\Core\Objects\DocObject $doc
+     **/
     protected $doc;
+    /**
+     * The id's of the current models in context
+     * @var array $model_ids
+     **/
+    protected $context_model_ids = [];
+    /**
+     * The names of the current models in context
+     * @var array $models
+     **/
+    protected $context_models = [];
+    /**
+     * The nick names of the current models in context
+     * @var array $nicknames
+     **/
     protected $nicknames = [];
+    /**
+     * The sparse fields of the current models in context
+     * @var array $sparse_fields
+     **/
     protected $sparse_fields = [];
     
 
@@ -51,26 +61,21 @@ abstract class JsonApi
      */
     public function __construct()
     {
-
+        $this->api_class = get_called_class();
         //we keep an internal doc so we can make a response
         $this->doc = new DocObject($this);
-
-        $this->class_name = get_called_class();
-
     }
 
     protected function baseQuery()
     {
         //we work from outside in
-        $models = array_reverse($this->current_models);
-
-        $ids = array_reverse($this->current_model_ids);
-
+        $models = array_reverse($this->context_models);
+        $ids = array_reverse($this->context_model_ids);
         $nicknames = array_reverse($this->nicknames);
-    
+
         //keep track of the top model
         $assoc_model = array_shift($models);
-       
+
         //trivial case
         $q = static::$models[$assoc_model]::query();
 
@@ -98,6 +103,7 @@ abstract class JsonApi
             $q->whereHas(camel_case($nickname), function ($query) use ($assoc_model, &$models, &$ids) {
                 $m = static::$models [$assoc_model];
                 $m = new $m;
+
                 $query->where($m->getKeyName(), array_shift($ids));
             });
         }
@@ -137,6 +143,7 @@ abstract class JsonApi
         //get the default request
         //in the future, we might have them pass it in or something
         $request = request();
+
         $this->doc = new DocObject($this, DocObject::DOC_MANY);
 
         //handle sparse fields
@@ -148,7 +155,7 @@ abstract class JsonApi
 
         //create the base query
         $q = $this->baseQuery();
-       
+
         //handle filters
         try {
             $q = $this->filter($request, $q);
@@ -419,7 +426,7 @@ abstract class JsonApi
 
         try {
             //get FQCL of model
-            $model = $this->config['models'][$this->models[0]];
+            $model = $this->config['models'][$this->context_models[0]];
 
             $body = json_decode(request()->getContent(), true) ?: request()->all();
             $attr = count($attributes) ? $attributes : $body['data']['attributes'];
@@ -471,29 +478,17 @@ abstract class JsonApi
         return $this;
     }
 
-    /**
-     * Set the current request's models
-     * we are working with.
-     *
-     * @var array $api_models
-     *  
-     **/
+    public function setContextModelIds(array $current_model_ids)
+    {
+        $this->current_model_ids = $current_model_ids;
 
-    public function setCurrentRequestModels(array $api_models)
-    {
-        $this->current_models = $api_models;
+        return $this;
     }
-    /**
-     * Set the current request's models id's
-     * we are working with.
-     *
-     * @var array $api_models
-     *  
-     **/
-    public function setCurrentRequestModelIds(array $modelIds)
+    public function setContextModels(array $context_models)
     {
-        
-        $this->current_model_ids = $modelIds;
+        $this->context_models = $context_models;
+
+        return $this;
     }
 
     public function setNicknames(array $nicknames)
@@ -502,22 +497,24 @@ abstract class JsonApi
 
         return $this;
     }
-
+    /**
+     * Get the document response object
+     *
+     * @return DialInno\Jaal\Core\Objects\DocObject
+     **/
     public function getDoc()
     {
         return $this->doc;
     }
     /**
      * Infer all of the data
-     *
      **/
     public function inferAll()
     {
-       
         $caller = debug_backtrace(false, 2)[1];
 
-        $this->setCurrentRequestModelIds(array_values(\Route::getCurrentRoute()->parameters()));
-        $this->setCurrentRequestModels(explode('.', array_search($caller['class'], static::$routes)));
+        $this->setContextModelIds(array_values(\Route::getCurrentRoute()->parameters()));
+        $this->setContextModels(explode('.', array_search($caller['class'], static::$routes)));
         $this->{$caller['function']}();
 
         return $this;
@@ -525,8 +522,8 @@ abstract class JsonApi
 
     public function inferQueryParam(Controller $controller)
     {
-        $this->setModelIds(array_values(\Route::getCurrentRoute()->parameters()));
-        $this->setModels(explode('.', array_search(get_class($controller), $this->config['routes'])));
+        $this->setContextModelIds(array_values(\Route::getCurrentRoute()->parameters()));
+        $this->setContextModels(explode('.', array_search(get_class($controller), $this->config['routes'])));
 
         return $this;
     }
@@ -534,7 +531,7 @@ abstract class JsonApi
     protected function filter(Request $request, Builder $query)
     {
         if (strlen($request->input('filter.search', ''))) {
-            $query = $this->search($query, $this->models[count($this->models)-1], explode(' ', substr($request->input('filter.search'), 0, 31)));
+            $query = $this->search($query, $this->context_models[count($this->context_models)-1], explode(' ', substr($request->input('filter.search'), 0, 31)));
         }
 
         //todo: add query builder
@@ -551,6 +548,7 @@ abstract class JsonApi
         if (is_null($types)) {
             return;
         }
+
         foreach ($types as $type => $fields_str) {
             if (strlen($fields_str)) {
                 $this->sparse_fields[$type] = array_unique(array_merge(['id'], explode(',', $fields_str)));
@@ -568,7 +566,7 @@ abstract class JsonApi
         $page_offset = max(0, intval($request->input('page.offset', 0)));
         $page_limit = min(200, max(10, intval($request->input('page.limit', 15))));
 
-        if (in_array($this->current_models[0], static::$pagination_data)) {
+        if (in_array($this->context_models[0], static::$pagination_data)) {
             //run the base query with count()
             $count = $query->count();
 
@@ -621,6 +619,10 @@ abstract class JsonApi
     {
         $api = new static;
         //make sure this class has all the properties it needs.
+        // Route::get(null, [
+        //     'as' => 'index-endpoints',
+        //     'uses' => '\\'.static::class.'@indexEndpoints',
+        // ]);
 
         //get the group they want
         $routes = is_array(static::$routes) && !empty(static::$routes) ? static::$routes :[];
@@ -639,7 +641,6 @@ abstract class JsonApi
 
         //define relationship routes
         foreach ($relationships as $from => $all_relations) {
-
             foreach ($all_relations as $nickname => $rel_type) {
                 $controller = static::$routes[$from];
 
@@ -660,6 +661,7 @@ abstract class JsonApi
                         'as' => "$from.relationships.$nickname.store",
                         'uses' => '\\'.$controller.'@store'.studly_case($nickname)
                     ]);
+
                     //delete for drop only
                     Route::delete("$from/{{$from}}/relationships/$nickname", [
                         'as' => "$from.relationships.$nickname.destroy",
@@ -668,7 +670,6 @@ abstract class JsonApi
                 }
             }
         }
-        
     }
 
     /**

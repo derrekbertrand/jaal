@@ -5,33 +5,36 @@ namespace DialInno\Jaal\Core\Objects;
 use Illuminate\Support\Collection;
 use DialInno\Jaal\Core\Api\JsonApi;
 use DialInno\Jaal\Core\Objects\GenericObject;
-use DialInno\Jaal\Core\Objects\Errors\SerializationErrorObject;
+use DialInno\Jaal\Core\Errors\SerializationErrorObject;
 
 /**
  * Responsible for serializing a resource object.
  */
-class ResourceObject extends GenericObject {
-
+class ResourceObject extends GenericObject
+{
     protected static $obj_name = 'resource';
 
     protected function validateMembers()
     {
-        if(!$this->data->has('id'))
+        if (!$this->data->has('id')) {
             $this->addError(new SerializationErrorObject($this->getDoc(), [
                 'detail' => 'ID is required for a resource object.'
             ]));
+        }
 
-        if(!$this->data->has('type'))
+        if (!$this->data->has('type')) {
             $this->addError(new SerializationErrorObject($this->getDoc(), [
                 'detail' => 'Type is required for a resource object.'
             ]));
+        }
 
         $this->data->each(function ($item, $key) {
             //if it is not in the allowed members list, complain
-            if(array_search($key, ['id', 'type', 'attributes', 'relationships', 'links', 'meta']) === false)
+            if (array_search($key, ['id', 'type', 'attributes', 'relationships', 'links', 'meta']) === false) {
                 $this->addError(new SerializationErrorObject($this->getDoc(), [
                     'detail' => $key.' is not a valid member of a resource object.'
                 ]));
+            }
         });
     }
 
@@ -42,8 +45,9 @@ class ResourceObject extends GenericObject {
      */
     public function jsonSerialize()
     {
-        if(!count($this->data['attributes']))
+        if (!count($this->data['attributes'])) {
             return $this->data->only(['id', 'type', 'relationships', 'links', 'meta']);
+        }
 
         return $this->data->only(['id', 'type', 'attributes', 'relationships', 'links', 'meta']);
     }

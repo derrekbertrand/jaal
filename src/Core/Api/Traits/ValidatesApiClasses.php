@@ -16,7 +16,6 @@ trait ValidatesApiClasses
      **/
     protected function isVersionDefined($class)
     {
-
         if (!property_exists($class, 'version') || empty(static::$version)) {
             return false;
         }
@@ -40,7 +39,6 @@ trait ValidatesApiClasses
      **/
     protected function isRoutesDefined($class)
     {
-       
         if (!property_exists($class, 'routes') || empty(static::$routes)) {
             return false;
         }
@@ -52,8 +50,7 @@ trait ValidatesApiClasses
      * @var string $classtring $class
      **/
     protected function isRoutesDefinedOrFail($class)
-    {   
-
+    {
         if (!$this->isRoutesDefined($class)) {
             throw new ApiRoutesUndefinedException("{$class} must define `protected static \$routes;'.");
         }
@@ -63,8 +60,7 @@ trait ValidatesApiClasses
      *  @var string $class
      **/
     protected function isRelationshipsDefined($class)
-    {   
-
+    {
         if (!property_exists($class, 'relationships') || empty(static::$relationships)) {
             return false;
         }

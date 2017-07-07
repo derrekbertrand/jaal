@@ -29,8 +29,7 @@ class DocObject extends GenericObject
      **/
     protected $errors;
     /**
-     * List which model types include pagination data. This should not be
-     * done on models that have large numbers of records..
+     * The api class in question
      *
      * @var DialInno\Jaal\Core\Api\JsonApi $api
      **/
@@ -106,7 +105,7 @@ class DocObject extends GenericObject
     /**
      * I am the document.
      *
-     * @return DocObject
+     * @return this
      */
     public function getDoc()
     {
@@ -162,7 +161,6 @@ class DocObject extends GenericObject
      */
     public function getResponse($options = 0)
     {
-
         $out = $this->toJson($options);
         return response($out, intval($this->getHttpStatus()));
     }
@@ -208,7 +206,6 @@ class DocObject extends GenericObject
         $out['jsonapi'] = ['version' => '1.0'];
         $error_arr = [];
         $data_arr = [];
-        dd($this->data);
         if ($this->isMany()) {
             $data_arr = $this->data->jsonSerialize();
         } elseif ($this->isOne()) {
@@ -221,7 +218,6 @@ class DocObject extends GenericObject
 
         //todo: toplevel meta object
         if ($this->meta->count()) {
-
             $out['meta'] = $this->meta->jsonSerialize();
         }
 
