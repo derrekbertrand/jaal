@@ -5,7 +5,7 @@ namespace DialInno\Jaal\Core\Objects;
 use Illuminate\Support\Collection;
 use DialInno\Jaal\Core\Api\JsonApi;
 use Illuminate\Contracts\Support\Jsonable;
-use DialInno\Jaal\Core\Errors\Exceptions\ApiException;
+use DialInno\Jaal\Core\Objects\ErrorObject;
 
 /**
  * Responsible for serializing the object.
@@ -30,7 +30,7 @@ abstract class GenericObject implements Jsonable, \JsonSerializable {
             $this->data = new Collection($data);
         //not sure what to do with anything else
         else
-            throw new ApiException('Jaal objects must be created from an array, collection, or JsonSerializable object.');
+            throw new \Exception('Jaal objects must be created from an array, collection, or JsonSerializable object.');
 
         //validate after adding
         $this->validateMembers();

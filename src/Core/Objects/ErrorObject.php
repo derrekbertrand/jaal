@@ -2,7 +2,7 @@
 
 namespace DialInno\Jaal\Core\Objects;
 
-use DialInno\Jaal\JsonApi;
+use DialInno\Jaal\Core\Api\JsonApi;
 use Illuminate\Support\Collection;
 
 /**

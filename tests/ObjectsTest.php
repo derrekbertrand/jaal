@@ -3,12 +3,13 @@
 namespace DialInno\Jaal\Tests;
 
 use DialInno\Jaal\JsonApiRoute;
-use DialInno\Jaal\Tests\Api\JsonApiV1;
+use DialInno\Jaal\Tests\Models\Post;
 use DialInno\Jaal\Tests\Models\User;
 use DialInno\Jaal\Tests\Models\Skill;
-use DialInno\Jaal\Tests\Models\Post;
-use DialInno\Jaal\Objects\Errors\NotFoundErrorObject;
-use DialInno\Jaal\Objects\Errors\ValidationErrorObject;
+use DialInno\Jaal\Tests\Api\JsonApiV1;
+use DialInno\Jaal\Core\Errors\NotFoundErrorObject;
+use DialInno\Jaal\Core\Errors\ValidationErrorObject;
+
 
 class ObjectsTest extends TestCase
 {

@@ -40,6 +40,7 @@ class ClassGenerator extends Generator
             $this->files->put($class_path, $this->getNewClassContents($generatedClassName,$api_info));
 
             $this->command->info("Succesfully created app/Http/{$generatedClassName}.php!");
+
         } else {
             $this->command->error("The class app/Http/{$generatedClassName}.php already exists!");
         }
@@ -57,6 +58,7 @@ class ClassGenerator extends Generator
         //Replace the default ApiV1 if needed--Todo cleanup
         $newClass = str_replace('ApiV1', $generatedClassName, $newClass);
         $newClass = str_replace("public static \$version = 'v1';","public static \$version = '{$api_info['version']}';",$newClass);
+        $newClass = str_replace("namespace DialInno\Jaal\Publish;","namespace App\Http;",$newClass);
 
         return $newClass;
     }

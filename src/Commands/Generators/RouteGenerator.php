@@ -38,7 +38,7 @@ class RouteGenerator extends Generator
 
         //check if app/Http/${classNameWanted}.php has routes registered...TODO cleanup
         if ($this->files->exists(app_path("Http\\".$full_name.".php")) && str_contains($routesFileContents, $routeSignature)) {
-            $this->command->error("It seems app/Http/\\$full_name.php's api routes are already defined in routes/api.php");
+            $this->command->error("It seems app/Http/$full_name.php's api routes are already defined in routes/api.php");
         } else {
             
             //create a api kebab case name for as in route definition e.g 'as'=>'api-name-v1'

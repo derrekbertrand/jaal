@@ -3,7 +3,8 @@
 namespace DialInno\Jaal\Tests\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use DialInno\Jaal\SerializeModel;
+use DialInno\Jaal\Core\Api\Traits\SerializeModel;
+
 
 class Post extends Model
 {

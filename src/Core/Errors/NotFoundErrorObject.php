@@ -2,9 +2,8 @@
 
 namespace DialInno\Jaal\Core\Errors;
 
-use DialInno\Jaal\Core\JsonApi;
 use Illuminate\Support\Collection;
-use DialInno\Jaal\Core\Errors\ErrorObject;
+use DialInno\Jaal\Core\Objects\ErrorObject;
 use DialInno\Jaal\Core\Objects\GenericObject;
 
 /**

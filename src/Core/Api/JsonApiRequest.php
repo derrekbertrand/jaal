@@ -1,6 +1,6 @@
 <?php
 
-namespace DialInno\Jaal;
+namespace DialInno\Jaal\Core\Api;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;

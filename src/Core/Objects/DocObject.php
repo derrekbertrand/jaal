@@ -4,9 +4,11 @@ namespace DialInno\Jaal\Core\Objects;
 
 use Illuminate\Support\Collection;
 use DialInno\Jaal\Core\Api\JsonApi;
+use Illuminate\Support\Facades\Validator;
 use DialInno\Jaal\Core\Objects\ErrorObject;
 use DialInno\Jaal\Core\Objects\GenericObject;
-use DialInno\Jaal\Core\Errors\Exceptions\ApiException;
+use DialInno\Jaal\Core\Objects\ResourceObject;
+use DialInno\Jaal\Core\Objects\ResourceIdentifierObject;
 
 /**
  * Responsible for serializing a document and preparing a response.
@@ -109,6 +111,7 @@ class DocObject extends GenericObject
      */
     public function getDoc()
     {
+
         return $this;
     }
 
@@ -154,6 +157,20 @@ class DocObject extends GenericObject
     }
 
     /**
+     * Validate the api request
+     * @param  $array $rules
+     * @param  $array $attributes
+     */
+    protected function validate($rules = null, $messages, $attributes)
+    {
+        $body = json_decode(request()->getContent(), true) ?: request()->all();
+        $validator = Validator::make($body, $rules, $messages, $attributes);
+
+        foreach($validator->errors()->toArray() as $ref => $messages)
+            foreach($messages as $message)
+                $this->addError(new ValidationErrorObject($this, ['detail' => $message, 'source' => ['pointer' => '/'.str_replace('.', '/', $ref)]]));
+    }
+    /**
      * Get a response object; takes json options.
      *
      * @param  int  $options
@@ -162,7 +179,8 @@ class DocObject extends GenericObject
     public function getResponse($options = 0)
     {
         $out = $this->toJson($options);
-        return response($out, intval($this->getHttpStatus()));
+
+        return response($out, intval($this->getHttpStatus()))->header('Content-Type', 'application/vnd.api+json');
     }
 
     /**
@@ -218,6 +236,7 @@ class DocObject extends GenericObject
 
         //todo: toplevel meta object
         if ($this->meta->count()) {
+
             $out['meta'] = $this->meta->jsonSerialize();
         }
 

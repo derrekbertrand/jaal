@@ -2,8 +2,9 @@
 
 namespace DialInno\Jaal\Tests\Requests;
 
-use DialInno\Jaal\JsonApiRequest;
+
 use DialInno\Jaal\Tests\Api\JsonApiV1;
+use DialInno\Jaal\Core\Api\JsonApiRequest;
 
 class UserRequest extends JsonApiRequest
 {

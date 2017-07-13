@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http;
+namespace DialInno\Jaal\Publish;
 
 use \DialInno\Jaal\Core\Api\JsonApi;
 

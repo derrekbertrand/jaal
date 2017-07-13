@@ -7,6 +7,7 @@ use DialInno\Jaal\Core\Api\JsonApi;
 use DialInno\Jaal\Core\Objects\GenericObject;
 use DialInno\Jaal\Core\Errors\SerializationErrorObject;
 
+
 /**
  * Responsible for serializing a resource object.
  */
