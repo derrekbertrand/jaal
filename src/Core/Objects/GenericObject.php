@@ -83,6 +83,7 @@ abstract class GenericObject implements Jsonable, \JsonSerializable {
     protected function validateMembers()
     {
         $this->data->each(function ($item, $key) {
+
             $member_regex = '/^([a-zA-Z0-9][a-zA-Z0-9_\\-]*)?[a-zA-Z0-9]$/';
 
             //throw exception if it is bad

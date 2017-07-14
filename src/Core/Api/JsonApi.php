@@ -10,7 +10,6 @@ use DialInno\Jaal\Core\Objects\DocObject;
 use Illuminate\Database\Eloquent\Builder;
 use DialInno\Jaal\Core\Objects\ErrorObject;
 use DialInno\Jaal\Core\Errors\NotFoundErrorObject;
-use DialInno\Jaal\Core\Api\Traits\ValidatesApiClasses;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use DialInno\Jaal\Core\Errors\Exceptions\UndefinedApiPropertiesException;
 
