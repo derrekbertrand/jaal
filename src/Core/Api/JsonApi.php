@@ -12,6 +12,7 @@ use DialInno\Jaal\Core\Objects\ErrorObject;
 use DialInno\Jaal\Core\Errors\NotFoundErrorObject;
 use DialInno\Jaal\Core\Api\Traits\ValidatesApiClasses;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use DialInno\Jaal\Core\Errors\Exceptions\UndefinedApiPropertiesException;
 
 abstract class JsonApi
 {
@@ -47,6 +48,8 @@ abstract class JsonApi
      * @var array
      **/
     protected $sparse_fields = [];
+
+    private $requiredProperties = ['routes','models','version'];
     
 
     /**
@@ -63,6 +66,13 @@ abstract class JsonApi
 
         //we keep an internal doc so we can make a response
         $this->doc = new DocObject($this);
+        //verify that our required fields are present...maybe move this somewhere else?
+        foreach ($this->requiredProperties as $property) {
+            $class =get_called_class();
+            if (!property_exists($class, $property)){
+                throw new UndefinedApiPropertiesException("$class must define `protected static \${$property};`.");
+            }
+        }
     
     }
 

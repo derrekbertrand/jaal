@@ -4,6 +4,7 @@ namespace DialInno\Jaal\Tests;
 
 use DialInno\Jaal\Tests\Api\JsonApiV1;
 use Illuminate\Foundation\Testing\TestResponse;
+
 class TestCase extends \Orchestra\Testbench\TestCase
 {
 
