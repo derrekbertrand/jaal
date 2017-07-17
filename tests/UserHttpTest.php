@@ -39,20 +39,21 @@ class UserHttpTest extends TestCase
             ->assertStatus(200);
     }
 
-    // public function testUserStoreValidationErrors()
-    // {
-    //     $this->json('POST', '/api/v1/user', [
-    //             'data' => [
-    //                 'type' => 'user',
-    //                 'attributes' => [
-    //                     'first' => 'Richard',
-    //                     'last' => 'Stallman',
-    //                     'email' => 'rmsexample.com'
-    //                 ],
-    //             ]
-    //         ])
-    //         ->assertStatus(400);
-    // }
+    public function testUserStoreValidationErrors()
+    {
+        
+        $this->json('POST', '/api/v1/user', [
+                'data' => [
+                    'type' => 'user',
+                    'attributes' => [
+                        'first' => 'Richard',
+                        'last' => 'Stallman',
+                        'email' => 'rmsexample.com'
+                    ],
+                ]
+            ])
+            ->assertStatus(400);
+    }
 
     public function testUserDelete()
     {

@@ -5,9 +5,10 @@ namespace DialInno\Jaal\Core\Api;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Http\Exceptions\HttpResponseException;
-use DialInno\Jaal\Objects\Errors\ValidationErrorObject;
 use DialInno\Jaal\Objects\Errors\AuthErrorObject;
+
+use Illuminate\Http\Exceptions\HttpResponseException;
+use DialInno\Jaal\Core\Errors\ValidationErrorObject;
 
 abstract class JsonApiRequest extends FormRequest
 {

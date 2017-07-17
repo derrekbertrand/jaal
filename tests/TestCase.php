@@ -2,8 +2,11 @@
 
 namespace DialInno\Jaal\Tests;
 
+
 use DialInno\Jaal\Tests\Api\JsonApiV1;
 use Illuminate\Foundation\Testing\TestResponse;
+use Orchestra\Testbench\Exceptions\Handler;
+use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 
 class TestCase extends \Orchestra\Testbench\TestCase
 {
@@ -31,6 +34,16 @@ class TestCase extends \Orchestra\Testbench\TestCase
 
         //pull in our factories for testing
         $this->withFactories(__DIR__.'/../database/factories');
+    }
+    /**
+    * Resolve application HTTP exception handler.
+    *
+    * @param  \Illuminate\Foundation\Application  $app
+    * @return void
+    */
+    protected function resolveApplicationExceptionHandler($app)
+    {
+        $app->singleton('Illuminate\Contracts\Debug\ExceptionHandler', 'Orchestra\Testbench\Exceptions\Handler');
     }
 
     /**
