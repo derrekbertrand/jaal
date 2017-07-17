@@ -12,51 +12,54 @@ class ClassGenerator extends Generator
      *
      * @var static $apiClassPath
      */
-    protected static $apiClassPath = __DIR__."/../../../publish/ApiV1.php";
-    /**
-     * The filesystem instance.
-     *
-     * @var \Illuminate\Filesystem\Filesystem
-     */
-    protected $files;
+    protected static $apiClassTemplatePath = __DIR__."/../../../publish/ApiV1.php";
 
     /**
      * Generate the class if it doesnt exist
-     *
-     * @var string $classNameWanted
-     * @var  Illuminate\Console\Command $command
+     * @var array $api_info
      *
      **/
-    public function generate(string $classNameWanted)
+    public function generate(array $api_info)
     {
-        $this->createClass($classNameWanted);
+        $this->createClass($api_info);
     }
 
     /**
      * Create a class if it doesnt exist
-     *
-     *
-     * @var string $className
-     * @var Illuminate\Console\Command $command
+     * @var array $api_info
      **/
-    private function createClass(string $classNameWanted)
+    private function createClass(array $api_info)
     {
         //was a class name given?
-        $classNameWanted = $classNameWanted == null ? "ApiV1" :$classNameWanted;
+        $generatedClassName = $api_info['name'] == null ? "ApiV{$api_info['version']}" :$api_info['full_name'];
         //default to saving to the app/Http/ dir.
-        $class_path =app_path("Http/{$classNameWanted}.php");
+        $class_path =app_path("Http/{$generatedClassName}.php");
         //Next verify class doesnt already exits
         if (!$this->files->exists($class_path)) {
-            //get the template
-            $newClass = $this->files->get(static::$apiClassTemplatePath);
-            //Replace the default ApiV1 if needed--Todo cleanup
-            $newClass = str_replace('ApiV1', $classNameWanted, $newClass);
-            //replace the contents of the actual file
-            $this->files->put($class_path, $newClass);
+            
+            $this->files->put($class_path, $this->getNewClassContents($generatedClassName,$api_info));
 
-            $this->command->info("Succesfully created app/Http/{$classNameWanted}.php!");
+            $this->command->info("Succesfully created app/Http/{$generatedClassName}.php!");
+
         } else {
-            $this->command->error("The class app/Http/{$classNameWanted}.php already exists!");
+            $this->command->error("The class app/Http/{$generatedClassName}.php already exists!");
         }
+    }
+
+    /**
+     * Returns the new class file contents to 
+     * overwrite the template content.
+     * @var string $generatedClassName
+     * @var array $api_info
+     **/
+    private function getNewClassContents(string $generatedClassName,array $api_info){
+        //get the template
+        $newClass = $this->files->get(static::$apiClassTemplatePath);
+        //Replace the default ApiV1 if needed--Todo cleanup
+        $newClass = str_replace('ApiV1', $generatedClassName, $newClass);
+        $newClass = str_replace("public static \$version = 'v1';","public static \$version = '{$api_info['version']}';",$newClass);
+        $newClass = str_replace("namespace DialInno\Jaal\Publish;","namespace App\Http;",$newClass);
+
+        return $newClass;
     }
 }

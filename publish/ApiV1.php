@@ -1,21 +1,27 @@
 <?php
 
-namespace App\Http;
+namespace DialInno\Jaal\Publish;
 
-/*This is the class that is used as a template for make command*/
-class ApiV1 extends \DialInno\Jaal\JsonApi
+use \DialInno\Jaal\Core\Api\JsonApi;
+
+class ApiV1 extends JsonApi
 {
-    public static $api_version = 'v1';
+    /**
+     * The version of the api.
+     *
+     * @var string
+     **/
+    public static $version = 'v1';
 
     /**
-     * This array is serailized into every JSON response sent back to the 
+     * This array is serailized into every JSON response sent back to the
      * client. Use it to add copyright and disclaimer data to your APIs
      *
      * @var array
      **/
-    // protected static $meta = [
-    //     'copyright' => 'Copyright '.date('Y ').env('EJSONIFY_COPYRIGHT', 'Dialing Innovations')
-    // ];
+    protected static $meta = [
+        'copyright' => "Copyright Dialing Innovations"
+    ];
 
     /**
      * This is a name-value association of a JSON:API 'type' and the
@@ -39,8 +45,7 @@ class ApiV1 extends \DialInno\Jaal\JsonApi
      *
      * @var array
      **/
-    //Todo...existing model property..named api_models for now.
-    protected static $api_models = [
+    protected static $models = [
         'user'  => \DialInno\Jaal\Tests\Models\User::class,
         // 'post'  => \DialInno\Jaal\Tests\Models\Post::class,
         // 'skill'  => \DialInno\Jaal\Tests\Models\Skill::class,
@@ -63,4 +68,11 @@ class ApiV1 extends \DialInno\Jaal\JsonApi
         //     'users' => 'many-to-many',
         // ]
     ];
+    /**
+     * List which model types include pagination data. This should not be
+     * done on models that have large numbers of records..
+     *
+     * @var array
+     **/
+    protected static $pagination_data = ['user'];
 }

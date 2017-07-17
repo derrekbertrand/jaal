@@ -3,8 +3,9 @@
 namespace DialInno\Jaal\Tests\Models;
 
 use Illuminate\Notifications\Notifiable;
+use DialInno\Jaal\Core\Api\Traits\SerializeModel;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use DialInno\Jaal\SerializeModel;
+
 
 class User extends Authenticatable
 {

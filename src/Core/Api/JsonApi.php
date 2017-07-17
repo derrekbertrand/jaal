@@ -1,25 +1,55 @@
 <?php
 
-namespace DialInno\Jaal;
+namespace DialInno\Jaal\Core\Api;
 
-use Illuminate\Support\Facades\Route;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Support\Collection;
-use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
-use DialInno\Jaal\Objects\DocObject;
-use DialInno\Jaal\Objects\ErrorObject;
-use DialInno\Jaal\Objects\Errors\NotFoundErrorObject;
+use Illuminate\Routing\Controller;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Route;
+use DialInno\Jaal\Core\Objects\DocObject;
+use Illuminate\Database\Eloquent\Builder;
+use DialInno\Jaal\Core\Objects\ErrorObject;
+use DialInno\Jaal\Core\Errors\NotFoundErrorObject;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use DialInno\Jaal\Core\Errors\Exceptions\UndefinedApiPropertiesException;
 
 abstract class JsonApi
 {
-    protected $config = null;
-    protected $models = [];
-    protected $model_ids = [];
-    protected $nicknames = [];
-    protected $sparse_fields = [];
+
+    /**
+     * The current request models were
+     * working with
+     * @var array
+     **/
+    protected $context_models;
+
+     /**
+     * The current request models were
+     * working with
+     * @var array
+     **/
+    protected $context_models_ids;
+    /**
+     * The doc object to return
+     * 
+     * @var \DialInno\Jaal\Core\Objects\DocObject $doc
+     **/
     protected $doc;
+    /**
+     * The context models nicknames as we defined in the static property $models
+     * 
+     * @var array
+     **/
+    protected $nicknames = [];
+    /**
+     * The models sparse fields
+     * 
+     * @var array
+     **/
+    protected $sparse_fields = [];
+
+    private $requiredProperties = ['routes','models','version'];
+    
 
     /**
      * Prepare a JsonApi object based on the model types passed in.
@@ -32,33 +62,63 @@ abstract class JsonApi
      */
     public function __construct()
     {
-        if (!property_exists($this, 'api_version')) {
+        if(!property_exists($this, 'api_version'))
             throw new \Exception('JsonApi must define `protected static $api_version;`.');
-        }
 
         //shorthand for the config
         $this->config = config('jaal.'.static::$api_version);
 
         //we keep an internal doc so we can make a response
         $this->doc = new DocObject($this);
+        //verify that our required fields are present...maybe move this somewhere else?
+        foreach ($this->requiredProperties as $property) {
+            $class =get_called_class();
+            if (!property_exists($class, $property)){
+                throw new UndefinedApiPropertiesException("$class must define `protected static \${$property};`.");
+            }
+        }
+    
     }
 
+    /**
+     * Add the user's defined meta into the document
+     * @var $meta_data
+     **/
+    protected function addMetaIfDefined($meta_data)
+    {
+
+        if (property_exists($this, 'meta') && !empty($meta_data)){
+
+            $this->getDoc()->addMeta($meta_data);
+
+        }
+        return $this;
+    }
+    /**
+     * Build up the query for the context model(s).
+     * and find
+     * 
+     * @var array
+     **/
     protected function baseQuery()
     {
         //we work from outside in
-        $models = array_reverse($this->models);
-        $ids = array_reverse($this->model_ids);
-        $nicknames = array_reverse($this->nicknames);
+        $models = array_reverse($this->context_models);
 
+        $ids = array_reverse($this->current_model_ids);
+
+        $nicknames = array_reverse($this->nicknames);
+    
         //keep track of the top model
         $assoc_model = array_shift($models);
-
+       
         //trivial case
-        $q = $this->config['models'][$assoc_model]::query();
+        $q = static::$models[$assoc_model]::query();
 
         //if we are looking for a specific instance
         if (count($ids) > count($models)) {
-            $m = $this->config['models'][$assoc_model];
+            $m = static::$models[$assoc_model];
+
             $m = new $m;
 
             $q->where($m->getKeyName(), array_shift($ids));
@@ -77,7 +137,7 @@ abstract class JsonApi
             $nickname = array_shift($nicknames);
 
             $q->whereHas(camel_case($nickname), function ($query) use ($assoc_model, &$models, &$ids) {
-                $m = $this->config['models'][$assoc_model];
+                $m = static::$models [$assoc_model];
                 $m = new $m;
 
                 $query->where($m->getKeyName(), array_shift($ids));
@@ -119,8 +179,11 @@ abstract class JsonApi
         //get the default request
         //in the future, we might have them pass it in or something
         $request = request();
-
+       
         $this->doc = new DocObject($this, DocObject::DOC_MANY);
+
+        // add the user's defined meta to the document response.
+        $this->addMetaIfDefined(static::$meta);
 
         //handle sparse fields
         try {
@@ -131,7 +194,7 @@ abstract class JsonApi
 
         //create the base query
         $q = $this->baseQuery();
-
+       
         //handle filters
         try {
             $q = $this->filter($request, $q);
@@ -157,6 +220,7 @@ abstract class JsonApi
         $q->get()->each(function ($item, $key) {
             $this->doc->addData($item);
         });
+
 
         return $this;
     }
@@ -378,7 +442,11 @@ abstract class JsonApi
         return $this;
     }
 
-
+    /**
+     * add the model to the document if its available.
+     * or add a not found error to the document response.
+     * 
+     **/
     public function show()
     {
         $this->doc = new DocObject($this, DocObject::DOC_ONE);
@@ -402,7 +470,7 @@ abstract class JsonApi
 
         try {
             //get FQCL of model
-            $model = $this->config['models'][$this->models[0]];
+            $model = static::$models[$this->context_models[0]];
 
             $body = json_decode(request()->getContent(), true) ?: request()->all();
             $attr = count($attributes) ? $attributes : $body['data']['attributes'];
@@ -454,18 +522,29 @@ abstract class JsonApi
         return $this;
     }
 
-    public function setModelIds(array $modelIds)
-    {
-        $this->model_ids = $modelIds;
+    /**
+     * Set the current request's models
+     * we are working with.
+     *
+     * @var array $api_models
+     *  
+     **/
 
-        return $this;
+    public function setContextModels(array $api_models)
+    {
+        $this->context_models = $api_models;
     }
-
-    public function setModels(array $models)
+    /**
+     * Set the current request's models id's
+     * we are working with.
+     *
+     * @var array $api_models
+     *  
+     **/
+    public function setContextModelIds(array $modelIds)
     {
-        $this->models = $models;
-
-        return $this;
+        
+        $this->current_model_ids = $modelIds;
     }
 
     public function setNicknames(array $nicknames)
@@ -476,21 +555,20 @@ abstract class JsonApi
     }
 
     public function getDoc()
-    {
+    {   
         return $this->doc;
     }
-
-    public function getConfig()
-    {
-        return $this->config;
-    }
-
+    /**
+     * Infer all of the data
+     *
+     **/
     public function inferAll()
     {
+       
         $caller = debug_backtrace(false, 2)[1];
-
-        $this->setModelIds(array_values(\Route::getCurrentRoute()->parameters()));
-        $this->setModels(explode('.', array_search($caller['class'], $this->config['routes'])));
+        $this->setContextModelIds(array_values(\Route::getCurrentRoute()->parameters()));
+        //return the nicknames of the models as defined in routes statick property
+        $this->setContextModels(explode('.', array_search($caller['class'], static::$routes)));
         $this->{$caller['function']}();
 
         return $this;
@@ -498,16 +576,19 @@ abstract class JsonApi
 
     public function inferQueryParam(Controller $controller)
     {
-        $this->setModelIds(array_values(\Route::getCurrentRoute()->parameters()));
-        $this->setModels(explode('.', array_search(get_class($controller), $this->config['routes'])));
+
+        $this->setContextModelIds(array_values(\Route::getCurrentRoute()->parameters()));
+        $this->setContextModels(explode('.', array_search(get_class($controller), static::$routes)));
 
         return $this;
     }
 
     protected function filter(Request $request, Builder $query)
     {
+
+
         if (strlen($request->input('filter.search', ''))) {
-            $query = $this->search($query, $this->models[count($this->models)-1], explode(' ', substr($request->input('filter.search'), 0, 31)));
+            $query = $this->search($query, $this->context_models[count($this->context_models)-1], explode(' ', substr($request->input('filter.search'), 0, 31)));
         }
 
         //todo: add query builder
@@ -524,7 +605,6 @@ abstract class JsonApi
         if (is_null($types)) {
             return;
         }
-
         foreach ($types as $type => $fields_str) {
             if (strlen($fields_str)) {
                 $this->sparse_fields[$type] = array_unique(array_merge(['id'], explode(',', $fields_str)));
@@ -542,7 +622,7 @@ abstract class JsonApi
         $page_offset = max(0, intval($request->input('page.offset', 0)));
         $page_limit = min(200, max(10, intval($request->input('page.limit', 15))));
 
-        if (in_array($this->models[0], $this->config['pagination_data'])) {
+        if (in_array($this->context_models[0], static::$pagination_data)) {
             //run the base query with count()
             $count = $query->count();
 
@@ -593,28 +673,29 @@ abstract class JsonApi
      */
     public static function routes()
     {
-        if (!isset(static::$api_version) && !strlen(static::$api_version)) {
-            throw new \Exception('JsonApi must define `protected static $api_version;`.');
-        }
-
-        // Route::get(null, [
-        //     'as' => 'index-endpoints',
-        //     'uses' => '\\'.static::class.'@indexEndpoints',
-        // ]);
+        $api = new static;
+        //make sure this class has all the properties it needs.
 
         //get the group they want
-        $routes = config('jaal.'.static::$api_version.'.routes');
-        $relationships = config('jaal.'.static::$api_version.'.relationships');
+        $routes = is_array(static::$routes) && !empty(static::$routes) ? static::$routes :[];
+
+        $relationships = is_array(static::$relationships) && !empty(static::$relationships) ? static::$relationships :[];
+
+
+        //LEFT OFF Here
+
 
         //define the common routes
+
         foreach ($routes as $name => $controller) {
             Route::resource($name, '\\'.$controller, ['except' => ['create', 'edit']]);
         }
 
         //define relationship routes
         foreach ($relationships as $from => $all_relations) {
+
             foreach ($all_relations as $nickname => $rel_type) {
-                $controller = config('jaal.'.static::$api_version.'.routes.'.$from);
+                $controller = static::$routes[$from];
 
                 Route::get("$from/{{$from}}/relationships/$nickname", [
                     'as' => "$from.relationships.$nickname.show",
@@ -642,6 +723,7 @@ abstract class JsonApi
                 }
             }
         }
+        
     }
 
     /**

@@ -1,20 +1,21 @@
 <?php
 
-namespace DialInno\Jaal\Objects;
+namespace DialInno\Jaal\Core\Objects;
 
-use DialInno\Jaal\JsonApi;
+use DialInno\Jaal\Core\Api\JsonApi;
 use Illuminate\Support\Collection;
-use DialInno\Jaal\Objects\Errors\SerializationErrorObject;
 
 /**
  * Responsible for serializing a error object.
  */
-class ErrorObject extends MetaObject {
-
-    public function __construct(MetaObject $parent, $data)
+class ErrorObject extends GenericObject
+{
+    public function __construct(GenericObject $parent, $data)
     {
         parent::__construct($parent, $data);
 
+        $this->parent = $parent;
+        
         $this->data = (new Collection([
             'title' => 'Error',
             'detail' => 'An error occurred.',
@@ -22,11 +23,19 @@ class ErrorObject extends MetaObject {
         ]))->merge($this->data);
     }
 
+    /**
+     * Return the statuscode
+     * @return string
+     **/
     public function getStatus()
     {
         return strval($this->data->get('status', '400'));
     }
-
+    
+    /**
+     * Return the statuscode
+     * @return string
+     **/
     public function jsonSerialize()
     {
         return $this->data->only(['id', 'links', 'status', 'code', 'title', 'detail', 'source', 'meta']);

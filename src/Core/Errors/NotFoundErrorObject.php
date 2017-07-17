@@ -1,17 +1,17 @@
 <?php
 
-namespace DialInno\Jaal\Objects\Errors;
+namespace DialInno\Jaal\Core\Errors;
 
-use DialInno\Jaal\JsonApi;
 use Illuminate\Support\Collection;
-use DialInno\Jaal\Objects\ErrorObject;
-use DialInno\Jaal\Objects\MetaObject;
+use DialInno\Jaal\Core\Objects\ErrorObject;
+use DialInno\Jaal\Core\Objects\GenericObject;
 
 /**
  * Responsible for serializing a error object.
  */
-class NotFoundErrorObject extends ErrorObject {
-    public function __construct(MetaObject $parent)
+class NotFoundErrorObject extends ErrorObject 
+{
+    public function __construct(GenericObject $parent)
     {
         $this->parent = $parent;
 

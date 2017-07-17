@@ -7,6 +7,7 @@ use Illuminate\Foundation\Testing\TestResponse;
 
 class TestCase extends \Orchestra\Testbench\TestCase
 {
+
     /**
      * Setup the test environment.
      */
@@ -42,10 +43,9 @@ class TestCase extends \Orchestra\Testbench\TestCase
     protected function getEnvironmentSetUp($app)
     {
         $app['config']->set('database.default', 'testing');
-
         //pull in our testing config
-        $jaal = require(__DIR__.'/../config/jaal.php');
-        $app['config']->set('jaal', $jaal);
+        $api = new JsonApiV1;
+        $app['config']->set('jaal', $api);
 
         //make sure we use FK when running code
         \Schema::enableForeignKeyConstraints();

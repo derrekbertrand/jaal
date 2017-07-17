@@ -3,6 +3,7 @@
 namespace DialInno\Jaal\Commands\Generators;
 
 use Illuminate\Console\Command;
+use DialInno\Jaal\Core\Api\Version;
 use Illuminate\Filesystem\Filesystem;
 
 abstract class Generator
@@ -14,12 +15,7 @@ abstract class Generator
      * @var \Illuminate\Constole\Command
      */
     protected $command;
-    /**
-     * The api class example.
-     *
-     * @var static $apiClassTemplatePath
-     */
-    protected static $apiClassTemplatePath = __DIR__."/../../../publish/ApiV1.php";
+
     /**
      * The filesystem instance.
      *
@@ -34,11 +30,9 @@ abstract class Generator
     }
 
     /**
-     * undocumented function
-     *
-     * @var $options
-     * @var  Illuminate\Console\Command $command
+     * Generate the api class resource
+     * @var $api_info
      *
      **/
-    abstract public function generate(string $options);
+    abstract public function generate(array $api_info);
 }

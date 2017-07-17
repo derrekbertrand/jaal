@@ -3,60 +3,58 @@
 namespace DialInno\Jaal\Tests;
 
 use DialInno\Jaal\JsonApiRoute;
-use DialInno\Jaal\Tests\Api\JsonApiV1;
+use DialInno\Jaal\Tests\Models\Post;
 use DialInno\Jaal\Tests\Models\User;
 use DialInno\Jaal\Tests\Models\Skill;
-use DialInno\Jaal\Tests\Models\Post;
-use DialInno\Jaal\Objects\Errors\NotFoundErrorObject;
-use DialInno\Jaal\Objects\Errors\ValidationErrorObject;
+use DialInno\Jaal\Tests\Api\JsonApiV1;
+use DialInno\Jaal\Core\Errors\NotFoundErrorObject;
+use DialInno\Jaal\Core\Errors\ValidationErrorObject;
+
 
 class ObjectsTest extends TestCase
 {
-
-    public function testBadApi()
+    public function setUp()
     {
-        $this->expectException(\Exception::class);
+        parent::setUp();
 
-        new \DialInno\Jaal\Tests\Api\BadApi;
+        $this->jsonapi = new JsonApiV1;
+        $this->doc = $this->jsonapi->getDoc();
+        
     }
-
-    public function test404Error()
+    public function test_404_response()
     {
-        $jsonapi = new JsonApiV1;
-        $doc = $jsonapi->getDoc();
+        
 
-        $doc->addError(new NotFoundErrorObject($doc));
+        $this->doc->addError(new NotFoundErrorObject($this->doc));
 
-        $response = $jsonapi->getDoc()->getResponse();
+        $response = $this->jsonapi->getDoc()->getResponse();
 
         $this->assertEquals(404, $response->getStatusCode());
         $this->assertContains('The resource could not be found.', $response->getContent());
     }
 
-    public function testCustom400Error()
+    public function test_custom_400_response()
     {
-        $jsonapi = new JsonApiV1;
-        $doc = $jsonapi->getDoc();
+        
 
-        $doc->addError([]);
+        $this->doc->addError([]);
 
-        $response = $jsonapi->getDoc()->getResponse();
+        $response = $this->jsonapi->getDoc()->getResponse();
 
         $this->assertEquals(400, $response->getStatusCode());
         $this->assertContains('An error occurred.', $response->getContent());
     }
 
-    public function testCustom500Error()
+    public function test_custom_500_response()
     {
-        $jsonapi = new JsonApiV1;
-        $doc = $jsonapi->getDoc();
+        
 
-        $doc->addError([
+        $this->doc->addError([
             'status' => '500',
             'detail' => 'The system failed unexpectedly.',
         ]);
 
-        $response = $jsonapi->getDoc()->getResponse();
+        $response = $this->jsonapi->getDoc()->getResponse();
 
         $this->assertEquals(500, $response->getStatusCode());
         $this->assertContains('The system failed unexpectedly.', $response->getContent());
@@ -64,101 +62,95 @@ class ObjectsTest extends TestCase
 
     public function testFallback400Error()
     {
-        $jsonapi = new JsonApiV1;
-        $doc = $jsonapi->getDoc();
+        
 
-        $doc->addError([
+        $this->doc->addError([
             'status' => '500',
             'detail' => 'The system failed unexpectedly.',
         ]);
 
-        $doc->addError(new NotFoundErrorObject($doc));
+        $this->doc->addError(new NotFoundErrorObject($this->doc));
 
-        $response = $jsonapi->getDoc()->getResponse();
+        $response = $this->jsonapi->getDoc()->getResponse();
 
         $this->assertEquals(400, $response->getStatusCode());
         $this->assertContains('The system failed unexpectedly.', $response->getContent());
         $this->assertContains('The resource could not be found.', $response->getContent());
     }
 
-    public function test200Default()
+    public function test_default_200_response()
     {
-        $jsonapi = new JsonApiV1;
-        $doc = $jsonapi->getDoc();
-
-        $this->assertEquals(200, $doc->getHttpStatus());
+        $this->assertEquals(200, $this->doc->getHttpStatus());
     }
 
-    public function testBadResource()
+    public function test_bad_resource()
     {
-        $jsonapi = new JsonApiV1;
-        $doc = $jsonapi->getDoc();
+        
 
-        $doc->addData(['foo' => 'bar']);
+        $this->doc->addData(['foo' => 'bar']);
 
-        $response = $jsonapi->getDoc()->getResponse();
+        $response = $this->jsonapi->getDoc()->getResponse();
+
+        $responseContent = $response->getContent();
 
         $this->assertEquals(500, $response->getStatusCode());
-        $this->assertContains('ID is required for a resource object.', $response->getContent());
-        $this->assertContains('foo is not a valid member of a resource object.', $response->getContent());
-        $this->assertContains('Type is required for a resource object.', $response->getContent());
+        $this->assertContains('ID is required for a resource object.', $responseContent);
+        $this->assertContains('foo is not a valid member of a resource object.', $responseContent);
+        $this->assertContains('Type is required for a resource object.', $responseContent);
     }
 
-    public function testValidationError()
+    public function test_failed_validation_response()
     {
-        $jsonapi = new JsonApiV1;
-        $doc = $jsonapi->getDoc();
+        
 
-        $doc->addError(new ValidationErrorObject($doc, [
+        $this->doc->addError(new ValidationErrorObject($this->doc, [
             'detail' => 'The field is required.'
         ]));
 
-        $response = $jsonapi->getDoc()->getResponse();
+        $response = $this->jsonapi->getDoc()->getResponse();
 
         $this->assertEquals(400, $response->getStatusCode());
         $this->assertContains('The field is required.', $response->getContent());
     }
 
-    public function testAddCollectionObject()
+
+    public function test_add_collection_error()
     {
-        $jsonapi = new JsonApiV1;
-        $doc = $jsonapi->getDoc();
+        
 
-        $doc->addError(new \Illuminate\Support\Collection);
+        $this->doc->addError(new \Illuminate\Support\Collection);
 
-        $response = $jsonapi->getDoc()->getResponse();
+        $response = $this->jsonapi->getDoc()->getResponse();
+
 
         $this->assertEquals(400, $response->getStatusCode());
         $this->assertContains('An error occurred.', $response->getContent());
     }
 
-    public function testAddBadObject()
+    public function test_add_bad_object()
     {
-        $jsonapi = new JsonApiV1;
-        $doc = $jsonapi->getDoc();
+        
 
         $this->expectException(\Exception::class);
 
-        $doc->addError(new \Exception());
+        $this->doc->addError(new \Exception());
     }
 
-    public function testBadMemberNameUnderscore()
+    public function test_bad_member_name_underscore()
     {
-        $jsonapi = new JsonApiV1;
-        $doc = $jsonapi->getDoc();
+        
 
         $this->expectException(\Exception::class);
 
-        $doc->addError(['_foo' => 'bar']);
+        $this->doc->addError(['_foo' => 'bar']);
     }
 
-    public function testBadMemberNamePeriod()
+    public function test_bad_member_name_period()
     {
-        $jsonapi = new JsonApiV1;
-        $doc = $jsonapi->getDoc();
+        
 
         $this->expectException(\Exception::class);
 
-        $doc->addError(['foo.bar' => 'baz']);
+        $this->doc->addError(['foo.bar' => 'baz']);
     }
 }

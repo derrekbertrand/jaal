@@ -15,7 +15,7 @@ you want to give it a go.
 
 ## Getting Started
 
-Add `DialInno\Jaal\JaalProvider::class` to your application's providers array.
+Add `DialInno\Jaal\Core\Providers\JaalProvider::class` to your application's providers array.
 Run this to publish the example `config/jaal.php` file:
 
 ```bash

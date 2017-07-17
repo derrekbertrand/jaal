@@ -1,33 +1,73 @@
 <?php
 
-namespace DialInno\Jaal\Objects;
+namespace DialInno\Jaal\Core\Objects;
 
-use DialInno\Jaal\JsonApi;
 use Illuminate\Support\Collection;
+use DialInno\Jaal\Core\Api\JsonApi;
+use Illuminate\Support\Facades\Validator;
+use DialInno\Jaal\Core\Objects\ErrorObject;
+use DialInno\Jaal\Core\Objects\GenericObject;
+use DialInno\Jaal\Core\Objects\ResourceObject;
+use DialInno\Jaal\Core\Objects\ResourceIdentifierObject;
 
 /**
  * Responsible for serializing a document and preparing a response.
  */
-class DocObject extends MetaObject {
+class DocObject extends GenericObject
+{
 
+    /**
+     * constants to describe the document data
+     **/
     const DOC_NONE = 0;
     const DOC_ONE = 1;
     const DOC_MANY = 2;
     const DOC_ONE_IDENT = 3;
     const DOC_MANY_IDENT = 4;
     const DOC_TYPE_MAX = 4;
-
+    /**
+     * Document errors
+     * @var Illuminate\Database\Eloquent\Collection $errors
+     **/
     protected $errors;
+    /**
+     * The api class in question
+     *
+     * @var DialInno\Jaal\Core\Api\JsonApi $api
+     **/
+    protected $api = null;
 
-    protected $json_api = null;
-
+    /**
+     * Default status of 200
+     * @var int $code
+     **/
     protected $code = 200;
-
+    /**
+     * the Document type
+     * @var int $doc_type
+     **/
     protected $doc_type;
 
+    /**
+     * The document data
+     * @var Illuminate\Database\Eloquent\Collection $data
+     **/
     protected $data;
+
+    /**
+     * The document links
+     * @var ?
+     **/
     protected $links;
+    /**
+     * The document included data
+     * @var ?
+     **/
     protected $included;
+    /**
+     * The document meta
+     * @var Illuminate\Database\Eloquent\Collection $data
+     **/
     protected $meta;
 
     public function __construct(JsonApi $json_api, int $doc_type = 0)
@@ -39,31 +79,39 @@ class DocObject extends MetaObject {
         $this->meta = new Collection;
     }
 
+    /**
+     * Get document http status
+     * @var string code
+     **/
     public function getHttpStatus()
     {
-        if($this->errors->count())
+        if ($this->errors->count()) {
             return $this->errors->reduce(function ($carry, $item) {
                 //prime the system
-                if($carry === null)
+                if ($carry === null) {
                     return $item->getStatus();
+                }
 
                 //if we have different errors, send a 400
-                if($item->getStatus() !== $carry)
+                if ($item->getStatus() !== $carry) {
                     return '400';
+                }
 
                 return $item->getStatus();
             });
-        else
+        } else {
             return $this->code;
+        }
     }
 
     /**
      * I am the document.
      *
-     * @return DocObject
+     * @return this
      */
     public function getDoc()
     {
+
         return $this;
     }
 
@@ -75,8 +123,9 @@ class DocObject extends MetaObject {
      */
     public function addError($error_data)
     {
-        if(!($error_data instanceof ErrorObject))
+        if (!($error_data instanceof ErrorObject)) {
             $error_data = new ErrorObject($this->getDoc(), $error_data);
+        }
 
         $this->errors->push($error_data);
 
@@ -97,15 +146,30 @@ class DocObject extends MetaObject {
      */
     public function addData($data)
     {
-        if($this->isIdent())
+        if ($this->isIdent()) {
             $resource = new ResourceIdentifierObject($this, $data);
-        else
+        } else {
             $resource = new ResourceObject($this, $data);
+        }
 
         //add to data
         $this->data->push($resource);
     }
 
+    /**
+     * Validate the api request
+     * @param  $array $rules
+     * @param  $array $attributes
+     */
+    protected function validate($rules = null, $messages, $attributes)
+    {
+        $body = json_decode(request()->getContent(), true) ?: request()->all();
+        $validator = Validator::make($body, $rules, $messages, $attributes);
+
+        foreach($validator->errors()->toArray() as $ref => $messages)
+            foreach($messages as $message)
+                $this->addError(new ValidationErrorObject($this, ['detail' => $message, 'source' => ['pointer' => '/'.str_replace('.', '/', $ref)]]));
+    }
     /**
      * Get a response object; takes json options.
      *
@@ -116,7 +180,7 @@ class DocObject extends MetaObject {
     {
         $out = $this->toJson($options);
 
-        return response($out, intval($this->getHttpStatus()));
+        return response($out, intval($this->getHttpStatus()))->header('Content-Type', 'application/vnd.api+json');
     }
 
     /**
@@ -160,33 +224,31 @@ class DocObject extends MetaObject {
         $out['jsonapi'] = ['version' => '1.0'];
         $error_arr = [];
         $data_arr = [];
-
-        if($this->isMany())
-        {
+        if ($this->isMany()) {
             $data_arr = $this->data->jsonSerialize();
-        }
-        else if($this->isOne())
-        {
-            if($this->data->count())
+        } elseif ($this->isOne()) {
+            if ($this->data->count()) {
                 $data_arr = $this->data[0]->jsonSerialize();
-            else
+            } else {
                 $data_arr = null;
+            }
         }
 
         //todo: toplevel meta object
-        if($this->meta->count())
+        if ($this->meta->count()) {
+
             $out['meta'] = $this->meta->jsonSerialize();
+        }
 
         //if we have errors, ignore the data
-        if($this->errors->count())
-        {
+        if ($this->errors->count()) {
             $out['errors'] = $this->errors->jsonSerialize();
         }
         //we don't have errors, display the data
-        else
-        {
-            if($this->isMany() || $this->isOne())
+        else {
+            if ($this->isMany() || $this->isOne()) {
                 $out['data'] = $data_arr;
+            }
         }
 
         //todo: links

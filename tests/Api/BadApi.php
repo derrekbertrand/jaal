@@ -2,7 +2,7 @@
 
 namespace DialInno\Jaal\Tests\Api;
 
-use DialInno\Jaal\JsonApi;
+use DialInno\Jaal\Core\Api\JsonApi;
 
 class BadApi extends JsonApi
 {

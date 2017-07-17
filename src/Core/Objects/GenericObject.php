@@ -1,23 +1,23 @@
 <?php
 
-namespace DialInno\Jaal\Objects;
+namespace DialInno\Jaal\Core\Objects;
 
-use DialInno\Jaal\JsonApi;
 use Illuminate\Support\Collection;
+use DialInno\Jaal\Core\Api\JsonApi;
 use Illuminate\Contracts\Support\Jsonable;
+use DialInno\Jaal\Core\Objects\ErrorObject;
 
 /**
- * Responsible for serializing a meta object.
+ * Responsible for serializing the object.
  */
-class MetaObject implements Jsonable, \JsonSerializable {
+abstract class GenericObject implements Jsonable, \JsonSerializable {
 
-    protected static $obj_name = 'meta';
+
 
     protected $data;
-    protected $meta;
     protected $parent;
 
-    public function __construct(MetaObject $parent, $data)
+    public function __construct(GenericObject $parent, $data)
     {
         $this->parent = $parent;
         $this->meta = new Collection;
@@ -83,6 +83,7 @@ class MetaObject implements Jsonable, \JsonSerializable {
     protected function validateMembers()
     {
         $this->data->each(function ($item, $key) {
+
             $member_regex = '/^([a-zA-Z0-9][a-zA-Z0-9_\\-]*)?[a-zA-Z0-9]$/';
 
             //throw exception if it is bad
