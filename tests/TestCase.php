@@ -5,12 +5,11 @@ namespace DialInno\Jaal\Tests;
 
 use DialInno\Jaal\Tests\Api\JsonApiV1;
 use Illuminate\Foundation\Testing\TestResponse;
-use Orchestra\Testbench\Exceptions\Handler;
-use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Orchestra\Testbench\Exceptions\Handler as OrchestraHandler;
+use Illuminate\Contracts\Debug\ExceptionHandler as LaravelHandler;
 
 class TestCase extends \Orchestra\Testbench\TestCase
 {
-
     /**
      * Setup the test environment.
      */
@@ -44,6 +43,17 @@ class TestCase extends \Orchestra\Testbench\TestCase
     protected function resolveApplicationExceptionHandler($app)
     {
         $app->singleton('Illuminate\Contracts\Debug\ExceptionHandler', 'Orchestra\Testbench\Exceptions\Handler');
+    }
+
+    protected function disableExceptionHandling()
+    {
+        $this->app->instance(LaravelHandler::class, new class extends OrchestraHandler {
+            public function __construct() {}
+            public function report(\Exception $e) {}
+            public function render($request, \Exception $e) {
+                throw $e;
+            }
+        });
     }
 
     /**
