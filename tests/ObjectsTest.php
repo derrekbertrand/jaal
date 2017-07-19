@@ -85,8 +85,6 @@ class ObjectsTest extends TestCase
 
     public function test_bad_resource()
     {
-        
-
         $this->doc->addData(['foo' => 'bar']);
 
         $response = $this->jsonapi->getDoc()->getResponse();
@@ -101,16 +99,13 @@ class ObjectsTest extends TestCase
 
     public function test_failed_validation_response()
     {
-        
 
-        $this->doc->addError(new ValidationErrorObject($this->doc, [
-            'detail' => 'The field is required.'
-        ]));
+        $this->doc->validate(['foo'=>'required']);
 
         $response = $this->jsonapi->getDoc()->getResponse();
 
         $this->assertEquals(400, $response->getStatusCode());
-        $this->assertContains('The field is required.', $response->getContent());
+        $this->assertContains('The foo field is required.', $response->getContent());
     }
 
 

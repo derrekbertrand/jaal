@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Validator;
 use DialInno\Jaal\Core\Objects\ErrorObject;
 use DialInno\Jaal\Core\Objects\GenericObject;
 use DialInno\Jaal\Core\Objects\ResourceObject;
+use DialInno\Jaal\Core\Errors\ValidationErrorObject;
 use DialInno\Jaal\Core\Objects\ResourceIdentifierObject;
 
 /**
@@ -161,14 +162,16 @@ class DocObject extends GenericObject
      * @param  $array $rules
      * @param  $array $attributes
      */
-    protected function validate($rules = null, $messages, $attributes)
+    public function validate($rules = null, $messages=[], $attributes=[])
     {
         $body = json_decode(request()->getContent(), true) ?: request()->all();
+    
         $validator = Validator::make($body, $rules, $messages, $attributes);
 
         foreach($validator->errors()->toArray() as $ref => $messages)
             foreach($messages as $message)
                 $this->addError(new ValidationErrorObject($this, ['detail' => $message, 'source' => ['pointer' => '/'.str_replace('.', '/', $ref)]]));
+        return $this;
     }
     /**
      * Get a response object; takes json options.
@@ -180,7 +183,34 @@ class DocObject extends GenericObject
     {
         $out = $this->toJson($options);
 
-        return response($out, intval($this->getHttpStatus()))->header('Content-Type', 'application/vnd.api+json');
+        if($this->requestWantsJson()){
+
+            return $this->getJsonResponse($options);
+        }
+        return response($out, intval($this->getHttpStatus()));
+    }
+
+    /**
+     * Get a response object; takes json options.
+     *
+     * @param  int  $options
+     * @return Response
+     */
+    protected function getJsonResponse($options = 0)
+    {
+        $out = $this->toJson($options);
+        return response($out, intval($this->getHttpStatus()))->header('Content-Type','application/vnd.api+json');
+    }
+
+
+    /**
+     * Findout if the request is wanting our api content type
+     *
+     * @return bool
+     */
+    public function requestWantsJson(){
+
+        return str_contains(request()->headers->get('accept'), 'application/vnd.api+json');
     }
 
     /**

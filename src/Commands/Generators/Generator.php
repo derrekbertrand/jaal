@@ -3,6 +3,7 @@
 namespace DialInno\Jaal\Commands\Generators;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Collection;
 use DialInno\Jaal\Core\Api\Version;
 use Illuminate\Filesystem\Filesystem;
 
@@ -31,8 +32,8 @@ abstract class Generator
 
     /**
      * Generate the api class resource
-     * @var $api_info
+     * @var string $api_name
      *
      **/
-    abstract public function generate(array $api_info);
+    abstract public function generate(string $api_name);
 }

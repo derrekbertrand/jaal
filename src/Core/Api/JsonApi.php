@@ -680,22 +680,25 @@ abstract class JsonApi
         //define the common routes
 
         foreach ($routes as $name => $controller) {
+
+
             Route::resource($name, '\\'.$controller, ['except' => ['create', 'edit']]);
         }
 
         //define relationship routes
         foreach ($relationships as $from => $all_relations) {
-            foreach ($all_relations as $nickname => $rel_type) {
-                $controller = static::$routes[$from];
+            foreach ($all_relations as $nickname => $rel_type){
 
+                $controller = static::$routes[$from];
+                $studlyNickName = studly_case($nickname);
                 Route::get("$from/{{$from}}/relationships/$nickname", [
                     'as' => "$from.relationships.$nickname.show",
-                    'uses' => '\\'.$controller.'@show'.studly_case($nickname),
+                    'uses' => '\\'.$controller.'@show'.$studlyNickName,
                 ]);
 
                 Route::patch("$from/{{$from}}/relationships/$nickname", [
                     'as' => "$from.relationships.$nickname.update",
-                    'uses' => '\\'.$controller.'@update'.studly_case($nickname),
+                    'uses' => '\\'.$controller.'@update'.$studlyNickName,
                 ]);
 
                 //if it is a to-many type, then we need to respond to these also
@@ -703,13 +706,13 @@ abstract class JsonApi
                     //post for add only
                     Route::post("$from/{{$from}}/relationships/$nickname", [
                         'as' => "$from.relationships.$nickname.store",
-                        'uses' => '\\'.$controller.'@store'.studly_case($nickname),
+                        'uses' => '\\'.$controller.'@store'.$studlyNickName,
                     ]);
 
                     //delete for drop only
                     Route::delete("$from/{{$from}}/relationships/$nickname", [
                         'as' => "$from.relationships.$nickname.destroy",
-                        'uses' => '\\'.$controller.'@destroy'.studly_case($nickname),
+                        'uses' => '\\'.$controller.'@destroy'.$nickname,
                     ]);
                 }
             }

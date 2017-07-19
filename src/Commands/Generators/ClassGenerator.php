@@ -2,6 +2,7 @@
 
 namespace DialInno\Jaal\Commands\Generators;
 
+use Illuminate\Support\Collection;
 use Illuminate\Filesystem\Filesystem;
 use DialInno\Jaal\Commands\Generators\Generator;
 
@@ -12,37 +13,44 @@ class ClassGenerator extends Generator
      *
      * @var static $apiClassPath
      */
-    protected static $apiClassTemplatePath = __DIR__."/../../../publish/ApiV1.php";
+    protected static $apiClassTemplatePath = __DIR__."/../../Publish/ApiV1.php";
 
     /**
      * Generate the class if it doesnt exist
-     * @var array $api_info
+     * @var string $api_name
      *
      **/
-    public function generate(array $api_info)
+    public function generate(string $api_name)
     {
-        $this->createClass($api_info);
+        $this->createClass($api_name);
     }
 
     /**
      * Create a class if it doesnt exist
-     * @var array $api_info
+     * @var string $api_name
      **/
-    private function createClass(array $api_info)
+    private function createClass(string $api_name)
     {
         //was a class name given?
-        $generatedClassName = $api_info['name'] == null ? "ApiV{$api_info['version']}" :$api_info['full_name'];
+        $generatedClassName = $api_name == null ? "ApiV1" : $api_name;
+
+        $api_dir = app_path('Http/Api');
+
+        if(!$this->files->exists($api_dir)){
+
+            mkdir($api_dir);
+        }
         //default to saving to the app/Http/ dir.
-        $class_path =app_path("Http/{$generatedClassName}.php");
+        $class_path = $api_dir . "/$generatedClassName.php";
         //Next verify class doesnt already exits
         if (!$this->files->exists($class_path)) {
             
-            $this->files->put($class_path, $this->getNewClassContents($generatedClassName,$api_info));
+            $this->files->put($class_path, $this->getNewClassContents($generatedClassName,$api_name));
 
-            $this->command->info("Succesfully created app/Http/{$generatedClassName}.php!");
+            $this->command->info("Succesfully created app/Http/Api/{$generatedClassName}.php!");
 
         } else {
-            $this->command->error("The class app/Http/{$generatedClassName}.php already exists!");
+            $this->command->error("The class app/Http/Api/{$generatedClassName}.php already exists!");
         }
     }
 
@@ -50,16 +58,19 @@ class ClassGenerator extends Generator
      * Returns the new class file contents to 
      * overwrite the template content.
      * @var string $generatedClassName
-     * @var array $api_info
+     * @var array $api_name
      **/
-    private function getNewClassContents(string $generatedClassName,array $api_info){
+    private function getNewClassContents(string $generatedClassName,string $api_name){
         //get the template
         $newClass = $this->files->get(static::$apiClassTemplatePath);
+
+        $formattedApiName = kebab_case($api_name);
         //Replace the default ApiV1 if needed--Todo cleanup
         $newClass = str_replace('ApiV1', $generatedClassName, $newClass);
-        $newClass = str_replace("public static \$version = 'v1';","public static \$version = '{$api_info['version']}';",$newClass);
-        $newClass = str_replace("namespace DialInno\Jaal\Publish;","namespace App\Http;",$newClass);
+        $newClass = str_replace("public static \$version = 'v1';","public static \$version = '{$formattedApiName}';",$newClass);
+        $newClass = str_replace("namespace DialInno\Jaal\Publish;","namespace App\Http\Api;",$newClass);
 
         return $newClass;
     }
+
 }
