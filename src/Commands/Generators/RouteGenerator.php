@@ -44,9 +44,18 @@ class RouteGenerator extends Generator
 
             //Not the cleanest way but keeps text formatted
             $content =<<<PHP
-Route::group(['middleware'=>'jaal', 'prefix' => '{$formattedApiName}','as' => 'api.{$formattedApiName}.','namespace' => '{$api_name}'], function () { 
-    \App\Http\Api\\$api_name::routes();
-});
+Route::group(
+    [
+        'middleware' => \DialInno\Jaal\Core\Middleware\NegotiateJsonApi::class,
+        'prefix' => '{$formattedApiName}',
+        'as' => 'api.{$formattedApiName}.',
+        'namespace' => '{$api_name}'
+    ],
+    function () { 
+        \App\Http\Api\\$api_name::routes();
+    }
+);
+
 PHP;
           
             //tack on at the end of the routes file.

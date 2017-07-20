@@ -1,26 +1,17 @@
 <?php
 
-namespace DialInno\Jaal\Publish;
+namespace DialInno\Jaal\Core\Api;
 
 use \DialInno\Jaal\Core\Api\JsonApi;
 
-class ApiV1 extends JsonApi
+class DummyApi extends JsonApi
 {
-    /**
-    * This array tells the api class to exclude route uri's 
-    * from the VerifyRequestWantsJson middleware.
-    *
-    *
-    * @var array
-    **/
-    public $exclude_routes = [];
-
     /**
      * The version of the api.
      *
      * @var string
      **/
-    public static $version = 'v1';
+    public static $version = '';
 
     /**
      * This array is serailized into every JSON response sent back to the
