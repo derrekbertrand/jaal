@@ -158,22 +158,6 @@ class DocObject extends GenericObject
     }
 
     /**
-     * Validate the api request
-     * @param  $array $rules
-     * @param  $array $attributes
-     */
-    public function validate($rules = null, $messages=[], $attributes=[])
-    {
-        $body = json_decode(request()->getContent(), true) ?: request()->all();
-    
-        $validator = Validator::make($body, $rules, $messages, $attributes);
-
-        foreach($validator->errors()->toArray() as $ref => $messages)
-            foreach($messages as $message)
-                $this->addError(new ValidationErrorObject($this, ['detail' => $message, 'source' => ['pointer' => '/'.str_replace('.', '/', $ref)]]));
-        return $this;
-    }
-    /**
      * Get a response object; takes json options.
      *
      * @param  int  $options
