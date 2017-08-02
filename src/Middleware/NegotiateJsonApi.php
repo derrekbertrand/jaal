@@ -93,7 +93,7 @@ class NegotiateJsonApi
 
         foreach ($params as $param) {
             // if it is reserved but not standard throw a fit
-            if ((preg_match('/^[a-z]+$/', $param) === 1) && !in_array($param, ['include', 'fields', 'sort', 'page', 'filter'])) {
+            if ((preg_match('/^[a-z]+$/', $param) === 1) && !in_array($param, ['include', 'fields', 'sort', 'page', 'filter', '_method'])) {
                 $bad_params[] = $param;
                 continue;
             }
