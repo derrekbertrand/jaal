@@ -1,11 +1,11 @@
 <?php
 
-namespace DialInno\Jaal\Core\Objects;
+namespace DialInno\Jaal\Objects;
 
 use Illuminate\Support\Collection;
-use DialInno\Jaal\Core\Api\JsonApi;
-use DialInno\Jaal\Core\Objects\GenericObject;
-use DialInno\Jaal\Core\Errors\SerializationErrorObject;
+use DialInno\Jaal\Api\JsonApi;
+use DialInno\Jaal\Objects\GenericObject;
+use DialInno\Jaal\Objects\Errors\SerializationErrorObject;
 
 
 /**

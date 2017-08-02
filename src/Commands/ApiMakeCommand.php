@@ -93,7 +93,6 @@ class ApiMakeCommand extends Command
                 $generator = new $class($this->files, $this);
 
                 if ($generator instanceof \DialInno\Jaal\Commands\Generators\Generator) {
-
                     $generator->generate($args['api_name']);
                 } else {
                     $this->error("Config Error:{$class} is not a valid Generator object. {$class} not processed!");

@@ -1,8 +1,8 @@
 <?php
 
-namespace DialInno\Jaal\Publish;
+namespace DialInno\Jaal\Commands\Publish;
 
-use \DialInno\Jaal\Core\Api\JsonApi;
+use \DialInno\Jaal\Api\JsonApi;
 
 class ApiV1 extends JsonApi
 {

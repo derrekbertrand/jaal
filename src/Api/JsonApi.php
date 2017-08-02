@@ -1,15 +1,15 @@
 <?php
 
-namespace DialInno\Jaal\Core\Api;
+namespace DialInno\Jaal\Api;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Route;
-use DialInno\Jaal\Core\Objects\DocObject;
+use DialInno\Jaal\Objects\DocObject;
 use Illuminate\Database\Eloquent\Builder;
-use DialInno\Jaal\Core\Errors\NotFoundErrorObject;
+use DialInno\Jaal\Objects\Errors\NotFoundErrorObject;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use DialInno\Jaal\Core\Errors\Exceptions\UndefinedApiPropertiesException;
+use DialInno\Jaal\Exceptions\UndefinedApiPropertiesException;
 
 abstract class JsonApi
 {

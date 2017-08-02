@@ -2,7 +2,6 @@
 
 namespace DialInno\Jaal\Tests;
 
-use DialInno\Jaal\JsonApiRoute;
 use DialInno\Jaal\Tests\Models\User;
 use DialInno\Jaal\Tests\Models\Skill;
 use DialInno\Jaal\Tests\Models\Post;

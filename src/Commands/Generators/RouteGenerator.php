@@ -32,11 +32,11 @@ class RouteGenerator extends Generator
 
         $routesFileContents = $this->files->get($apiBasePath);
 
-        $routeSignature = "\App\Http\Api\\$api_name::routes();";
+        $routeSignature = "\App\Http\\$api_name::routes();";
 
         //check if app/Http/${classNameWanted}.php has routes registered...TODO cleanup
-        if ($this->files->exists(app_path("Http/Api/".$api_name.".php")) && str_contains($routesFileContents, $routeSignature)) {
-            $this->command->error("It seems app/Http/Api/$api_name.php's api routes are already defined in routes/api.php");
+        if ($this->files->exists(app_path("Http/".$api_name.".php")) && str_contains($routesFileContents, $routeSignature)) {
+            $this->command->error("It seems app/Http/$api_name.php's api routes are already defined in routes/api.php");
         } else {
             
             //create a api kebab case name for as in route definition e.g 'as'=>'api-name-v1'
@@ -46,13 +46,13 @@ class RouteGenerator extends Generator
             $content =<<<PHP
 Route::group(
     [
-        'middleware' => \DialInno\Jaal\Core\Middleware\NegotiateJsonApi::class,
+        'middleware' => \DialInno\Jaal\Middleware\NegotiateJsonApi::class,
         'prefix' => '{$formattedApiName}',
         'as' => 'api.{$formattedApiName}.',
         'namespace' => '{$api_name}'
     ],
     function () { 
-        \App\Http\Api\\$api_name::routes();
+        \App\Http\\$api_name::routes();
     }
 );
 
@@ -63,7 +63,7 @@ PHP;
             //save the file
             $this->files->put($apiBasePath, $routes);
 
-            $this->command->info("Succesfully registered app/Http/Api/{$api_name}.php's routes!");
+            $this->command->info("Succesfully registered app/Http/{$api_name}.php's routes!");
         }
     }
 }

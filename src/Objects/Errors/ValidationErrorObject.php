@@ -1,11 +1,11 @@
 <?php
 
-namespace DialInno\Jaal\Core\Errors;
+namespace DialInno\Jaal\Objects\Errors;
 
 use DialInno\Jaal\JsonApi;
 use Illuminate\Support\Collection;
-use DialInno\Jaal\Core\Objects\ErrorObject;
-use DialInno\Jaal\Core\Objects\GenericObject;
+use DialInno\Jaal\Objects\Errors\ErrorObject;
+use DialInno\Jaal\Objects\GenericObject;
 
 /**
  * Responsible for serializing a error object.

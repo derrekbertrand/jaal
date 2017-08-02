@@ -1,6 +1,6 @@
 <?php
 
-namespace DialInno\Jaal;
+namespace DialInno\Jaal\Api;
 
 use Illuminate\Database\Eloquent\Model;
 

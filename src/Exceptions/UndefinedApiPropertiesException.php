@@ -1,6 +1,6 @@
 <?php
 
-namespace DialInno\Jaal\Core\Errors\Exceptions;
+namespace DialInno\Jaal\Exceptions;
 
 class UndefinedApiPropertiesException extends \Exception
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace DialInno\Jaal\Core\Providers;
+namespace DialInno\Jaal;
 
 use Illuminate\Support\ServiceProvider;
 

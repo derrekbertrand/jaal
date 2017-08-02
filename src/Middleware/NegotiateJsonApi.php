@@ -1,10 +1,10 @@
 <?php
 
-namespace DialInno\Jaal\Core\Middleware;
+namespace DialInno\Jaal\Middleware;
 
 use Closure;
-use DialInno\Jaal\Core\Objects\ErrorObject;
-use DialInno\Jaal\Core\Api\DummyApi;
+use DialInno\Jaal\Objects\ErrorObject;
+use DialInno\Jaal\Api\DummyApi;
 
 class NegotiateJsonApi
 {

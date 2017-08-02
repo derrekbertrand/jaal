@@ -4,7 +4,7 @@ namespace DialInno\Jaal\Tests;
 
 use DialInno\Jaal\Tests\TestCase;
 use DialInno\Jaal\Tests\Api\BadApi;
-use DialInno\Jaal\Core\Errors\Exceptions\UndefinedApiPropertiesException;
+use DialInno\Jaal\Exceptions\UndefinedApiPropertiesException;
 
 
 

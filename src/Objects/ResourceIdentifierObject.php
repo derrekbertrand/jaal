@@ -1,10 +1,10 @@
 <?php
 
-namespace DialInno\Jaal\Core\Objects;
+namespace DialInno\Jaal\Objects;
 
 use DialInno\Jaal\JsonApi;
 use Illuminate\Support\Collection;
-use DialInno\Jaal\Core\Objects\ResourceObject;
+use DialInno\Jaal\Objects\ResourceObject;
 
 /**
  * Responsible for serializing a data object.

@@ -1,6 +1,6 @@
 <?php
 
-namespace DialInno\Jaal\Core\Api\Traits;
+namespace DialInno\Jaal\Api\Traits;
 
 trait SerializeModel
 {

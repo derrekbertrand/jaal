@@ -4,7 +4,7 @@ namespace DialInno\Jaal\Tests\Models;
 
 
 use Illuminate\Database\Eloquent\Model;
-use DialInno\Jaal\Core\Api\Traits\SerializeModel;
+use DialInno\Jaal\Api\Traits\SerializeModel;
 
 class Skill extends Model
 {

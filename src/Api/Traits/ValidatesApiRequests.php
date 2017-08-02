@@ -1,13 +1,13 @@
 <?php
 
-namespace DialInno\Jaal\Core;
+namespace DialInno\Jaal\Api\Traits;
 
 use Illuminate\Http\Request;
 use Illuminate\Contracts\Validation\Factory;
 use Illuminate\Contracts\Validation\Validator;
-use DialInno\Jaal\Core\Api\DummyApi;
-use DialInno\Jaal\Core\Objects\DocObject;
-use DialInno\Jaal\Core\Errors\ValidationErrorObject;
+use DialInno\Jaal\Api\DummyApi;
+use DialInno\Jaal\Objects\DocObject;
+use DialInno\Jaal\Objects\Errors\ValidationErrorObject;
 
 trait ValidatesApiRequests
 {

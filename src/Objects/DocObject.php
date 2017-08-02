@@ -1,16 +1,16 @@
 <?php
 
-namespace DialInno\Jaal\Core\Objects;
+namespace DialInno\Jaal\Objects;
 
+
+use DialInno\Jaal\Api\JsonApi;
+use DialInno\Jaal\Objects\GenericObject;
+use DialInno\Jaal\Objects\ResourceObject;
+use DialInno\Jaal\Objects\ResourceIdentifierObject;
+use DialInno\Jaal\Objects\Errors\ErrorObject;
+use DialInno\Jaal\Objects\Errors\ValidationErrorObject;
 use Illuminate\Support\Collection;
-use DialInno\Jaal\Core\Api\JsonApi;
 use Illuminate\Support\Facades\Validator;
-use DialInno\Jaal\Core\Objects\ErrorObject;
-use DialInno\Jaal\Core\Objects\GenericObject;
-use DialInno\Jaal\Core\Objects\ResourceObject;
-use DialInno\Jaal\Core\Errors\ValidationErrorObject;
-use DialInno\Jaal\Core\Objects\ResourceIdentifierObject;
-
 /**
  * Responsible for serializing a document and preparing a response.
  */

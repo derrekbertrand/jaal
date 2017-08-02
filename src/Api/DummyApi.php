@@ -1,8 +1,8 @@
 <?php
 
-namespace DialInno\Jaal\Core\Api;
+namespace DialInno\Jaal\Api;
 
-use \DialInno\Jaal\Core\Api\JsonApi;
+use \DialInno\Jaal\Api\JsonApi;
 
 class DummyApi extends JsonApi
 {
