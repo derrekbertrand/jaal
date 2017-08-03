@@ -263,7 +263,7 @@ abstract class JsonApi
     public function updateToOne(string $nickname, $id = null)
     {
         $this->doc = new DocObject($this, DocObject::DOC_ONE_IDENT);
-        $body = json_decode(request()->getContent(), true) ?: request()->all();
+        $body = $this->getRequestDoc();
 
         //if we don't have an id, and we do have one in the body...
         if ($id === null && array_key_exists('data', $body) && array_key_exists('id', $body['data'])) {
@@ -295,7 +295,7 @@ abstract class JsonApi
 
             //drag the ids out of the request
             if (!count($ids)) {
-                $body = json_decode(request()->getContent(), true) ?: request()->all();
+                $body = $this->getRequestDoc();
                 foreach ($body['data'] as $rid) {
                     $ids[] = $rid['id'];
                 }
@@ -337,7 +337,7 @@ abstract class JsonApi
 
             //drag the ids out of the request
             if (!count($ids)) {
-                $body = json_decode(request()->getContent(), true) ?: request()->all();
+                $body = $this->getRequestDoc();
                 foreach ($body['data'] as $rid) {
                     $ids[] = $rid['id'];
                 }
@@ -375,7 +375,7 @@ abstract class JsonApi
 
             //drag the ids out of the request
             if (!count($ids)) {
-                $body = json_decode(request()->getContent(), true) ?: request()->all();
+                $body = $this->getRequestDoc();
                 foreach ($body['data'] as $rid) {
                     $ids[] = $rid['id'];
                 }
@@ -416,7 +416,7 @@ abstract class JsonApi
 
             //drag the ids out of the request
             if (!count($ids)) {
-                $body = json_decode(request()->getContent(), true) ?: request()->all();
+                $body = $this->getRequestDoc();
                 foreach ($body['data'] as $rid) {
                     $ids[] = $rid['id'];
                 }
@@ -474,7 +474,7 @@ abstract class JsonApi
             //get FQCL of model
             $model = static::$models[$this->context_models[0]];
 
-            $body = json_decode(request()->getContent(), true) ?: request()->all();
+            $body = $this->getRequestDoc();
             $attr = count($attributes) ? $attributes : $body['data']['attributes'];
 
             //run the query
@@ -505,7 +505,7 @@ abstract class JsonApi
             $db_response = $this->baseQuery()->firstOrFail();
 
             //drag the attributes out of the request
-            $body = json_decode(request()->getContent(), true) ?: request()->all();
+            $body = $this->getRequestDoc();
             $attr = count($attributes) ? $attributes : $body['data']['attributes'];
 
             //todo: check for failed update
@@ -717,6 +717,15 @@ abstract class JsonApi
                 }
             }
         }
+    }
+
+    protected function getRequestDoc()
+    {
+        // todo handle malformed JSON here
+        $body = json_decode(request()->getContent(), true);
+        $json_err = json_last_error();
+
+        return $body;
     }
 
     /**

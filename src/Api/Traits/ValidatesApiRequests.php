@@ -22,10 +22,10 @@ trait ValidatesApiRequests
      */
     public function validateApiWith(Validator $validator, Request $request = null, DocObject $doc = null)
     {
-        $request = $request ?: app('request');
+        $request = $request ?: request();
 
         if (is_array($validator)) {
-            $validator = $this->getValidationFactory()->make($request->all(), $validator);
+            $validator = $this->getValidationFactory()->make(json_decode($request->getContent(), true), $validator);
         }
 
         if ($validator->fails()) {
@@ -48,7 +48,7 @@ trait ValidatesApiRequests
      */
     public function validateApi(Request $request, array $rules, array $messages = [], array $customAttributes = [], DocObject $doc = null)
     {
-        $validator = $this->getValidationFactory()->make($request->all(), $rules, $messages, $customAttributes);
+        $validator = $this->getValidationFactory()->make(json_decode($request->getContent(), true), $rules, $messages, $customAttributes);
 
         if ($validator->fails()) {
             return $this->serializeErrorDoc($validator, $doc);
