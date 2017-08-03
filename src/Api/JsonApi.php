@@ -721,7 +721,8 @@ abstract class JsonApi
 
     protected function getRequestDoc()
     {
-        $body = request()->all();
+        // todo handle malformed JSON here
+        $body = json_decode(request()->getContent(), true);
 
         return $body;
     }
