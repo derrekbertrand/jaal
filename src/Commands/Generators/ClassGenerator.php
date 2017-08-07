@@ -17,7 +17,7 @@ class ClassGenerator extends Generator
 
     /**
      * Generate the class if it doesnt exist
-     * @var string $api_name
+     * @param string $api_name
      *
      **/
     public function generate(string $api_name)
@@ -27,7 +27,7 @@ class ClassGenerator extends Generator
 
     /**
      * Create a class if it doesnt exist
-     * @var string $api_name
+     * @param string $api_name
      **/
     private function createClass(string $api_name)
     {
@@ -50,8 +50,8 @@ class ClassGenerator extends Generator
     /**
      * Returns the new class file contents to 
      * overwrite the template content.
-     * @var string $generatedClassName
-     * @var array $api_name
+     * @param string $generatedClassName
+     * @param array $api_name
      **/
     private function getNewClassContents(string $generatedClassName,string $api_name){
         //get the template

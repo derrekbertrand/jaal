@@ -2,23 +2,17 @@
 
 namespace DialInno\Jaal\Objects;
 
-
 use DialInno\Jaal\Api\JsonApi;
-use DialInno\Jaal\Objects\GenericObject;
-use DialInno\Jaal\Objects\ResourceObject;
-use DialInno\Jaal\Objects\ResourceIdentifierObject;
 use DialInno\Jaal\Objects\Errors\ErrorObject;
-use DialInno\Jaal\Objects\Errors\ValidationErrorObject;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Validator;
+
 /**
  * Responsible for serializing a document and preparing a response.
  */
 class DocObject extends GenericObject
 {
-
     /**
-     * constants to describe the document data
+     * constants to describe the document data.
      **/
     const DOC_NONE = 0;
     const DOC_ONE = 1;
@@ -27,62 +21,70 @@ class DocObject extends GenericObject
     const DOC_MANY_IDENT = 4;
     const DOC_TYPE_MAX = 4;
     /**
-     * Document errors
-     * @var Illuminate\Database\Eloquent\Collection $errors
+     * Document errors.
+     *
+     * @var Illuminate\Database\Eloquent\Collection
      **/
     protected $errors;
     /**
-     * The api class in question
+     * The api class in question.
      *
-     * @var DialInno\Jaal\Core\Api\JsonApi $api
+     * @var DialInno\Jaal\Core\Api\JsonApi
      **/
     protected $api = null;
 
     /**
-     * Default status of 200
-     * @var int $code
+     * Default status of 200.
+     *
+     * @var int
      **/
     protected $code = 200;
     /**
-     * the Document type
-     * @var int $doc_type
+     * the Document type.
+     *
+     * @var int
      **/
     protected $doc_type;
 
     /**
-     * The document data
-     * @var Illuminate\Database\Eloquent\Collection $data
+     * The document data.
+     *
+     * @var Illuminate\Database\Eloquent\Collection
      **/
     protected $data;
 
     /**
-     * The document links
+     * The document links.
+     *
      * @var ?
      **/
     protected $links;
     /**
-     * The document included data
+     * The document included data.
+     *
      * @var ?
      **/
     protected $included;
     /**
-     * The document meta
-     * @var Illuminate\Database\Eloquent\Collection $data
+     * The document meta.
+     *
+     * @var Illuminate\Database\Eloquent\Collection
      **/
     protected $meta;
 
     public function __construct(JsonApi $json_api, int $doc_type = 0)
     {
-        $this->data = new Collection;
+        $this->data = new Collection();
         $this->doc_type = $doc_type;
-        $this->errors = new Collection;
+        $this->errors = new Collection();
         $this->json_api = $json_api;
-        $this->meta = new Collection;
+        $this->meta = new Collection();
     }
 
     /**
-     * Get document http status
-     * @var string code
+     * Get document http status.
+     *
+     * @return string code
      **/
     public function getHttpStatus()
     {
@@ -108,19 +110,19 @@ class DocObject extends GenericObject
     /**
      * I am the document.
      *
-     * @return this
+     * @return $this
      */
     public function getDoc()
     {
-
         return $this;
     }
 
-     /**
+    /**
      * Friendly wrapper to add an error.
      *
-     * @param  array|Collection|JsonSerializable|ErrorObject $error_data
-     * @return ErrorObject
+     * @param array|Collection|JsonSerializable|ErrorObject $error_data
+     *
+     * @return DialInno\Jaal\Objects\Errors\ErrorObject
      */
     public function addError($error_data)
     {
@@ -143,7 +145,7 @@ class DocObject extends GenericObject
      *
      * Keep in mind that it is serialized later.
      *
-     * @param  Object  $data
+     * @param  $data
      */
     public function addData($data)
     {
@@ -160,64 +162,76 @@ class DocObject extends GenericObject
     /**
      * Get a response object; takes json options.
      *
-     * @param  int  $options
+     * @param int $options
+     *
      * @return Response
      */
     public function getResponse($options = 0)
     {
         $out = $this->toJson($options);
 
-        if($this->requestWantsJson()){
-
+        if ($this->requestWantsJson()) {
             return $this->getJsonResponse($options);
         }
+
         return response($out, intval($this->getHttpStatus()));
     }
 
     /**
      * Get a response object; takes json options.
      *
-     * @param  int  $options
+     * @param int $options
+     *
      * @return Response
      */
     protected function getJsonResponse($options = 0)
     {
         $out = $this->toJson($options);
-        return response($out, intval($this->getHttpStatus()))->header('Content-Type','application/vnd.api+json');
+
+        return response($out, intval($this->getHttpStatus()))->header('Content-Type', 'application/vnd.api+json');
     }
 
-
     /**
-     * Findout if the request is wanting our api content type
+     * Findout if the request is wanting our api content type.
      *
      * @return bool
      */
-    public function requestWantsJson(){
-
+    public function requestWantsJson()
+    {
         return str_contains(request()->headers->get('accept'), 'application/vnd.api+json');
     }
 
     /**
      * Convert the model instance to JSON.
      *
-     * @param  int  $options
+     * @param int $options
+     *
      * @return string
      */
     public function toJson($options = 0)
     {
         return json_encode($this->jsonSerialize(), $options);
     }
-
+    /**
+     * Check if the document type is one.
+     * @return boolean
+     */
     public function isOne()
     {
         return ($this->doc_type === self::DOC_ONE) || ($this->doc_type === self::DOC_ONE_IDENT);
     }
-
+    /**
+     * Check if the document type is many.
+     * @return boolean
+     */
     public function isMany()
     {
         return ($this->doc_type === self::DOC_MANY) || ($this->doc_type === self::DOC_MANY_IDENT);
     }
-
+    /**
+     * Check if the document type is indent.
+     * @return boolean
+     */
     public function isIdent()
     {
         return ($this->doc_type === self::DOC_ONE_IDENT) || ($this->doc_type === self::DOC_MANY_IDENT);
@@ -233,7 +247,7 @@ class DocObject extends GenericObject
         //todo: serialize everything, have it validate, then check errors
 
         //create a blank object to serialize
-        $out = new Collection;
+        $out = new Collection();
 
         $out['jsonapi'] = ['version' => '1.0'];
         $error_arr = [];
@@ -250,7 +264,6 @@ class DocObject extends GenericObject
 
         //todo: toplevel meta object
         if ($this->meta->count()) {
-
             $out['meta'] = $this->meta->jsonSerialize();
         }
 

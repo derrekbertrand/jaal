@@ -20,7 +20,7 @@ abstract class Generator
     /**
      * The filesystem instance.
      *
-     * @var \Illuminate\Filesystem\Filesystem
+     * @param \Illuminate\Filesystem\Filesystem
      */
     protected $files;
 
@@ -32,7 +32,7 @@ abstract class Generator
 
     /**
      * Generate the api class resource
-     * @var string $api_name
+     * @param string $api_name
      *
      **/
     abstract public function generate(string $api_name);

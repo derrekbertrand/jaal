@@ -50,6 +50,11 @@ abstract class JsonApi
      **/
     protected $sparse_fields = [];
 
+    /**
+     * Required properties that must be defined in the api.
+     *
+     * @var array.
+     */
     private $requiredProperties = ['routes', 'models', 'version'];
 
     /**
@@ -78,7 +83,7 @@ abstract class JsonApi
     /**
      * Add the user's defined meta into the document.
      *
-     * @var
+     * @param array $meta_data
      **/
     protected function addMetaIfDefined($meta_data)
     {
@@ -92,8 +97,6 @@ abstract class JsonApi
     /**
      * Build up the query for the context model(s).
      * and find.
-     *
-     * @var array
      **/
     protected function baseQuery()
     {
@@ -219,6 +222,13 @@ abstract class JsonApi
         return $this;
     }
 
+    /**
+     * Show to Many.
+     *
+     * @param string $nickname
+     *
+     * @return JsonApi
+     */
     public function showToMany(string $nickname)
     {
         $this->doc = new DocObject($this, DocObject::DOC_MANY_IDENT);
@@ -239,6 +249,13 @@ abstract class JsonApi
         return $this;
     }
 
+    /**
+     * Show to one.
+     *
+     * @param string $nickname
+     *
+     * @return JsonApi
+     */
     public function showToOne(string $nickname)
     {
         $this->doc = new DocObject($this, DocObject::DOC_ONE_IDENT);
@@ -260,6 +277,14 @@ abstract class JsonApi
         return $this;
     }
 
+    /**
+     * Update to one.
+     *
+     * @param string $nickname
+     * @param mixed  $id
+     *
+     * @return JsonApi
+     */
     public function updateToOne(string $nickname, $id = null)
     {
         $this->doc = new DocObject($this, DocObject::DOC_ONE_IDENT);
@@ -280,11 +305,26 @@ abstract class JsonApi
         return $this;
     }
 
+    /**
+     * Show Many to Many.
+     *
+     * @param string $nickname
+     *
+     * @return JsonApi
+     */
     public function showManyToMany(string $nickname)
     {
         return $this->showToMany($nickname);
     }
 
+    /**
+     * Update many to Many.
+     *
+     * @param string $nickname
+     * @param array  $id
+     *
+     * @return JsonApi
+     */
     public function updateManyToMany(string $nickname, array $ids = [])
     {
         $this->doc = new DocObject($this, DocObject::DOC_MANY_IDENT);
@@ -325,6 +365,14 @@ abstract class JsonApi
         return $this;
     }
 
+    /**
+     * destroy many to many.
+     *
+     * @param string $nickname
+     * @param string $ids
+     *
+     * @return JsonApi
+     */
     public function destroyManyToMany(string $nickname, array $ids = [])
     {
         //todo: modification functions on relations need to not dump the whole damn relationship
@@ -365,6 +413,14 @@ abstract class JsonApi
         return $this;
     }
 
+    /**
+     * Store to many.
+     *
+     * @param string $nickname
+     * @param string $ids
+     *
+     * @return JsonApi
+     */
     public function storeToMany(string $nickname, array $ids = [])
     {
         $this->doc = new DocObject($this, DocObject::DOC_MANY_IDENT);
@@ -406,6 +462,14 @@ abstract class JsonApi
         return $this;
     }
 
+    /**
+     * store many to many.
+     *
+     * @param string $nickname
+     * @param string $ids
+     *
+     * @return JsonApi
+     */
     public function storeManyToMany(string $nickname, array $ids = [])
     {
         $this->doc = new DocObject($this, DocObject::DOC_MANY_IDENT);
@@ -466,6 +530,13 @@ abstract class JsonApi
         return $this;
     }
 
+    /**
+     * store model.
+     *
+     * @param  array attributes
+     *
+     * @return JsonApi
+     */
     public function store(array $attributes = [])
     {
         $this->doc = new DocObject($this, DocObject::DOC_ONE);
@@ -496,6 +567,13 @@ abstract class JsonApi
         return $this;
     }
 
+    /**
+     * Update.
+     *
+     * @param  array attributes
+     *
+     * @return JsonApi
+     */
     public function update(array $attributes = [])
     {
         $this->doc = new DocObject($this, DocObject::DOC_ONE);
@@ -532,7 +610,7 @@ abstract class JsonApi
      * Set the current request's models
      * we are working with.
      *
-     * @var array
+     * @param array $api_models
      **/
     public function setContextModels(array $api_models)
     {
@@ -543,13 +621,20 @@ abstract class JsonApi
      * Set the current request's models id's
      * we are working with.
      *
-     * @var array
+     * @param array modelIds
      **/
     public function setContextModelIds(array $modelIds)
     {
         $this->current_model_ids = $modelIds;
     }
 
+    /**
+     * Set context models nicknames.
+     *
+     * @param array $nicknames
+     *
+     * @return JsonApi
+     */
     public function setNicknames(array $nicknames)
     {
         $this->nicknames = $nicknames;
@@ -557,6 +642,11 @@ abstract class JsonApi
         return $this;
     }
 
+    /**
+     * Get the doc object.
+     *
+     * @return DialInno\Jaal\Objects\DocObject $doc
+     */
     public function getDoc()
     {
         return $this->doc;
@@ -564,6 +654,8 @@ abstract class JsonApi
 
     /**
      * Infer all of the data.
+     *
+     * @return JsonApi
      **/
     public function inferAll()
     {
@@ -576,6 +668,13 @@ abstract class JsonApi
         return $this;
     }
 
+    /**
+     * Infer data with query params.
+     *
+     * @param Illuminate\Routing\Controller $controller
+     *
+     * @return JsonApi
+     */
     public function inferQueryParam(Controller $controller)
     {
         $this->setContextModelIds(array_values(\Route::getCurrentRoute()->parameters()));
@@ -584,6 +683,14 @@ abstract class JsonApi
         return $this;
     }
 
+    /**
+     * Filter the query.
+     *
+     * @param Request $request
+     * @param Builder $query
+     *
+     * @return JsonApi
+     */
     protected function filter(Request $request, Builder $query)
     {
         if (strlen($request->input('filter.search', ''))) {
@@ -596,6 +703,13 @@ abstract class JsonApi
         return $query;
     }
 
+    /**
+     * Handle sparse fields.
+     *
+     * @param Illuminate\Http\Request $request
+     *
+     * @return JsonApi
+     */
     protected function sparse(Request $request)
     {
         $types = $request->input('fields', null);
@@ -613,6 +727,14 @@ abstract class JsonApi
         }
     }
 
+    /**
+     * Paginate the query.
+     *
+     * @param Illuminate\Http\Request              $request
+     * @param Illuminate\Database\Eloquent\Builder $query
+     *
+     * @return Illuminate\Database\Query\Builder $query
+     */
     protected function paginate(Request $request, Builder $query)
     {
         $page_offset = max(0, intval($request->input('page.offset', 0)));
@@ -636,6 +758,14 @@ abstract class JsonApi
         return $query;
     }
 
+    /**
+     * Sort the query.
+     *
+     * @param Illuminate\Http\Request              $request
+     * @param Illuminate\Database\Eloquent\Builder $query
+     *
+     * @return Illuminate\Database\Query\Builder $query
+     */
     protected function sort(Request $request, Builder $query)
     {
         $sort_str = $request->input('sort', '');
@@ -663,7 +793,7 @@ abstract class JsonApi
     }
 
     /**
-     * Generate a set of routes based on the eloquent jsonify config.
+     * Generate a set of routes based on the api class properties.
      */
     public static function routes()
     {
@@ -674,21 +804,14 @@ abstract class JsonApi
         $routes = is_array(static::$routes) && !empty(static::$routes) ? static::$routes : [];
 
         $relationships = is_array(static::$relationships) && !empty(static::$relationships) ? static::$relationships : [];
-
-        //LEFT OFF Here
-
         //define the common routes
-
         foreach ($routes as $name => $controller) {
-
-
             Route::resource($name, '\\'.$controller, ['except' => ['create', 'edit']]);
         }
 
         //define relationship routes
         foreach ($relationships as $from => $all_relations) {
-            foreach ($all_relations as $nickname => $rel_type){
-
+            foreach ($all_relations as $nickname => $rel_type) {
                 $controller = static::$routes[$from];
                 $studlyNickName = studly_case($nickname);
                 Route::get("$from/{{$from}}/relationships/$nickname", [
@@ -730,9 +853,9 @@ abstract class JsonApi
     /**
      * Search using a query string.
      *
-     * @param Builder $query
-     * @param string  $type
-     * @param array   $search
+     * @param Illuminate\Database\Query\Builder $query
+     * @param string                            $type
+     * @param array                             $search
      *
      * @return Builder
      */

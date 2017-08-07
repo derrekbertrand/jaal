@@ -13,7 +13,7 @@ class RouteGenerator extends Generator
     /**
      * Register the routes if the class doesnt exist
      *
-     * @var string $api_info
+     * @param string $api_info
      *
      **/
     public function generate(string $api_name)
@@ -24,7 +24,7 @@ class RouteGenerator extends Generator
     /**
      * Register routes for the given api info
      *
-     * @var string $api_info
+     * @param string $api_info
      **/
     private function registerRoutes(string $api_name)
     {
