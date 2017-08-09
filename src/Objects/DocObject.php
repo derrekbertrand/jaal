@@ -149,6 +149,7 @@ class DocObject extends GenericObject
      */
     public function addData($data)
     {
+
         if ($this->isIdent()) {
             $resource = new ResourceIdentifierObject($this, $data);
         } else {
@@ -157,6 +158,7 @@ class DocObject extends GenericObject
 
         //add to data
         $this->data->push($resource);
+      
     }
 
     /**
@@ -169,8 +171,9 @@ class DocObject extends GenericObject
     public function getResponse($options = 0)
     {
         $out = $this->toJson($options);
-
+        
         if ($this->requestWantsJson()) {
+            
             return $this->getJsonResponse($options);
         }
 
@@ -210,6 +213,8 @@ class DocObject extends GenericObject
      */
     public function toJson($options = 0)
     {
+
+
         return json_encode($this->jsonSerialize(), $options);
     }
     /**
@@ -253,9 +258,12 @@ class DocObject extends GenericObject
         $error_arr = [];
         $data_arr = [];
         if ($this->isMany()) {
+
             $data_arr = $this->data->jsonSerialize();
         } elseif ($this->isOne()) {
+        
             if ($this->data->count()) {
+              
                 $data_arr = $this->data[0]->jsonSerialize();
             } else {
                 $data_arr = null;
@@ -264,15 +272,18 @@ class DocObject extends GenericObject
 
         //todo: toplevel meta object
         if ($this->meta->count()) {
+
             $out['meta'] = $this->meta->jsonSerialize();
         }
 
         //if we have errors, ignore the data
         if ($this->errors->count()) {
+
             $out['errors'] = $this->errors->jsonSerialize();
         }
         //we don't have errors, display the data
         else {
+
             if ($this->isMany() || $this->isOne()) {
                 $out['data'] = $data_arr;
             }

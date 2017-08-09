@@ -16,7 +16,8 @@ class ResourceObject extends GenericObject
     protected static $obj_name = 'resource';
 
     protected function validateMembers()
-    {
+    {   
+
         if (!$this->data->has('id')) {
             $this->addError(new SerializationErrorObject($this->getDoc(), [
                 'detail' => 'ID is required for a resource object.'
@@ -37,6 +38,7 @@ class ResourceObject extends GenericObject
                 ]));
             }
         });
+        
     }
 
     /**
@@ -45,7 +47,8 @@ class ResourceObject extends GenericObject
      * @return array
      */
     public function jsonSerialize()
-    {
+    {   
+       // dd($this->data);
         if (!count($this->data['attributes'])) {
             return $this->data->only(['id', 'type', 'relationships', 'links', 'meta']);
         }

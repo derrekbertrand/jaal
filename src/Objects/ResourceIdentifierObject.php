@@ -19,6 +19,7 @@ class ResourceIdentifierObject extends ResourceObject
      */
     public function jsonSerialize()
     {
+    	
         return $this->data->only(['id', 'type']);
     }
 }

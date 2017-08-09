@@ -115,10 +115,10 @@ abstract class JsonApi
 
         //if we are looking for a specific instance
         if (count($ids) > count($models)) {
+
             $m = static::$models[$assoc_model];
 
             $m = new $m();
-
             $q->where($m->getKeyName(), array_shift($ids));
         }
 
@@ -127,6 +127,8 @@ abstract class JsonApi
         if (isset($this->sparse_fields[$assoc_model])) {
             call_user_func_array([$q, 'select'], $this->sparse_fields[$assoc_model]);
         }
+
+
 
         //each model's relation
         while (count($models)) {
@@ -141,6 +143,7 @@ abstract class JsonApi
                 $query->where($m->getKeyName(), array_shift($ids));
             });
         }
+       
 
         return $q;
     }
@@ -173,7 +176,7 @@ abstract class JsonApi
      * @return JsonApi
      */
     public function index()
-    {
+    {  
         //get the default request
         //in the future, we might have them pass it in or something
         $request = request();
@@ -286,7 +289,8 @@ abstract class JsonApi
      * @return JsonApi
      */
     public function updateToOne(string $nickname, $id = null)
-    {
+    {   
+
         $this->doc = new DocObject($this, DocObject::DOC_ONE_IDENT);
         $body = $this->getRequestDoc();
 
@@ -546,24 +550,35 @@ abstract class JsonApi
             $model = static::$models[$this->context_models[0]];
 
             $body = $this->getRequestDoc();
+
+            
             $attr = count($attributes) ? $attributes : $body['data']['attributes'];
 
+            $model = $model::create($attr);
+            
+            $body['data']['id'] = $model[$model->getKeyName()];
+
+            
             //run the query
-            $this->doc->addData($model::create($attr));
+            $this->doc->addData($body['data']);
+           
         } catch (ModelNotFoundException $e) {
+           
             //todo: this is not strictly accurate
             $this->doc->addError(new ResourceNotFoundError());
 
             return $this;
         } catch (QueryException $e) {
+
             //dd($e->getPrevious()->errorInfo);
             $this->doc->addError(new DatabaseError());
 
             return $this;
         } catch (\Exception $e) {
+
             throw $e;
         }
-
+       
         return $this;
     }
 
@@ -659,10 +674,14 @@ abstract class JsonApi
      **/
     public function inferAll()
     {
+
         $caller = debug_backtrace(false, 2)[1];
+
         $this->setContextModelIds(array_values(\Route::getCurrentRoute()->parameters()));
+
         //return the nicknames of the models as defined in routes statick property
         $this->setContextModels(explode('.', array_search($caller['class'], static::$routes)));
+
         $this->{$caller['function']}();
 
         return $this;
@@ -677,6 +696,7 @@ abstract class JsonApi
      */
     public function inferQueryParam(Controller $controller)
     {
+
         $this->setContextModelIds(array_values(\Route::getCurrentRoute()->parameters()));
         $this->setContextModels(explode('.', array_search(get_class($controller), static::$routes)));
 
@@ -845,8 +865,9 @@ abstract class JsonApi
     protected function getRequestDoc()
     {
         // todo handle malformed JSON here
-        $body = json_decode(request()->getContent(), true);
 
+        $body = json_decode(request()->getContent(), true);
+        // dd($body);
         return $body;
     }
 

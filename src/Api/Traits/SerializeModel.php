@@ -31,7 +31,7 @@ trait SerializeModel
             $blacklist = array_merge($blacklist, $this->getKeyName());
         else
             $blacklist[] = $this->getKeyName();
-
+       
         //filter based on that blacklist
         $data_object['attributes'] = array_filter($this->getAttributes(), function ($key) use ($blacklist) {
             return !in_array($key, $blacklist);
