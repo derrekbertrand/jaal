@@ -555,12 +555,11 @@ abstract class JsonApi
             $attr = count($attributes) ? $attributes : $body['data']['attributes'];
 
             $model = $model::create($attr);
-            
+
             $body['data']['id'] = $model[$model->getKeyName()];
 
-            
             //run the query
-            $this->doc->addData($body['data']);
+            $this->doc->addData($model->jsonSerialize());
            
         } catch (ModelNotFoundException $e) {
            
@@ -604,7 +603,8 @@ abstract class JsonApi
             //todo: check for failed update
             $db_response->update($attr);
 
-            $this->doc->addData($db_response);
+        
+            $this->doc->addData($db_response->jsonSerialize());
         } catch (ModelNotFoundException $e) {
             $this->doc->addError(new NotFoundErrorObject($this->doc));
 
