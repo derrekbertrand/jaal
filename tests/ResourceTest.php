@@ -4,7 +4,7 @@ namespace DialInno\Jaal\Tests;
 
 // THE SYSTEM SHOULD:
 // - 
-class VerticalTest extends TestCase
+class ResourceTest extends TestCase
 {
     public function setUp()
     {

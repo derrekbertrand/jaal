@@ -1,11 +1,21 @@
 <?php
 
-namespace DialInno\Jaal\DocObjects;
+namespace DialInno\Jaal\Objects;
 
 use Illuminate\Support\Collection;
 
-class ErrorSource extends DocObject
+class ResourceIdentifier extends BaseObject
 {
+    /**
+     * Return a collection of keys; the object must contain them all.
+     *
+     * @return Collection
+     */
+    protected function payloadMustContain()
+    {
+        return Collection::make(['id', 'type']);
+    }
+
     /**
      * Return a collection of keys; this is an extensive list of key names.
      *
@@ -13,10 +23,10 @@ class ErrorSource extends DocObject
      */
     protected function payloadMayContain()
     {
-        return Collection::make(['pointer', 'parameter']);
+        return Collection::make(['id', 'type']);
     }
 
-    /**
+        /**
      * Return a collection containing key value pairs of keys and the types that we expect as values.
      *
      * @return Collection
@@ -24,8 +34,8 @@ class ErrorSource extends DocObject
     protected function payloadDatatypes()
     {
         return Collection::make([
-            'pointer' => 'string',
-            'parameter' => 'string',
+            'id' => 'string',
+            'type' => 'string',
         ]);
     }
 }

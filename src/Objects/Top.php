@@ -1,12 +1,12 @@
 <?php
 
-namespace DialInno\Jaal\DocObjects;
+namespace DialInno\Jaal\Objects;
 
 use DialInno\Jaal\Exceptions\ValueException;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Support\Collection;
 
-class Top extends DocObject implements Responsable
+class Top extends BaseObject implements Responsable
 {
     protected $http_status = 200;
 
@@ -61,12 +61,12 @@ class Top extends DocObject implements Responsable
     /**
      * Creates a new toplevel document from a JSON payload.
      *
-     * Unlike other DocObjects, if it is a string, it will attempt to parse the
+     * Unlike other Objects, if it is a string, it will attempt to parse the
      * payload as JSON before unpacking.
      *
      * @param mixed $payload
      *
-     * @return DocObject
+     * @return BaseObject
      */
     public static function unpack($payload, array $path = [])
     {
@@ -88,7 +88,7 @@ class Top extends DocObject implements Responsable
      * @param Collection $payload
      * @param array $path
      *
-     * @return DocObject
+     * @return BaseObject
      */
     public function unpackPayload(Collection $payload, array $path = [])
     {

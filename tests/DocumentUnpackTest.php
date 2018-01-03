@@ -2,13 +2,13 @@
 
 namespace DialInno\Jaal\Tests;
 
-use DialInno\Jaal\DocObjects\Top;
+use DialInno\Jaal\Objects\Top;
 use DialInno\Jaal\Exceptions\BadDocumentException;
 use DialInno\Jaal\Exceptions\KeyException;
 use DialInno\Jaal\Exceptions\ValueException;
 
 // THE SYSTEM SHOULD:
-// - unpack JSON into DocObjects
+// - unpack JSON into Objects
 // - validate the structure of the JSON document
 // - throw Responsable Exceptions
 // - contain relevant error information

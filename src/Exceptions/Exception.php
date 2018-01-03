@@ -3,7 +3,7 @@
 namespace DialInno\Jaal\Exceptions;
 
 use Illuminate\Contracts\Support\Responsable;
-use DialInno\Jaal\DocObjects\Top;
+use DialInno\Jaal\Objects\Top;
 
 abstract class Exception extends \Exception implements Responsable
 {

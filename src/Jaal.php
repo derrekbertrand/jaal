@@ -11,7 +11,7 @@ use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
 
-use DialInno\Jaal\DocObjects\Top;
+use DialInno\Jaal\Objects\Top;
 
 abstract class Jaal
 {
@@ -32,7 +32,7 @@ abstract class Jaal
         $this->response_doc = new Top;
     }
 
-    public static function inferFromRequest(Request $request)
+    public static function fromRequest(Request $request)
     {
         $that = new static($request);
 
@@ -115,5 +115,25 @@ abstract class Jaal
         return static::$resources[$this->path_model_type]['resource'];
     }
 
+    public function getIncludeList()
+    {
+        $query = $this->request->query->all();
 
+        if (array_key_exists('include', $query)) {
+            ;
+        } else {
+            return [];
+        }
+    }
+
+    public function getFieldList()
+    {
+        $query = $this->request->query->all();
+
+        if (array_key_exists('fields', $query)) {
+            ;
+        } else {
+            return [];
+        }
+    }
 }

@@ -1,10 +1,10 @@
 <?php
 
-namespace DialInno\Jaal\DocObjects;
+namespace DialInno\Jaal\Objects;
 
 use Illuminate\Support\Collection;
 
-class Relationships extends DocObject
+class Relationships extends BaseObject
 {
     /**
      * Each type of object must unpack its payload from a collection.
@@ -12,7 +12,7 @@ class Relationships extends DocObject
      * @param Collection $payload
      * @param array $path
      *
-     * @return DocObject
+     * @return BaseObject
      */
     public function unpackPayload(Collection $payload, array $path = [])
     {

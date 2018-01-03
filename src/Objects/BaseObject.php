@@ -1,6 +1,6 @@
 <?php
 
-namespace DialInno\Jaal\DocObjects;
+namespace DialInno\Jaal\Objects;
 
 use JsonSerializable;
 use Illuminate\Contracts\Support\Arrayable;
@@ -9,7 +9,7 @@ use Illuminate\Support\Collection;
 use DialInno\Jaal\Exceptions\KeyException;
 use DialInno\Jaal\Exceptions\ValueException;
 
-abstract class DocObject implements Arrayable, Jsonable, JsonSerializable
+abstract class BaseObject implements Arrayable, Jsonable, JsonSerializable
 {
     // this is a collection which represents the payload data
     public $payload = null;
@@ -31,7 +31,7 @@ abstract class DocObject implements Arrayable, Jsonable, JsonSerializable
                 $tmp = [];
 
                 foreach ($item as $subitem) {
-                    if ($subitem instanceof DocObject) {
+                    if ($subitem instanceof BaseObject) {
                         $tmp[] = $subitem->toArray();
                     } else {
                         $tmp[] = $subitem;
@@ -39,7 +39,7 @@ abstract class DocObject implements Arrayable, Jsonable, JsonSerializable
                 }
 
                 return $tmp;
-            } else if ($item instanceof DocObject) {
+            } else if ($item instanceof BaseObject) {
                 return $item->toArray();
             }
 
@@ -75,9 +75,9 @@ abstract class DocObject implements Arrayable, Jsonable, JsonSerializable
     }
 
     /**
-     * Creates a new DocObject from a JSON payload.
+     * Creates a new BaseObject from a JSON payload.
      *
-     * We expect that any DocObject is going to be unpacked from a stdClass
+     * We expect that any BaseObject is going to be unpacked from a stdClass
      * object or a Collection, but we collect it into a Collection for
      * consistency.
      *
@@ -87,7 +87,7 @@ abstract class DocObject implements Arrayable, Jsonable, JsonSerializable
      * @param mixed $payload
      * @param array $path
      *
-     * @return DocObject
+     * @return BaseObject
      */
     public static function unpack($payload, array $path = [])
     {
@@ -153,7 +153,7 @@ abstract class DocObject implements Arrayable, Jsonable, JsonSerializable
      * @param Collection $payload
      * @param array $path
      *
-     * @return DocObject
+     * @return BaseObject
      */
     public function unpackPayload(Collection $payload, array $path = [])
     {

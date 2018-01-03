@@ -1,10 +1,10 @@
 <?php
 
-namespace DialInno\Jaal\DocObjects;
+namespace DialInno\Jaal\Objects;
 
 use Illuminate\Support\Collection;
 
-class JsonApi extends DocObject
+class Relationship extends BaseObject
 {
     /**
      * Each type of object must unpack its payload from a collection.
@@ -12,15 +12,33 @@ class JsonApi extends DocObject
      * @param Collection $payload
      * @param array $path
      *
-     * @return DocObject
+     * @return BaseObject
      */
     public function unpackPayload(Collection $payload, array $path = [])
     {
         $this->payload = $payload;
+        $data = $this->payload->get('data');
 
+        if (is_array($data)) {
+            $this->unpackObjectArray('data', ResourceIdentifier::class, $path);
+        } else if (is_object($data)) {
+            $this->unpackObject('data', ResourceIdentifier::class, $path);
+        }
+        
         $this->unpackObject('meta', Meta::class, $path);
+        $this->unpackObject('links', Link::class, $path);
 
         return $this;
+    }
+
+    /**
+     * Return a collection of keys; they object must contain at least one.
+     *
+     * @return Collection
+     */
+    protected function payloadMustContainOne()
+    {
+        return Collection::make(['links', 'data', 'meta']);
     }
 
     /**
@@ -30,7 +48,7 @@ class JsonApi extends DocObject
      */
     protected function payloadMayContain()
     {
-        return Collection::make(['version', 'meta']);
+        return Collection::make(['links', 'data', 'meta']);
     }
 
     /**
@@ -41,7 +59,8 @@ class JsonApi extends DocObject
     protected function payloadDatatypes()
     {
         return Collection::make([
-            'version' => 'string',
+            'links' => 'object',
+            'data' => 'NULL|array|object',
             'meta' => 'object',
         ]);
     }
