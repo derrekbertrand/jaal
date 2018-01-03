@@ -2,7 +2,7 @@
 
 namespace DialInno\Jaal\Tests;
 
-use DialInno\Jaal\Objects\Top;
+use DialInno\Jaal\Objects\Document;
 use DialInno\Jaal\Exceptions\BadDocumentException;
 use DialInno\Jaal\Exceptions\KeyException;
 use DialInno\Jaal\Exceptions\ValueException;

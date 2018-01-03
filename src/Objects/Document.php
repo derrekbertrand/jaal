@@ -6,7 +6,7 @@ use DialInno\Jaal\Exceptions\ValueException;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Support\Collection;
 
-class Top extends BaseObject implements Responsable
+class Document extends BaseObject implements Responsable
 {
     protected $http_status = 200;
 
@@ -15,7 +15,7 @@ class Top extends BaseObject implements Responsable
      *
      * @param mixed $error
      *
-     * @return Top
+     * @return Document
      */
     public function addError($error)
     {

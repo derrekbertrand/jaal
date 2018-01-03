@@ -11,7 +11,7 @@ use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
 
-use DialInno\Jaal\Objects\Top;
+use DialInno\Jaal\Objects\Document;
 
 abstract class Jaal
 {
@@ -29,7 +29,7 @@ abstract class Jaal
     public function __construct(Request $request = null)
     {
         $this->request = $request;
-        $this->response_doc = new Top;
+        $this->response_doc = new Document;
     }
 
     public static function fromRequest(Request $request)
@@ -41,7 +41,7 @@ abstract class Jaal
 
         // unpack the content
         if ($that->request_type === 'store' || $that->request_type === 'update') {
-            $that->request_doc = Top::unpack($request->getContent());
+            $that->request_doc = Document::unpack($request->getContent());
         }
 
         return $that;

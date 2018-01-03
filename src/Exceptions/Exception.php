@@ -3,7 +3,7 @@
 namespace DialInno\Jaal\Exceptions;
 
 use Illuminate\Contracts\Support\Responsable;
-use DialInno\Jaal\Objects\Top;
+use DialInno\Jaal\Objects\Document;
 
 abstract class Exception extends \Exception implements Responsable
 {
@@ -11,7 +11,7 @@ abstract class Exception extends \Exception implements Responsable
 
     public function __construct()
     {
-        $this->response_document = new Top;
+        $this->response_document = new Document;
     }
 
     public function throwIfErrors()
