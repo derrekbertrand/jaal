@@ -59,30 +59,6 @@ class Document extends BaseObject implements Responsable
     }
 
     /**
-     * Creates a new toplevel document from a JSON payload.
-     *
-     * Unlike other Objects, if it is a string, it will attempt to parse the
-     * payload as JSON before unpacking.
-     *
-     * @param mixed $payload
-     *
-     * @return BaseObject
-     */
-    public static function unpack($payload, array $path = [])
-    {
-        if (is_string($payload)) {
-            $payload = json_decode($payload, false, 256, JSON_BIGINT_AS_STRING);
-
-            // check if we had a parse error
-            if (JSON_ERROR_NONE !== json_last_error()) {
-                throw ValueException::make()->expected('object', 'garbage payload');
-            }
-        }
-
-        return parent::unpack($payload, $path);
-    }
-
-    /**
      * Each type of object must unpack its payload from a collection.
      *
      * @param Collection $payload
