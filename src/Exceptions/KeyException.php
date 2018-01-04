@@ -13,7 +13,7 @@ class KeyException extends Exception
         $this->path = '/'.implode('/', $path);
     }
 
-    public static function make(array $path = [])
+    public static function make(array $path)
     {
         return new static($path);
     }

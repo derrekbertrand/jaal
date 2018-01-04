@@ -33,7 +33,7 @@ class DocumentUnpackTest extends TestCase
      */
     public function testStdExampleCases($status, $payload)
     {
-        $res = Document::unpack($payload)->toResponse(null);
+        $res = Document::deserialize($payload)->toResponse(null);
 
         // assert that the content we're getting out is the same as if we just ran
         // the thing through a decode and encode

@@ -20,7 +20,7 @@ class Document extends BaseObject implements Responsable
     public function addError($error)
     {
         $errors = $this->payload->get('errors', []);
-        $error = Error::unpack(Collection::make($error), []);
+        $error = Error::deserialize(Collection::make($error), []);
         $errors[] = $error;
         $error_status = intval($error->payload->get('status', '400'));
 
@@ -66,7 +66,7 @@ class Document extends BaseObject implements Responsable
      *
      * @return BaseObject
      */
-    public function unpackPayload(Collection $payload, array $path = [])
+    public function deserializePayload(Collection $payload, ?array $path)
     {
         $this->payload = $payload;
         $data = $this->payload->get('data');

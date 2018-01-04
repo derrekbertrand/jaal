@@ -1,12 +1,12 @@
 <?php
 
-namespace DialInno\Jaal\Objects\Concerns;
+namespace DialInno\Jaal\Contracts;
 
 use Illuminate\Support\Collection;
 use DialInno\Jaal\Exceptions\KeyException;
 use DialInno\Jaal\Exceptions\ValueException;
 
-interface DeserializesPayload
+interface DeserializePayload
 {
     /**
      * This object can deserialize a payload and return a new 

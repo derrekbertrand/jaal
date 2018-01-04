@@ -24,17 +24,20 @@ trait DeserializesPayload
      *
      * @return static
      */
-    public static function deserialize($payload, ?array $path)
+    public static function deserialize($payload, ?array $path = null)
     {
+        $path = $path ?? [];
+
         // if it is a string, attempt to decode it as JSON before doing anything
         if (is_string($payload)) {
             $payload = json_decode($payload, false, 256, JSON_BIGINT_AS_STRING);
 
             // check if we had a parse error
             if (JSON_ERROR_NONE !== json_last_error()) {
-                throw ValueException::make()->expected('object', 'garbage payload');
+                throw JsonException::make()->expected('object', 'garbage payload');
             }
         }
+
 
         // we expect stdClass or a Collection
         if (is_object($payload) && get_class($payload) === 'stdClass') {
@@ -88,7 +91,7 @@ trait DeserializesPayload
         $val_ex->throwIfErrors();
 
         // the payload is structurally correct, so go ahead and unpack it
-        $that->unpackPayload($payload, $path);
+        $that->deserializePayload($payload, $path);
 
         return $that;
     }
@@ -101,7 +104,7 @@ trait DeserializesPayload
      *
      * @return BaseObject
      */
-    public function deserializePayload(Collection $payload, array $path = [])
+    protected function deserializePayload(Collection $payload, ?array $path)
     {
         $this->payload = $payload;
 
@@ -122,7 +125,7 @@ trait DeserializesPayload
         if ($this->payload->has($key)) {
             $path[] = $key;
 
-            $this->payload[$key] = $doc_object::unpack($this->payload->get($key), $path);
+            $this->payload[$key] = $doc_object::deserialize($this->payload->get($key), $path);
         }
     }
 
@@ -141,7 +144,7 @@ trait DeserializesPayload
 
             foreach ($this->payload->get($key) as $index => $obj) {
                 $tmp_path = array_merge($path, [strval($index)]);
-                $temp[] = $doc_object::unpack($obj, $tmp_path);
+                $temp[] = $doc_object::deserialize($obj, $tmp_path);
             }
 
             $this->payload[$key] = $temp;;
