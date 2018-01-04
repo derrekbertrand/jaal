@@ -23,6 +23,11 @@ abstract class Exception extends \Exception implements Responsable
         return $this;
     }
 
+    public function getErrors()
+    {
+        return $this->response_document->payload->get('errors', []);
+    }
+
     /**
      * Attempt to normalize the items into a collection of quoted strings.
      *

@@ -6,6 +6,13 @@ use Illuminate\Support\Collection;
 
 class Resource extends BaseObject
 {
+    public function attributes()
+    {
+        $attr = $this->payload->get('attributes', null);
+
+        return is_null($attr) ? [] : $attr->toArray();
+    }
+
     /**
      * Return a array of keys; the object must contain them all.
      *

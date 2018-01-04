@@ -12,7 +12,7 @@ use DialInno\Jaal\Exceptions\ValueException;
 // - validate the structure of the JSON document
 // - throw Responsable Exceptions
 // - contain relevant error information
-class DocumentUnpackTest extends TestCase
+class DocumentDeserializeTest extends TestCase
 {
     use StandardExamples;
     use BadExamples;
