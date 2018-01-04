@@ -55,4 +55,23 @@ class DocumentUnpackTest extends TestCase
             $this->assertContains($contains, $res->getContent());
         }
     }
+
+    // this is about the only sensible scenario I could think of
+    public function testBadServerSerialization()
+    {
+
+        $doc = Document::deserialize('{"meta": {"foo": "bar"}}');
+        $doc->payload['meta'] = tmpfile();
+
+        try {
+            $doc->toResponse(null);
+        } catch (\DialInno\Jaal\Exceptions\Exception $e) {
+            $res = $e->toResponse(null);
+
+            $this->assertEquals(500, $res->status());
+            $this->assertContains('Internal Serialization Error', $res->getContent());
+        }
+
+        fclose($doc->payload->get('meta'));
+    }
 }
