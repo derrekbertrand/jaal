@@ -19,15 +19,17 @@ trait DeserializesPayload
      * spec as possible. We aren't validating the payload, only making sure it
      * follows the structure of the spec.
      *
+     * With all of the basic structural checks passing, we can comfortably pass
+     * it along to deserializePayload() to save a copy in this class and unpack
+     * any child classes.
+     *
      * @param mixed $payload
-     * @param array $path
+     * @param array|null $path
      *
      * @return static
      */
     public static function deserialize($payload, ?array $path = null)
     {
-        $path = $path ?? [];
-
         // if it is a string, attempt to decode it as JSON before doing anything
         if (is_string($payload)) {
             $payload = json_decode($payload, false, 256, JSON_BIGINT_AS_STRING);
@@ -38,6 +40,7 @@ trait DeserializesPayload
             }
         }
 
+        $path = $path ?? [];
 
         // we expect stdClass or a Collection
         if (is_object($payload) && get_class($payload) === 'stdClass') {
@@ -46,160 +49,204 @@ trait DeserializesPayload
             throw ValueException::make($path)->expected('object', gettype($payload));
         }
 
+        // create a new instance, set the payload
         $that = new static;
-        $keys = $payload->keys();
+        $that->payload = $payload;
 
-        $key_ex = KeyException::make($path);
+        // assert that its specifications are met
+        $that->assertKeysAreToSpec($path);
+        $that->assertValuesAreToSpec($path);
 
-        // these are required
-        $key_ex->required($that->payloadMustContain()->diff($keys));
+        // if they exist, deserialize the child objects
+        $that->deserializeChildren($path);
 
-        // if we have a list, then they're the only ones allowed
-        $may = $that->payloadMayContain();
-        if ($may->count()) {
-            $key_ex->disallowed($keys->diff($may));
-        }
-
-        // we must have one of the following
-        $must_one = $that->payloadMustContainOne();
-        if ($must_one->count() && !$keys->intersect($must_one)->count()) {
-            $key_ex->requireOne($must_one);
-        }
-
-        // these are the possible key conflicts
-        $that->payloadConflicts()->each(function ($conflict, $i) use ($keys, $key_ex) {
-            if ($keys->contains($conflict)) {
-                $key_ex->conflicts($conflict);
-            }
-        });
-
-        $key_ex->throwIfErrors();
-
-        $val_ex = ValueException::make($path);
-
-        // check the data types if applicable
-        $that->payloadDatatypes()->each(function ($allowed, $key) use ($payload, $val_ex) {
-            if ($payload->has($key)) {
-                $value_type = gettype($payload->get($key));
-
-                if (!in_array($value_type, explode('|', $allowed))) {
-                    $val_ex->expected($allowed, $value_type);
-                }
-            }
-        });
-
-        $val_ex->throwIfErrors();
-
-        // the payload is structurally correct, so go ahead and unpack it
-        $that->deserializePayload($payload, $path);
+        // do whatever cleanup needs done before returning the object
+        $that->finishedDeserializing($path);
 
         return $that;
     }
 
     /**
-     * Each type of object must deserialize its payload from a collection.
+     * Assert that the payload's immediate keys are to spec.
      *
-     * @param Collection $payload
      * @param array $path
-     *
-     * @return BaseObject
      */
-    protected function deserializePayload(Collection $payload, ?array $path)
+    protected function assertKeysAreToSpec(array $path)
     {
-        $this->payload = $payload;
+        $keys = $this->payload->keys();
+        $key_ex = KeyException::make($path);
 
-        // by default, we don't do anything with it
+        $must_contain = $this->payloadMustContain();
+        $may_contain = $this->payloadMayContain();
+        $must_contain_one = $this->payloadMustContainOne();
+        $conflicts = $this->payloadConflicts();
 
-        return $this;
+        // if we have a list, they must always be included
+        if (count($must_contain)) {
+            $must_contain = Collection::make($must_contain);
+
+            // an empty set will not add errors
+            $key_ex->required($must_contain->diff($keys));
+        }
+
+        // if we have a list, they are the only valid keys
+        if (count($may_contain)) {
+            // an empty set will not add errors
+            $key_ex->disallowed($keys->diff($may_contain));
+        }
+
+        // if we have a list, one of them must be included
+        if (count($must_contain_one) && !$keys->intersect($must_contain_one)->count()) {
+            $key_ex->requireOne($must_contain_one);
+        }
+
+        // these are the possible key conflicts
+        if (count($conflicts)) {
+            $conflicts = Collection::make($conflicts);
+
+            $conflicts->each(function ($conflict, $i) use ($keys, $key_ex) {
+                if ($keys->contains($conflict)) {
+                    $key_ex->conflicts($conflict);
+                }
+            });
+        }
+
+        $key_ex->throwIfErrors();
     }
 
     /**
-     * If a key exists, unpack it into the supplied object, set an appropriate path, and put it back into the payload.
+     * Assert that the payload's immediate values are to spec.
      *
-     * @param string $key
-     * @param string $doc_object
      * @param array $path
      */
-    public function unpackObject(string $key, string $doc_object, array $path = [])
+    protected function assertValuesAreToSpec(array $path)
     {
-        if ($this->payload->has($key)) {
-            $path[] = $key;
+        $payload_datatypes = $this->payloadDatatypes();
 
-            $this->payload[$key] = $doc_object::deserialize($this->payload->get($key), $path);
+        // check the data types if applicable
+        if (count($payload_datatypes)) {
+            $val_ex = ValueException::make($path);
+            $payload_datatypes = Collection::make($payload_datatypes);
+
+            $payload_datatypes->each(function ($allowed, $key) use ($val_ex) {
+                if ($this->payload->has($key)) {
+                    $value_type = gettype($this->payload->get($key));
+
+                    if (!in_array($value_type, explode('|', $allowed))) {
+                        $val_ex->expected($allowed, $value_type);
+                    }
+                }
+            });
+
+            $val_ex->throwIfErrors();
         }
     }
 
+
     /**
-     * Like unpack object, except handles an array of objects.
+     * Deserialize the whitelisted child objects.
      *
-     * @param string $key
-     * @param string $doc_object
+     * This takes a map of keys to object names and deserializes them. They
+     * should have had their datatypes validated by now, so whether it is an
+     * object or an array of objects we can safely deserialize them.
+     *
      * @param array $path
      */
-    public function unpackObjectArray(string $key, string $doc_object, array $path = [])
+    protected function deserializeChildren(array $path)
     {
-        if ($this->payload->has($key)) {
-            $path[] = $key;
-            $temp = [];
+        $object_map = $this->payloadObjectMap();
 
-            foreach ($this->payload->get($key) as $index => $obj) {
-                $tmp_path = array_merge($path, [strval($index)]);
-                $temp[] = $doc_object::deserialize($obj, $tmp_path);
+        foreach ($object_map as $key => $child_class) {
+            $child_payload = $this->payload->get($key);
+            $child_path = array_merge($path, [$key]);
+
+            if (is_object($child_payload)) {
+                $this->payload[$key] = $child_class::deserialize($child_payload, $child_path);
+            } else if (is_array($child_payload)) {
+                // we assume it is an array of the children
+                // they should have whitelisted this as an array in order for
+                // us to get here
+                $temp = [];
+
+                foreach ($child_payload as $i => $sub_payload) {
+                    $sub_path = array_merge($child_path, [$i]);
+                    $temp[] = $child_class::deserialize($sub_payload, $sub_path);
+                }
+
+                $this->payload[$key] = $temp;
             }
-
-            $this->payload[$key] = $temp;;
         }
     }
 
     /**
-     * Return a collection of keys; the object must contain them all.
+     * Return a array of keys; the object must contain them all.
      *
-     * @return Collection
+     * @return array
      */
-    protected function payloadMustContain()
+    protected function payloadMustContain(): array
     {
-        return Collection::make();
+        return [];
     }
 
     /**
-     * Return a collection of keys; they object must contain at least one.
+     * Return a array of keys; they object must contain at least one.
      *
-     * @return Collection
+     * @return array
      */
-    protected function payloadMustContainOne()
+    protected function payloadMustContainOne(): array
     {
-        return Collection::make();
+        return [];
     }
 
     /**
-     * Return a collection of keys; this is an extensive list of key names.
+     * Return a array of keys; this is an extensive list of key names.
      *
-     * @return Collection
+     * @return array
      */
-    protected function payloadMayContain()
+    protected function payloadMayContain(): array
     {
-        return Collection::make();
+        return [];
     }
 
     /**
-     * Return a collection of key collections; the object can contain one from each list.
+     * Return a array of key arrays; the object can contain one from each list.
      *
-     * @return Collection
+     * @return array
      */
-    protected function payloadConflicts()
+    protected function payloadConflicts(): array
     {
-        return Collection::make();
+        return [];
     }
 
     /**
-     * Return a collection containing key value pairs of keys and the types that we expect as values.
+     * Return a array containing key value pairs of keys and the types that we expect as values.
      *
      * Separate options with a pipe. Acceptable values are here: http://php.net/manual/en/function.gettype.php
      *
-     * @return Collection
+     * @return array
      */
-    protected function payloadDatatypes()
+    protected function payloadDatatypes(): array
     {
-        return Collection::make();
+        return [];
+    }
+
+    /**
+     * Return a map of keys to object type.
+     *
+     * @return array
+     */
+    protected function payloadObjectMap(): array
+    {
+        return [];
+    }
+
+    /**
+     * Do any cleanup before passing this back.
+     *
+     * @param array $path
+     */
+    protected function finishedDeserializing(array $path)
+    {
+        //
     }
 }

@@ -7,23 +7,14 @@ use Illuminate\Support\Collection;
 class Relationships extends BaseObject
 {
     /**
-     * Each type of object must unpack its payload from a collection.
+     * Return a map of keys to object type.
      *
-     * @param Collection $payload
-     * @param array $path
-     *
-     * @return BaseObject
+     * @return array
      */
-    public function unpackPayload(Collection $payload, array $path = [])
+    protected function payloadObjectMap(): array
     {
-        $this->payload = $payload;
+        $keys = $this->payload->keys();
 
-        // each key needs to be a Relationship
-
-        $this->payload->each(function ($relationship, $keyname) use ($path) {
-            $this->unpackObject($keyname, Relationship::class, $path);
-        });
-
-        return $this;
+        return $keys->combine(array_pad([], $keys->count(), Relationship::class))->all();
     }
 }

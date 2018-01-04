@@ -7,35 +7,35 @@ use Illuminate\Support\Collection;
 class ResourceIdentifier extends BaseObject
 {
     /**
-     * Return a collection of keys; the object must contain them all.
+     * Return a array of keys; the object must contain them all.
      *
-     * @return Collection
+     * @return array
      */
-    protected function payloadMustContain()
+    protected function payloadMustContain(): array
     {
-        return Collection::make(['id', 'type']);
+        return ['id', 'type'];
     }
 
     /**
-     * Return a collection of keys; this is an extensive list of key names.
+     * Return a array of keys; this is an extensive list of key names.
      *
-     * @return Collection
+     * @return array
      */
-    protected function payloadMayContain()
+    protected function payloadMayContain(): array
     {
-        return Collection::make(['id', 'type']);
+        return ['id', 'type'];
     }
 
-        /**
-     * Return a collection containing key value pairs of keys and the types that we expect as values.
+    /**
+     * Return a array containing key value pairs of keys and the types that we expect as values.
      *
-     * @return Collection
+     * @return array
      */
-    protected function payloadDatatypes()
+    protected function payloadDatatypes(): array
     {
-        return Collection::make([
+        return [
             'id' => 'string',
             'type' => 'string',
-        ]);
+        ];
     }
 }

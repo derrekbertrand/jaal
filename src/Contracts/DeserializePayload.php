@@ -2,17 +2,13 @@
 
 namespace DialInno\Jaal\Contracts;
 
-use Illuminate\Support\Collection;
-use DialInno\Jaal\Exceptions\KeyException;
-use DialInno\Jaal\Exceptions\ValueException;
-
 interface DeserializePayload
 {
     /**
-     * This object can deserialize a payload and return a new 
+     * This object can deserialize a payload and return a new object.
      *
      * @param mixed $payload
-     * @param array $path
+     * @param array|null $path
      *
      * @return static
      */

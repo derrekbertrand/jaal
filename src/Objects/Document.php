@@ -24,23 +24,29 @@ class Document extends BaseObject implements Responsable
         $errors[] = $error;
         $error_status = intval($error->payload->get('status', '400'));
 
-        // we have two kinds of errors, so we'll pass pack a generic error code
-        if ($this->http_status !== $error_status) {
-            if ($this->http_status >= 500 || $error_status >= 500) {
-                // if either one is a 5XX, that takes precedence
-                $this->http_status = 500;
-            } else if ($this->http_status >= 400 && $error_status >= 400) {
-                // if they're both 4XX, set a generic
-                $this->http_status = 400;
-            } else if ($this->http_status < 400) {
-                // http_status is non-error, so override it 
-                $this->http_status = $error_status;
-            }
-        }
+        $this->changeStatus($error_status);
 
         $this->payload->put('errors', $errors);
 
         return $this;
+    }
+
+    public function changeStatus(int $new_status)
+    {
+        // we have two kinds of status codes
+        // we'll either set a generic status or override the new status
+        if ($this->http_status !== $new_status) {
+            if ($this->http_status >= 500 || $new_status >= 500) {
+                // if either one is a 5XX, that takes precedence
+                $this->http_status = 500;
+            } else if ($this->http_status >= 400 && $new_status >= 400) {
+                // if they're both 4XX, set a generic
+                $this->http_status = 400;
+            } else if ($this->http_status < 400) {
+                // http_status is non-error, so override it 
+                $this->http_status = $new_status;
+            }
+        }
     }
 
     public function hasErrors()
@@ -59,99 +65,83 @@ class Document extends BaseObject implements Responsable
     }
 
     /**
-     * Each type of object must unpack its payload from a collection.
+     * Return a array of keys; they object must contain at least one.
      *
-     * @param Collection $payload
-     * @param array $path
-     *
-     * @return BaseObject
+     * @return array
      */
-    public function deserializePayload(Collection $payload, ?array $path)
+    protected function payloadMustContainOne(): array
     {
-        $this->payload = $payload;
-        $data = $this->payload->get('data');
-
-        if (is_array($data)) {
-            $this->unpackObjectArray('data', Resource::class, $path);
-        } else if (is_object($data)) {
-            $this->unpackObject('data', Resource::class, $path);
-        }
-
-        $this->unpackErrorsArray();
-        $this->unpackObject('meta', Meta::class, $path);
-        $this->unpackObject('jsonapi', JsonApi::class, $path);
-        $this->unpackObject('links', Link::class, $path);
-        $this->unpackObjectArray('included', Resource::class, $path);
-
-        return $this;
+        return ['data', 'errors', 'meta'];
     }
 
     /**
-     * Like unpack object, except handles an array of objects.
+     * Return a array of keys; this is an extensive list of key names.
+     *
+     * @return array
      */
-    protected function unpackErrorsArray()
+    protected function payloadMayContain(): array
     {
-        // addError appends, so forget errors before trying to add them
-        $errors = $this->payload->get('errors', []);
-        $this->payload->forget('errors');
-
-        // this only actually runs if there are any errors
-        foreach ($errors as $index => $obj) {
-            $this->addError($obj);
-        }
+        return ['data', 'errors', 'meta', 'jsonapi', 'links', 'included'];
     }
 
     /**
-     * Return a collection of keys; they object must contain at least one.
+     * Return a array of key arrays; the object can contain one from each list.
      *
-     * @return Collection
+     * @return array
      */
-    protected function payloadMustContainOne()
+    protected function payloadConflicts(): array
     {
-        return Collection::make(['data', 'errors', 'meta']);
+        return [['data', 'errors']];
     }
 
     /**
-     * Return a collection of keys; this is an extensive list of key names.
+     * Return a array containing key value pairs of keys and the types that we expect as values.
      *
-     * @return Collection
+     * @return array
      */
-    protected function payloadMayContain()
+    protected function payloadDatatypes(): array
     {
-        return Collection::make(['data', 'errors', 'meta', 'jsonapi', 'links', 'included']);
-    }
-
-    /**
-     * Return a collection of key collections; the object can contain one from each list.
-     *
-     * @return Collection
-     */
-    protected function payloadConflicts()
-    {
-        return Collection::make([
-            Collection::make(['data', 'errors'])
-        ]);
-    }
-
-    /**
-     * Return a collection containing key value pairs of keys and the types that we expect as values.
-     *
-     * @return Collection
-     */
-    protected function payloadDatatypes()
-    {
-        return Collection::make([
+        return [
             'data' => 'NULL|array|object',
             'errors' => 'array',
             'meta' => 'object',
             'jsonapi' => 'object',
             'links' => 'object',
             'included' => 'array',
-        ]);
+        ];
     }
 
     /**
-     * Convert this exception to a JSON response.
+     * Return a map of keys to object type.
+     *
+     * @return array
+     */
+    protected function payloadObjectMap(): array
+    {
+        return [
+            'data' => Resource::class,
+            'errors' => Error::class,
+            'meta' => Meta::class,
+            'jsonapi' => JsonApi::class,
+            'links' => Link::class,
+            'included' => Resource::class,
+        ];
+    }
+
+    /**
+     * Do any cleanup before passing this back.
+     *
+     * @param array $path
+     */
+    protected function finishedDeserializing(array $path)
+    {
+        foreach ($this->payload->get('errors', []) as $error) {
+            $this->changeStatus(intval($error->payload->get('status', 400)));
+        }
+    }
+
+    /**
+     * Convert this object to a JSON response.
      */
     public function toResponse($request)
     {

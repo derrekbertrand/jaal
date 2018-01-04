@@ -7,59 +7,54 @@ use Illuminate\Support\Collection;
 class Resource extends BaseObject
 {
     /**
-     * Each type of object must unpack its payload from a collection.
+     * Return a array of keys; the object must contain them all.
      *
-     * @param Collection $payload
-     * @param array $path
-     *
-     * @return BaseObject
+     * @return array
      */
-    public function unpackPayload(Collection $payload, array $path = [])
+    protected function payloadMustContain(): array
     {
-        $this->payload = $payload;
-
-        $this->unpackObject('attributes', Attributes::class, $path);
-        $this->unpackObject('relationships', Relationships::class, $path);
-        $this->unpackObject('links', Link::class, $path);
-        $this->unpackObject('meta', Meta::class, $path);
-
-        return $this;
+        return ['type'];
     }
 
     /**
-     * Return a collection of keys; the object must contain them all.
+     * Return a array of keys; this is an extensive list of key names.
      *
-     * @return Collection
+     * @return array
      */
-    protected function payloadMustContain()
+    protected function payloadMayContain(): array
     {
-        return Collection::make(['type']);
+        return ['id', 'type', 'attributes', 'relationships', 'links', 'meta'];
     }
 
     /**
-     * Return a collection of keys; this is an extensive list of key names.
+     * Return a array containing key value pairs of keys and the types that we expect as values.
      *
-     * @return Collection
+     * @return array
      */
-    protected function payloadMayContain()
+    protected function payloadDatatypes(): array
     {
-        return Collection::make(['id', 'type', 'attributes', 'relationships', 'links', 'meta']);
-    }
-
-    /**
-     * Return a collection containing key value pairs of keys and the types that we expect as values.
-     *
-     * @return Collection
-     */
-    protected function payloadDatatypes()
-    {
-        return Collection::make([
+        return [
             'id' => 'string',
             'type' => 'string',
             'attributes' => 'object',
             'relationships' => 'object',
             'links' => 'object',
             'meta' => 'object',
-        ]);
+        ];
+    }
+
+    /**
+     * Return a map of keys to object type.
+     *
+     * @return array
+     */
+    protected function payloadObjectMap(): array
+    {
+        return [
+            'attributes' => Attributes::class,
+            'relationships' => Relationships::class,
+            'links' => Link::class,
+            'meta' => Meta::class,
+        ];
     }
 }

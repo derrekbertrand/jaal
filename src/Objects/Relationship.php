@@ -7,61 +7,50 @@ use Illuminate\Support\Collection;
 class Relationship extends BaseObject
 {
     /**
-     * Each type of object must unpack its payload from a collection.
+     * Return a array of keys; they object must contain at least one.
      *
-     * @param Collection $payload
-     * @param array $path
-     *
-     * @return BaseObject
+     * @return array
      */
-    public function unpackPayload(Collection $payload, array $path = [])
+    protected function payloadMustContainOne(): array
     {
-        $this->payload = $payload;
-        $data = $this->payload->get('data');
-
-        if (is_array($data)) {
-            $this->unpackObjectArray('data', ResourceIdentifier::class, $path);
-        } else if (is_object($data)) {
-            $this->unpackObject('data', ResourceIdentifier::class, $path);
-        }
-        
-        $this->unpackObject('meta', Meta::class, $path);
-        $this->unpackObject('links', Link::class, $path);
-
-        return $this;
+        return ['links', 'data', 'meta'];
     }
 
     /**
-     * Return a collection of keys; they object must contain at least one.
+     * Return a array of keys; this is an extensive list of key names.
      *
-     * @return Collection
+     * @return array
      */
-    protected function payloadMustContainOne()
+    protected function payloadMayContain(): array
     {
-        return Collection::make(['links', 'data', 'meta']);
+        return ['links', 'data', 'meta'];
     }
 
     /**
-     * Return a collection of keys; this is an extensive list of key names.
+     * Return a array containing key value pairs of keys and the types that we expect as values.
      *
-     * @return Collection
+     * @return array
      */
-    protected function payloadMayContain()
+    protected function payloadDatatypes(): array
     {
-        return Collection::make(['links', 'data', 'meta']);
-    }
-
-    /**
-     * Return a collection containing key value pairs of keys and the types that we expect as values.
-     *
-     * @return Collection
-     */
-    protected function payloadDatatypes()
-    {
-        return Collection::make([
+        return [
             'links' => 'object',
             'data' => 'NULL|array|object',
             'meta' => 'object',
-        ]);
+        ];
+    }
+
+    /**
+     * Return a map of keys to object type.
+     *
+     * @return array
+     */
+    protected function payloadObjectMap(): array
+    {
+        return [
+            'links' => Link::class,
+            'data' => ResourceIdentifier::class,
+            'meta' => Meta::class,
+        ];
     }
 }

@@ -7,42 +7,23 @@ use Illuminate\Support\Collection;
 class Error extends BaseObject
 {
     /**
-     * Each type of object must unpack its payload from a collection.
+     * Return a array of keys; this is an extensive list of key names.
      *
-     * @param Collection $payload
-     * @param array $path
-     *
-     * @return BaseObject
+     * @return array
      */
-    public function unpackPayload(Collection $payload, array $path = [])
+    protected function payloadMayContain(): array
     {
-        $this->payload = $payload;
-
-        $this->unpackObject('source', ErrorSource::class, $path);
-        $this->unpackObject('links', Link::class, $path);
-        $this->unpackObject('meta', Meta::class, $path);
-
-        return $this;
+        return ['id', 'links', 'status', 'code', 'title', 'detail', 'source', 'meta'];
     }
 
     /**
-     * Return a collection of keys; this is an extensive list of key names.
+     * Return a array containing key value pairs of keys and the types that we expect as values.
      *
-     * @return Collection
+     * @return array
      */
-    protected function payloadMayContain()
+    protected function payloadDatatypes(): array
     {
-        return Collection::make(['id', 'links', 'status', 'code', 'title', 'detail', 'source', 'meta']);
-    }
-
-        /**
-     * Return a collection containing key value pairs of keys and the types that we expect as values.
-     *
-     * @return Collection
-     */
-    protected function payloadDatatypes()
-    {
-        return Collection::make([
+        return [
             'id' => 'string',
             'links' => 'object',
             'status' => 'string',
@@ -51,6 +32,20 @@ class Error extends BaseObject
             'detail' => 'string',
             'source' => 'object',
             'meta' => 'object',
-        ]);
+        ];
+    }
+
+    /**
+     * Return a map of keys to object type.
+     *
+     * @return array
+     */
+    protected function payloadObjectMap(): array
+    {
+        return [
+            'links' => Link::class,
+            'source' => ErrorSource::class,
+            'meta' => Meta::class,
+        ];
     }
 }

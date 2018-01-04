@@ -7,25 +7,25 @@ use Illuminate\Support\Collection;
 class ErrorSource extends BaseObject
 {
     /**
-     * Return a collection of keys; this is an extensive list of key names.
+     * Return a array of keys; this is an extensive list of key names.
      *
-     * @return Collection
+     * @return array
      */
-    protected function payloadMayContain()
+    protected function payloadMayContain(): array
     {
-        return Collection::make(['pointer', 'parameter']);
+        return ['pointer', 'parameter'];
     }
 
     /**
-     * Return a collection containing key value pairs of keys and the types that we expect as values.
+     * Return a array containing key value pairs of keys and the types that we expect as values.
      *
-     * @return Collection
+     * @return array
      */
-    protected function payloadDatatypes()
+    protected function payloadDatatypes(): array
     {
-        return Collection::make([
+        return [
             'pointer' => 'string',
             'parameter' => 'string',
-        ]);
+        ];
     }
 }
