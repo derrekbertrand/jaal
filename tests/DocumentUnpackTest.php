@@ -15,6 +15,7 @@ use DialInno\Jaal\Exceptions\ValueException;
 class DocumentUnpackTest extends TestCase
 {
     use StandardExamples;
+    use BadExamples;
 
     /**
      * Setup the test environment.
@@ -23,10 +24,6 @@ class DocumentUnpackTest extends TestCase
     {
         \Orchestra\Testbench\TestCase::setUp();
     }
-
-    // -------------------------------------------------------------------------
-    // DATA DESERIALIZATION
-    // -------------------------------------------------------------------------
 
     /**
      * @dataProvider standardExampleProvider
@@ -40,5 +37,22 @@ class DocumentUnpackTest extends TestCase
         // in the future it might be better to pre-decode-encode these strings
         $this->assertEquals($status, $res->status());
         $this->assertEquals(json_encode(json_decode($payload)), $res->getContent());
+    }
+
+    /**
+     * @dataProvider badExampleProvider
+     */
+    public function testBadExampleCases($status, $contains, $payload)
+    {
+        try {
+            Document::deserialize($payload);
+
+            throw new \Exception('Failed to abort.');
+        } catch (\DialInno\Jaal\Exceptions\Exception $e) {
+            $res = $e->toResponse(null);
+
+            $this->assertEquals($status, $res->status());
+            $this->assertContains($contains, $res->getContent());
+        }
     }
 }

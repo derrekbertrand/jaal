@@ -3,6 +3,7 @@
 namespace DialInno\Jaal\Objects\Concerns;
 
 use Illuminate\Contracts\Support\Arrayable;
+use DialInno\Jaal\Exceptions\JsonException;
 
 trait SerializesPayload
 {
@@ -55,7 +56,7 @@ trait SerializesPayload
         $json = json_encode($this->jsonSerialize(), $options);
 
         if (JSON_ERROR_NONE !== json_last_error()) {
-            throw new \Exception('Failed to serialize JSON');
+            throw JsonException::make()->serialize();
         }
 
         return $json;

@@ -5,6 +5,7 @@ namespace DialInno\Jaal\Objects\Concerns;
 use Illuminate\Support\Collection;
 use DialInno\Jaal\Exceptions\KeyException;
 use DialInno\Jaal\Exceptions\ValueException;
+use DialInno\Jaal\Exceptions\JsonException;
 
 trait DeserializesPayload
 {
@@ -36,7 +37,7 @@ trait DeserializesPayload
 
             // check if we had a parse error
             if (JSON_ERROR_NONE !== json_last_error()) {
-                throw JsonException::make()->expected('object', 'garbage payload');
+                throw JsonException::make()->deserialize();
             }
         }
 
@@ -105,7 +106,7 @@ trait DeserializesPayload
             $conflicts = Collection::make($conflicts);
 
             $conflicts->each(function ($conflict, $i) use ($keys, $key_ex) {
-                if ($keys->contains($conflict)) {
+                if ($keys->intersect($conflict)->count() > 1) {
                     $key_ex->conflicts($conflict);
                 }
             });

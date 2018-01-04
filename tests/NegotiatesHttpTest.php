@@ -54,6 +54,20 @@ class NegotiatesHttpTest extends TestCase
             ->assertSee('baz is a reserved query parameter');
     }
 
+    public function testInvalidParameters()
+    {
+        // all headers satisfied, you can't use reserved query params
+
+        $response = $this->withHeaders([
+            'Content-Type' => 'application/vnd.api+json',
+            'Accept' => 'application/vnd.api+json',
+        ])->get('/test?_foo=bar&baz-=bax');
+
+        $response->assertStatus(400)
+            ->assertSee('_foo is not a valid query parameter')
+            ->assertSee('baz- is not a valid query parameter');
+    }
+
     public function testAllGood()
     {
         // Laravel mixes all input; I'm specifically testing to see that we
