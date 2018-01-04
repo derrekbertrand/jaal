@@ -1,3 +1,4 @@
 test.sqlite
 composer.lock
 vendor/
+build/

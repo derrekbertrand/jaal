@@ -16,8 +16,6 @@ matrix:
   include:
     - php: 7.1
       env: setup=coveralls coverage=yes
-  allow_failures:
-    - env: setup=coveralls coverage=yes
   fast_finish: true
 
 # be polite; keep the cached packages
