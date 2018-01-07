@@ -3,7 +3,7 @@
 namespace DialInno\Jaal\Tests;
 
 use DialInno\Jaal\Objects\Document;
-use DialInno\Jaal\Exceptions\ValidationException;
+use DialInno\Jaal\Response;
 
 // THE SYSTEM SHOULD:
 // - 
@@ -22,25 +22,61 @@ class SchemaHydrateTest extends TestCase
     /**
      * @dataProvider validationBadSingleDataProvider
      */
-    public function testValidationBadExampleCases($schema, $method, $payload)
+    public function testValidationBadExampleCases($schema, $status, $method, $contains, $doesnt_contain, $payload)
     {
         try {
             // deserialize; should have no issues
             $doc = Document::deserialize($payload);
 
             // instantiate this schema
-            $schema = new $schema;
+            $schema = $this->app->make($schema);
 
             // hydrate a class, but it should fail
             $schema->hydrate($doc->payload->get('data', null), $method, ['data']);
 
             throw new \Exception('Failed to abort.');
-        } catch (ValidationException $e) {
+        } catch (Response $e) {
             $res = $e->toResponse(null);
 
-            echo $res->getContent()."\n\n";
+            // the status should be thus, probably 400 or 422
+            $this->assertEquals($status, $res->status());
 
-            $this->assertEquals(422, $res->status());
+            // it should contain these strings
+            foreach($contains as $content) {
+                $this->assertContains($content, $res->getContent());
+            }
+
+            // it should not contain these strings
+            foreach($doesnt_contain as $content) {
+                $this->assertNotContains($content, $res->getContent());
+            }
+        }
+    }
+
+    /**
+     * @dataProvider validationGoodSingleDataProvider
+     */
+    public function testValidationGoodExampleCases($schema, $method, $attr_contains, $attr_cannot_contain, $payload)
+    {
+        $this->disableExceptionHandling();
+
+        // deserialize; should have no issues
+        $doc = Document::deserialize($payload);
+
+        // instantiate this schema
+        $schema = $this->app->make($schema);
+
+        // hydrate a class, but it should fail
+        $res = $schema->hydrate($doc->payload->get('data', null), $method, ['data']);
+
+        // the attributes should be thus
+        foreach($attr_contains as $key => $value) {
+            $this->assertContains($value, $res->$key);
+        }
+
+        // the attributes should not be thus
+        foreach($attr_cannot_contain as $key => $value) {
+            $this->assertNotContains($value, $res->$key);
         }
     }
 }

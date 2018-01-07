@@ -3,9 +3,8 @@
 namespace DialInno\Jaal\Objects\Concerns;
 
 use Illuminate\Support\Collection;
-use DialInno\Jaal\Exceptions\KeyException;
-use DialInno\Jaal\Exceptions\ValueException;
-use DialInno\Jaal\Exceptions\JsonException;
+use Illuminate\Container\Container;
+use DialInno\Jaal\Contracts\Response;
 
 trait DeserializesPayload
 {
@@ -31,13 +30,17 @@ trait DeserializesPayload
      */
     public static function deserialize($payload, ?array $path = null)
     {
+        $jaal_ex = Container::getInstance()->make(Response::class);
+
         // if it is a string, attempt to decode it as JSON before doing anything
         if (is_string($payload)) {
             $payload = json_decode($payload, false, 256, JSON_BIGINT_AS_STRING);
 
             // check if we had a parse error
             if (JSON_ERROR_NONE !== json_last_error()) {
-                throw JsonException::make()->deserialize();
+                $jaal_ex
+                    ->cannotDeserializeJson()
+                    ->throwResponse();
             }
         }
 
@@ -47,7 +50,9 @@ trait DeserializesPayload
         if (is_object($payload) && get_class($payload) === 'stdClass') {
             $payload = Collection::make($payload);
         } else if (!($payload instanceof Collection)) {
-            throw ValueException::make($path)->expected('object', gettype($payload));
+            $jaal_ex
+                ->unexpectedValue('object', gettype($payload))
+                ->throwResponse();
         }
 
         // create a new instance, set the payload
@@ -55,8 +60,8 @@ trait DeserializesPayload
         $that->payload = $payload;
 
         // assert that its specifications are met
-        $that->assertKeysAreToSpec($path);
-        $that->assertValuesAreToSpec($path);
+        $that->assertKeysAreToSpec($jaal_ex, $path);
+        $that->assertValuesAreToSpec($jaal_ex, $path);
 
         // if they exist, deserialize the child objects
         $that->deserializeChildren($path);
@@ -70,12 +75,12 @@ trait DeserializesPayload
     /**
      * Assert that the payload's immediate keys are to spec.
      *
+     * @param Response $jaal_ex
      * @param array $path
      */
-    protected function assertKeysAreToSpec(array $path)
+    protected function assertKeysAreToSpec(Response $jaal_ex, array $path)
     {
         $keys = $this->payload->keys();
-        $key_ex = KeyException::make($path);
 
         $must_contain = $this->payloadMustContain();
         $may_contain = $this->payloadMayContain();
@@ -87,59 +92,59 @@ trait DeserializesPayload
             $must_contain = Collection::make($must_contain);
 
             // an empty set will not add errors
-            $key_ex->required($must_contain->diff($keys));
+            $jaal_ex->requiredKey($must_contain->diff($keys));
         }
 
         // if we have a list, they are the only valid keys
         if (count($may_contain)) {
             // an empty set will not add errors
-            $key_ex->disallowed($keys->diff($may_contain));
+            $jaal_ex->disallowedKey($keys->diff($may_contain));
         }
 
         // if we have a list, one of them must be included
         if (count($must_contain_one) && !$keys->intersect($must_contain_one)->count()) {
-            $key_ex->requireOne($must_contain_one);
+            $jaal_ex->requireOneKey($must_contain_one);
         }
 
         // these are the possible key conflicts
         if (count($conflicts)) {
             $conflicts = Collection::make($conflicts);
 
-            $conflicts->each(function ($conflict, $i) use ($keys, $key_ex) {
+            $conflicts->each(function ($conflict, $i) use ($keys, $jaal_ex) {
                 if ($keys->intersect($conflict)->count() > 1) {
-                    $key_ex->conflicts($conflict);
+                    $jaal_ex->conflictingKeys($conflict);
                 }
             });
         }
 
-        $key_ex->throwIfErrors();
+        $jaal_ex->throwResponseIfErrors();
     }
 
     /**
      * Assert that the payload's immediate values are to spec.
      *
+     * @param Response $jaal_ex
      * @param array $path
      */
-    protected function assertValuesAreToSpec(array $path)
+    protected function assertValuesAreToSpec(Response $jaal_ex, array $path)
     {
         $payload_datatypes = $this->payloadDatatypes();
 
         // check the data types if applicable
         if (count($payload_datatypes)) {
-            $val_ex = ValueException::make($path);
             $payload_datatypes = Collection::make($payload_datatypes);
 
-            $payload_datatypes->each(function ($allowed, $key) use ($val_ex) {
+            $payload_datatypes->each(function ($allowed, $key) use ($jaal_ex) {
                 if ($this->payload->has($key)) {
                     $value_type = gettype($this->payload->get($key));
 
                     if (!in_array($value_type, explode('|', $allowed))) {
-                        $val_ex->expected($allowed, $value_type);
+                        $jaal_ex->unexpectedValue($allowed, $value_type);
                     }
                 }
             });
 
-            $val_ex->throwIfErrors();
+            $jaal_ex->throwResponseIfErrors();
         }
     }
 

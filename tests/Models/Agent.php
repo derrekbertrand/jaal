@@ -45,4 +45,9 @@ class Agent extends Authenticatable
     {
         return $this->morphToMany(Tag::class, 'taggable');
     }
+
+    public function setPasswordAttribute($value)
+    {
+        $this->attributes['password'] = bcrypt($value);
+    }
 }

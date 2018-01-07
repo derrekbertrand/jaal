@@ -74,7 +74,7 @@ class TestCase extends \Orchestra\Testbench\TestCase
         return [
             \Orchestra\Database\ConsoleServiceProvider::class,
             //'Cartalyst\Sentry\SentryServiceProvider',
-            \DialInno\Jaal\Tests\Providers\ServiceProvider::class,
+            \DialInno\Jaal\JaalProvider::class,
         ];
     }
 

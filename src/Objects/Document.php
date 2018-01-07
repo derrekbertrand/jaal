@@ -2,7 +2,6 @@
 
 namespace DialInno\Jaal\Objects;
 
-use DialInno\Jaal\Exceptions\ValueException;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Support\Collection;
 
@@ -20,9 +19,9 @@ class Document extends BaseObject implements Responsable
     public function addError($error)
     {
         $errors = $this->payload->get('errors', []);
-        $error = Error::deserialize(Collection::make($error), []);
+        $error = Collection::make($error);
         $errors[] = $error;
-        $error_status = intval($error->payload->get('status', '400'));
+        $error_status = intval($error->get('status', '400'));
 
         $this->changeStatus($error_status);
 

@@ -3,9 +3,7 @@
 namespace DialInno\Jaal\Tests;
 
 use DialInno\Jaal\Objects\Document;
-use DialInno\Jaal\Exceptions\BadDocumentException;
-use DialInno\Jaal\Exceptions\KeyException;
-use DialInno\Jaal\Exceptions\ValueException;
+use DialInno\Jaal\Response;
 
 // THE SYSTEM SHOULD:
 // - unpack JSON into Objects
@@ -48,7 +46,7 @@ class DocumentDeserializeTest extends TestCase
             Document::deserialize($payload);
 
             throw new \Exception('Failed to abort.');
-        } catch (\DialInno\Jaal\Exceptions\Exception $e) {
+        } catch (\DialInno\Jaal\Response $e) {
             $res = $e->toResponse(null);
 
             $this->assertEquals($status, $res->status());
@@ -65,7 +63,7 @@ class DocumentDeserializeTest extends TestCase
 
         try {
             $doc->toResponse(null);
-        } catch (\DialInno\Jaal\Exceptions\Exception $e) {
+        } catch (\DialInno\Jaal\Response $e) {
             $res = $e->toResponse(null);
 
             $this->assertEquals(500, $res->status());

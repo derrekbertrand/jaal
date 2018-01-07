@@ -2,7 +2,9 @@
 
 namespace DialInno\Jaal\Contracts;
 
-interface HydratePayload
+use DialInno\Jaal\Objects\Resource;
+
+interface HydrateResource
 {
     /**
      * Takes the internal payload, validates and hydrates it.
@@ -11,5 +13,5 @@ interface HydratePayload
      *
      * @return mixed
      */
-    public function hydrate();
+    public function hydrate(Resource $jaal_resource, string $method, array $path);
 }

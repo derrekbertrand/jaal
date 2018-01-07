@@ -36,7 +36,7 @@ EXAMPLE_EOF
 42
 EXAMPLE_EOF
 ],
-[ 400, 'The context requires one of the following keys: data, errors, meta',
+[ 400, 'The context requires one of the following keys: \'data\', \'errors\', \'meta\'',
 <<<'EXAMPLE_EOF'
 {
   "jsonapi": {
@@ -45,7 +45,7 @@ EXAMPLE_EOF
 }
 EXAMPLE_EOF
 ],
-[ 400, 'Cannot have keys together in this context: data, errors',
+[ 400, 'Cannot have keys together in this context: \'data\', \'errors\'',
 <<<'EXAMPLE_EOF'
 {
   "data": [],

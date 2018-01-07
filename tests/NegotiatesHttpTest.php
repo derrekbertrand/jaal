@@ -50,8 +50,8 @@ class NegotiatesHttpTest extends TestCase
         ])->get('/test?foo=bar&baz=bax');
 
         $response->assertStatus(400)
-            ->assertSee('foo is a reserved query parameter')
-            ->assertSee('baz is a reserved query parameter');
+            ->assertSee('\'foo\' is a reserved query parameter')
+            ->assertSee('\'baz\' is a reserved query parameter');
     }
 
     public function testInvalidParameters()
@@ -64,8 +64,8 @@ class NegotiatesHttpTest extends TestCase
         ])->get('/test?_foo=bar&baz-=bax');
 
         $response->assertStatus(400)
-            ->assertSee('_foo is not a valid query parameter')
-            ->assertSee('baz- is not a valid query parameter');
+            ->assertSee('\'_foo\' is not a valid query parameter')
+            ->assertSee('\'baz-\' is not a valid query parameter');
     }
 
     public function testAllGood()
@@ -113,5 +113,16 @@ class NegotiatesHttpTest extends TestCase
         ])->get('/test?'.http_build_query(['foo' => 'bar', 'baz' => 'bax']));
 
         $response->assertStatus(406);
+    }
+
+
+    public function testProviderProvides()
+    {
+        // provides is never really used, but we'll stub a test out to check it is there
+        // get it out of our low coverage listings
+
+        $provider = new \DialInno\Jaal\JaalProvider($this->app);
+
+        $this->assertGreaterThan(0, count($provider->provides()));
     }
 }

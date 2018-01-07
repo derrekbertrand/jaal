@@ -3,28 +3,17 @@
 namespace DialInno\Jaal;
 
 use Illuminate\Support\ServiceProvider;
+use DialInno\Jaal\Contracts\Response as ResponseContract;
+use DialInno\Jaal\Response;
 
 class JaalProvider extends ServiceProvider
 {
     /**
-     * Commands to register.
+     * Indicates if loading of the provider is deferred.
      *
-     * @var commands
+     * @var bool
      */
-    protected $commands = [
-
-        \DialInno\Jaal\Commands\ApiMakeCommand::class
-
-    ];
-    /**
-     * Bootstrap the application services.
-     *
-     * @return void
-     */
-    public function boot()
-    {
-        //
-    }
+    protected $defer = true;
 
     /**
      * Register the application services.
@@ -33,12 +22,18 @@ class JaalProvider extends ServiceProvider
      */
     public function register()
     {
-        // $this->commands($this->commands);
+        $this->app->singleton(ResponseContract::class, function () {
+            return new Response();
+        });
+    }
 
-        // $this->app->singleton(MyPackage::class, function () {
-        //     return new MyPackage();
-        // });
-
-        // $this->app->alias(MyPackage::class, 'my-package');
+    /**
+     * Get the services provided by the provider.
+     *
+     * @return array
+     */
+    public function provides()
+    {
+        return [ResponseContract::class];
     }
 }
