@@ -20,8 +20,7 @@ trait DeserializesPayload
      * follows the structure of the spec.
      *
      * With all of the basic structural checks passing, we can comfortably pass
-     * it along to deserializePayload() to save a copy in this class and unpack
-     * any child classes.
+     * it along to save a copy in this class and unpack any child classes.
      *
      * @param mixed $payload
      * @param array|null $path
@@ -30,6 +29,11 @@ trait DeserializesPayload
      */
     public static function deserialize($payload, ?array $path = null)
     {
+        // if it is already this class, no need to do anything
+        if ($payload instanceof static) {
+            return $payload;
+        }
+
         $jaal_ex = Container::getInstance()->make(Response::class);
 
         // if it is a string, attempt to decode it as JSON before doing anything
@@ -48,16 +52,15 @@ trait DeserializesPayload
 
         // we expect stdClass or a Collection
         if (is_object($payload) && get_class($payload) === 'stdClass') {
-            $payload = Collection::make($payload);
-        } else if (!($payload instanceof Collection)) {
+            $payload = static::make($payload);
+        } else if (!($payload instanceof static)) {
             $jaal_ex
                 ->unexpectedValue('object', gettype($payload))
                 ->throwResponse();
         }
 
         // create a new instance, set the payload
-        $that = new static;
-        $that->payload = $payload;
+        $that = new static($payload);
 
         // assert that its specifications are met
         $that->assertKeysAreToSpec($jaal_ex, $path);
@@ -80,41 +83,49 @@ trait DeserializesPayload
      */
     protected function assertKeysAreToSpec(Response $jaal_ex, array $path)
     {
-        $keys = $this->payload->keys();
+        $keys = $this->keys();
 
-        $must_contain = $this->payloadMustContain();
-        $may_contain = $this->payloadMayContain();
-        $must_contain_one = $this->payloadMustContainOne();
-        $conflicts = $this->payloadConflicts();
 
         // if we have a list, they must always be included
-        if (count($must_contain)) {
-            $must_contain = Collection::make($must_contain);
+        if (method_exists($this, 'payloadMustContain')) {
+            $must_contain = $this->payloadMustContain();
+            if (count($must_contain)) {
+                $must_contain = Collection::make($must_contain);
 
-            // an empty set will not add errors
-            $jaal_ex->requiredKey($must_contain->diff($keys));
+                // an empty set will not add errors
+                $jaal_ex->requiredKey($must_contain->diff($keys));
+            }
         }
 
         // if we have a list, they are the only valid keys
-        if (count($may_contain)) {
-            // an empty set will not add errors
-            $jaal_ex->disallowedKey($keys->diff($may_contain));
+        if (method_exists($this, 'payloadMayContain')) {
+            $may_contain = $this->payloadMayContain();
+            if (count($may_contain)) {
+                // an empty set will not add errors
+                $jaal_ex->disallowedKey($keys->diff($may_contain));
+            }
         }
 
         // if we have a list, one of them must be included
-        if (count($must_contain_one) && !$keys->intersect($must_contain_one)->count()) {
-            $jaal_ex->requireOneKey($must_contain_one);
+        if (method_exists($this, 'payloadMustContainOne')) {
+            $must_contain_one = $this->payloadMustContainOne();
+            if (count($must_contain_one) && !$keys->intersect($must_contain_one)->count()) {
+                $jaal_ex->requireOneKey($must_contain_one);
+            }
         }
 
         // these are the possible key conflicts
-        if (count($conflicts)) {
-            $conflicts = Collection::make($conflicts);
+        if (method_exists($this, 'payloadConflicts')) {
+            $conflicts = $this->payloadConflicts();
+            if (count($conflicts)) {
+                $conflicts = Collection::make($conflicts);
 
-            $conflicts->each(function ($conflict, $i) use ($keys, $jaal_ex) {
-                if ($keys->intersect($conflict)->count() > 1) {
-                    $jaal_ex->conflictingKeys($conflict);
-                }
-            });
+                $conflicts->each(function ($conflict, $i) use ($keys, $jaal_ex) {
+                    if ($keys->intersect($conflict)->count() > 1) {
+                        $jaal_ex->conflictingKeys($conflict);
+                    }
+                });
+            }
         }
 
         $jaal_ex->throwResponseIfErrors();
@@ -128,23 +139,24 @@ trait DeserializesPayload
      */
     protected function assertValuesAreToSpec(Response $jaal_ex, array $path)
     {
-        $payload_datatypes = $this->payloadDatatypes();
-
         // check the data types if applicable
-        if (count($payload_datatypes)) {
-            $payload_datatypes = Collection::make($payload_datatypes);
+        if (method_exists($this, 'payloadDatatypes')) {
+            $payload_datatypes = $this->payloadDatatypes();
+            if (count($payload_datatypes)) {
+                $payload_datatypes = Collection::make($payload_datatypes);
 
-            $payload_datatypes->each(function ($allowed, $key) use ($jaal_ex) {
-                if ($this->payload->has($key)) {
-                    $value_type = gettype($this->payload->get($key));
+                $payload_datatypes->each(function ($allowed, $key) use ($jaal_ex) {
+                    if ($this->has($key)) {
+                        $value_type = gettype($this->get($key));
 
-                    if (!in_array($value_type, explode('|', $allowed))) {
-                        $jaal_ex->unexpectedValue($allowed, $value_type);
+                        if (!in_array($value_type, explode('|', $allowed))) {
+                            $jaal_ex->unexpectedValue($allowed, $value_type);
+                        }
                     }
-                }
-            });
+                });
 
-            $jaal_ex->throwResponseIfErrors();
+                $jaal_ex->throwResponseIfErrors();
+            }
         }
     }
 
@@ -160,90 +172,29 @@ trait DeserializesPayload
      */
     protected function deserializeChildren(array $path)
     {
-        $object_map = $this->payloadObjectMap();
+        if (method_exists($this, 'payloadObjectMap')) {
+            $object_map = $this->payloadObjectMap();
+            foreach ($object_map as $key => $child_class) {
+                $child_payload = $this->get($key);
+                $child_path = array_merge($path, [$key]);
 
-        foreach ($object_map as $key => $child_class) {
-            $child_payload = $this->payload->get($key);
-            $child_path = array_merge($path, [$key]);
+                if (is_object($child_payload)) {
+                    $this[$key] = $child_class::deserialize($child_payload, $child_path);
+                } else if (is_array($child_payload)) {
+                    // we assume it is an array of the children
+                    // they should have whitelisted this as an array in order for
+                    // us to get here
+                    $temp = [];
 
-            if (is_object($child_payload)) {
-                $this->payload[$key] = $child_class::deserialize($child_payload, $child_path);
-            } else if (is_array($child_payload)) {
-                // we assume it is an array of the children
-                // they should have whitelisted this as an array in order for
-                // us to get here
-                $temp = [];
+                    foreach ($child_payload as $i => $sub_payload) {
+                        $sub_path = array_merge($child_path, [$i]);
+                        $temp[] = $child_class::deserialize($sub_payload, $sub_path);
+                    }
 
-                foreach ($child_payload as $i => $sub_payload) {
-                    $sub_path = array_merge($child_path, [$i]);
-                    $temp[] = $child_class::deserialize($sub_payload, $sub_path);
+                    $this[$key] = $temp;
                 }
-
-                $this->payload[$key] = $temp;
             }
         }
-    }
-
-    /**
-     * Return a array of keys; the object must contain them all.
-     *
-     * @return array
-     */
-    protected function payloadMustContain(): array
-    {
-        return [];
-    }
-
-    /**
-     * Return a array of keys; they object must contain at least one.
-     *
-     * @return array
-     */
-    protected function payloadMustContainOne(): array
-    {
-        return [];
-    }
-
-    /**
-     * Return a array of keys; this is an extensive list of key names.
-     *
-     * @return array
-     */
-    protected function payloadMayContain(): array
-    {
-        return [];
-    }
-
-    /**
-     * Return a array of key arrays; the object can contain one from each list.
-     *
-     * @return array
-     */
-    protected function payloadConflicts(): array
-    {
-        return [];
-    }
-
-    /**
-     * Return a array containing key value pairs of keys and the types that we expect as values.
-     *
-     * Separate options with a pipe. Acceptable values are here: http://php.net/manual/en/function.gettype.php
-     *
-     * @return array
-     */
-    protected function payloadDatatypes(): array
-    {
-        return [];
-    }
-
-    /**
-     * Return a map of keys to object type.
-     *
-     * @return array
-     */
-    protected function payloadObjectMap(): array
-    {
-        return [];
     }
 
     /**

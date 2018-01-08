@@ -59,7 +59,7 @@ class DocumentDeserializeTest extends TestCase
     {
 
         $doc = Document::deserialize('{"meta": {"foo": "bar"}}');
-        $doc->payload['meta'] = tmpfile();
+        $doc['meta'] = tmpfile();
 
         try {
             $doc->toResponse(null);
@@ -70,6 +70,6 @@ class DocumentDeserializeTest extends TestCase
             $this->assertContains('Internal Serialization Error', $res->getContent());
         }
 
-        fclose($doc->payload->get('meta'));
+        fclose($doc->get('meta'));
     }
 }

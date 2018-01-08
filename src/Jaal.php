@@ -12,8 +12,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
 
 use DialInno\Jaal\Objects\Document;
+use DialInno\Jaal\Contracts\Jaal as JaalContract;
 
-abstract class Jaal
+abstract class Jaal implements JaalContract
 {
     protected $request = null;
     protected $request_doc = null;

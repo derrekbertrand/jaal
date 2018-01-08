@@ -8,7 +8,7 @@ class Resource extends BaseObject
 {
     public function attributes()
     {
-        $attr = $this->payload->get('attributes', null);
+        $attr = $this->get('attributes', null);
 
         return is_null($attr) ? [] : $attr->toArray();
     }

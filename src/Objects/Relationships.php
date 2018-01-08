@@ -13,7 +13,7 @@ class Relationships extends BaseObject
      */
     protected function payloadObjectMap(): array
     {
-        $keys = $this->payload->keys();
+        $keys = $this->keys();
 
         return $keys->combine(array_pad([], $keys->count(), Relationship::class))->all();
     }

@@ -9,15 +9,8 @@ use DialInno\Jaal\Contracts\SerializePayload;
 use DialInno\Jaal\Exceptions\KeyException;
 use DialInno\Jaal\Exceptions\ValueException;
 
-abstract class BaseObject implements SerializePayload, DeserializePayload
+abstract class BaseObject extends Collection implements SerializePayload, DeserializePayload
 {
     use Concerns\DeserializesPayload,
         Concerns\SerializesPayload;
-
-    public $payload = null;
-
-    public function __construct()
-    {
-        $this->payload = Collection::make();
-    }
 }

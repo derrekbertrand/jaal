@@ -18,14 +18,14 @@ class Document extends BaseObject implements Responsable
      */
     public function addError($error)
     {
-        $errors = $this->payload->get('errors', []);
+        $errors = $this->get('errors', []);
         $error = Collection::make($error);
         $errors[] = $error;
         $error_status = intval($error->get('status', '400'));
 
         $this->changeStatus($error_status);
 
-        $this->payload->put('errors', $errors);
+        $this->put('errors', $errors);
 
         return $this;
     }
@@ -50,7 +50,7 @@ class Document extends BaseObject implements Responsable
 
     public function hasErrors()
     {
-        return count($this->payload->get('errors', [])) ? true : false;
+        return count($this->get('errors', [])) ? true : false;
     }
 
     /**
@@ -134,8 +134,8 @@ class Document extends BaseObject implements Responsable
      */
     protected function finishedDeserializing(array $path)
     {
-        foreach ($this->payload->get('errors', []) as $error) {
-            $this->changeStatus(intval($error->payload->get('status', 400)));
+        foreach ($this->get('errors', []) as $error) {
+            $this->changeStatus(intval($error->get('status', 400)));
         }
     }
 

@@ -32,7 +32,7 @@ class SchemaHydrateTest extends TestCase
             $schema = $this->app->make($schema);
 
             // hydrate a class, but it should fail
-            $schema->hydrate($doc->payload->get('data', null), $method, ['data']);
+            $schema->hydrate($doc->get('data', null), $method, ['data']);
 
             throw new \Exception('Failed to abort.');
         } catch (Response $e) {
@@ -67,7 +67,7 @@ class SchemaHydrateTest extends TestCase
         $schema = $this->app->make($schema);
 
         // hydrate a class, but it should fail
-        $res = $schema->hydrate($doc->payload->get('data', null), $method, ['data']);
+        $res = $schema->hydrate($doc->get('data', null), $method, ['data']);
 
         // the attributes should be thus
         foreach($attr_contains as $key => $value) {

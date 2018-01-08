@@ -9,13 +9,13 @@ use Illuminate\Container\Container;
 trait SerializesPayload
 {
     /**
-     * Convert the payload into an array.
+     * Convert this into an array.
      *
      * @return array
      */
     public function toArray()
     {
-        return $this->payload->map(function ($item, $key) {
+        return $this->map(function ($item, $key) {
             if (is_array($item)) {
                 $tmp = [];
 
@@ -37,7 +37,7 @@ trait SerializesPayload
     }
 
     /**
-     * Convert the payload into something JSON serializable.
+     * Convert this into something JSON serializable.
      *
      * @return array
      */
@@ -47,7 +47,7 @@ trait SerializesPayload
     }
 
     /**
-     * Convert the payload to its JSON representation.
+     * Convert this to its JSON representation.
      *
      * @param  int  $options
      * @return string

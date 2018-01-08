@@ -117,6 +117,32 @@ EXAMPLE_EOF
 }
 EXAMPLE_EOF
 ],
+// [   // verify we can return a new agent
+//     AgentSchema::class,
+//     'update',
+//     [
+//       'tags' => 'Mark',
+//     ],
+//     [
+//     ],
+// <<<'EXAMPLE_EOF'
+// {
+//   "data": {
+//     "id": "42",
+//     "type": "agent",
+//     "relationships": {
+//       "tags": {
+//         "data": [
+//           {"type": "tag", "id": "a-doe"},
+//           {"type": "tag", "id": "a-deer"},
+//           {"type": "tag", "id": "a-female-deer"}
+//         ]
+//       }
+//     }
+//   }
+// }
+// EXAMPLE_EOF
+// ],
         ];
     }
 }
