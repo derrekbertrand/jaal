@@ -26,22 +26,6 @@ class AgentSchema extends Schema
         ];
     }
 
-    protected function scalarStoreWhitelist()
-    {
-        return [
-            'first_name',
-            'last_name',
-            'job_title',
-            'email',
-            'password',
-        ];
-    }
-
-    protected function scalarUpdateWhitelist()
-    {
-        return $this->scalarStoreWhitelist();
-    }
-
     protected function scalarUpdateRules()
     {
         return [

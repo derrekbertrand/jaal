@@ -43,25 +43,22 @@ abstract class Schema implements HydrateResource
     protected function assertResourceIsValid()
     {
         $scalar_rules_method = 'scalar'.studly_case($this->method).'Rules';
-        $scalar_whitelist_method = 'scalar'.studly_case($this->method).'Whitelist';
         $attr = $this->resource->attributes();
         $keys = Collection::make(array_keys($attr));
 
-        // if we have a whitelist for this method, check attributes vs the whitelist
-        if (method_exists($this, $scalar_whitelist_method)) {
-            $may_contain = $this->$scalar_whitelist_method();
 
-            if (count($may_contain)) {
-                // an empty set will not add errors
-                $this->exception->disallowedKey($keys->diff($may_contain));
-            }
-        }
 
         // if we have rules for this, validate the attributes
         if (method_exists($this, $scalar_rules_method)) {
+            $rules = $this->$scalar_rules_method();
+            $allowed_keys = array_keys($rules);
+
+            // an empty set will not add errors
+            $this->exception->disallowedKey($keys->diff($allowed_keys));
+
             $validator = Validator::make(
                 $attr,
-                $this->$scalar_rules_method()
+                $rules
             );
 
             if ($validator->fails()) {
