@@ -26,7 +26,7 @@ class SchemaHydrateTest extends TestCase
     {
         try {
             // deserialize; should have no issues
-            $doc = Document::deserialize($payload);
+            $doc = $this->app->make(Document::class)->deserialize($payload);
 
             // instantiate this schema
             $schema = $this->app->make($schema);
@@ -61,7 +61,7 @@ class SchemaHydrateTest extends TestCase
         $this->disableExceptionHandling();
 
         // deserialize; should have no issues
-        $doc = Document::deserialize($payload);
+        $doc = $this->app->make(Document::class)->deserialize($payload);
 
         // instantiate this schema
         $schema = $this->app->make($schema);

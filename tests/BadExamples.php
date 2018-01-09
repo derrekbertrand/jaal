@@ -67,6 +67,15 @@ EXAMPLE_EOF
 }
 EXAMPLE_EOF
 ],
+[ 400, '\'_foo\' is not a valid key name',
+<<<'EXAMPLE_EOF'
+{
+  "meta": {
+    "_foo": "bar"
+  }
+}
+EXAMPLE_EOF
+],
         ];
     }
 }

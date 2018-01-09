@@ -16,12 +16,11 @@ class Document extends BaseObject implements Responsable
      *
      * @return Document
      */
-    public function addError($error)
+    public function addError(Error $error)
     {
         $errors = $this->get('errors', []);
-        $error = Collection::make($error);
         $errors[] = $error;
-        $error_status = intval($error->get('status', '400'));
+        $error_status = intval($error->get('status', 400));
 
         $this->changeStatus($error_status);
 
@@ -134,6 +133,7 @@ class Document extends BaseObject implements Responsable
      */
     protected function finishedDeserializing(array $path)
     {
+        // adjust to an appropriate response code
         foreach ($this->get('errors', []) as $error) {
             $this->changeStatus(intval($error->get('status', 400)));
         }

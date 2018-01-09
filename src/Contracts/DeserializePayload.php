@@ -12,5 +12,5 @@ interface DeserializePayload
      *
      * @return static
      */
-    public static function deserialize($payload, ?array $path);
+    public function deserialize($payload, ?array $path);
 }

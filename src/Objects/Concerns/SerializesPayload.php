@@ -57,8 +57,7 @@ trait SerializesPayload
         $json = json_encode($this->jsonSerialize(), $options);
 
         if (JSON_ERROR_NONE !== json_last_error()) {
-            throw Container::getInstance()
-                ->make(Response::class)
+            throw app(Response::class)
                 ->cannotSerializeJson();
         }
 

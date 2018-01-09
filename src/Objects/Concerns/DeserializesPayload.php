@@ -27,7 +27,7 @@ trait DeserializesPayload
      *
      * @return static
      */
-    public static function deserialize($payload, ?array $path = null)
+    public function deserialize($payload, ?array $path = null)
     {
         // if it is already this class, no need to do anything
         if ($payload instanceof static) {
@@ -38,7 +38,7 @@ trait DeserializesPayload
 
         // if it is a string, attempt to decode it as JSON before doing anything
         if (is_string($payload)) {
-            $payload = json_decode($payload, false, 256, JSON_BIGINT_AS_STRING);
+            $payload = json_decode($payload, false, 128, JSON_BIGINT_AS_STRING);
 
             // check if we had a parse error
             if (JSON_ERROR_NONE !== json_last_error()) {
@@ -59,20 +59,20 @@ trait DeserializesPayload
                 ->throwResponse();
         }
 
-        // create a new instance, set the payload
-        $that = new static($payload);
+        // set the items the way the constructor would
+        $this->items = $this->getArrayableItems($payload);
 
         // assert that its specifications are met
-        $that->assertKeysAreToSpec($jaal_ex, $path);
-        $that->assertValuesAreToSpec($jaal_ex, $path);
+        $this->assertKeysAreToSpec($jaal_ex, $path);
+        $this->assertValuesAreToSpec($jaal_ex, $path);
 
         // if they exist, deserialize the child objects
-        $that->deserializeChildren($path);
+        $this->deserializeChildren($path);
 
         // do whatever cleanup needs done before returning the object
-        $that->finishedDeserializing($path);
+        $this->finishedDeserializing($path);
 
-        return $that;
+        return $this;
     }
 
     /**
@@ -128,6 +128,13 @@ trait DeserializesPayload
             }
         }
 
+        // they could also not be valid
+        foreach ($keys as $key) {
+            if (preg_match('/^[a-zA-Z0-9][a-zA-Z0-9_-]*[a-zA-Z0-9]?$/', $key) === 0) {
+                $jaal_ex->invalidKey($key);
+            }
+        }
+
         $jaal_ex->throwResponseIfErrors();
     }
 
@@ -150,6 +157,7 @@ trait DeserializesPayload
                         $value_type = gettype($this->get($key));
 
                         if (!in_array($value_type, explode('|', $allowed))) {
+                            // it is not the type of value we were expecting
                             $jaal_ex->unexpectedValue($allowed, $value_type);
                         }
                     }
@@ -179,7 +187,7 @@ trait DeserializesPayload
                 $child_path = array_merge($path, [$key]);
 
                 if (is_object($child_payload)) {
-                    $this[$key] = $child_class::deserialize($child_payload, $child_path);
+                    $this[$key] = app($child_class)->deserialize($child_payload, $child_path);
                 } else if (is_array($child_payload)) {
                     // we assume it is an array of the children
                     // they should have whitelisted this as an array in order for
@@ -188,7 +196,7 @@ trait DeserializesPayload
 
                     foreach ($child_payload as $i => $sub_payload) {
                         $sub_path = array_merge($child_path, [$i]);
-                        $temp[] = $child_class::deserialize($sub_payload, $sub_path);
+                        $temp[] = app($child_class)->deserialize($sub_payload, $sub_path);
                     }
 
                     $this[$key] = $temp;

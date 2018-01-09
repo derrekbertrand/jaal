@@ -28,7 +28,7 @@ class DocumentDeserializeTest extends TestCase
      */
     public function testStdExampleCases($status, $payload)
     {
-        $res = Document::deserialize($payload)->toResponse(null);
+        $res = $this->app->make(Document::class)->deserialize($payload)->toResponse(null);
 
         // assert that the content we're getting out is the same as if we just ran
         // the thing through a decode and encode
@@ -43,7 +43,7 @@ class DocumentDeserializeTest extends TestCase
     public function testBadExampleCases($status, $contains, $payload)
     {
         try {
-            Document::deserialize($payload);
+            $this->app->make(Document::class)->deserialize($payload);
 
             throw new \Exception('Failed to abort.');
         } catch (\DialInno\Jaal\Response $e) {
@@ -58,7 +58,7 @@ class DocumentDeserializeTest extends TestCase
     public function testBadServerSerialization()
     {
 
-        $doc = Document::deserialize('{"meta": {"foo": "bar"}}');
+        $doc = $this->app->make(Document::class)->deserialize('{"meta": {"foo": "bar"}}');
         $doc['meta'] = tmpfile();
 
         try {

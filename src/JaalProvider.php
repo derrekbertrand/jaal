@@ -5,8 +5,7 @@ namespace DialInno\Jaal;
 use Illuminate\Support\ServiceProvider;
 use DialInno\Jaal\Contracts\Response as ResponseContract;
 use DialInno\Jaal\Response;
-use DialInno\Jaal\Contracts\Jaal as JaalContract;
-use DialInno\Jaal\Jaal;
+use DialInno\Jaal\Objects\Document;
 
 class JaalProvider extends ServiceProvider
 {
@@ -26,7 +25,7 @@ class JaalProvider extends ServiceProvider
     {
         // devs may typehint the response contract
         $this->app->singleton(ResponseContract::class, function () {
-            return new Response();
+            return new Response($this->app->make(Document::class));
         });
     }
 

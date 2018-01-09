@@ -5,6 +5,7 @@ namespace DialInno\jaal\Middleware;
 use Closure;
 use Illuminate\Container\Container;
 use DialInno\Jaal\Response;
+use DialInno\Jaal\Objects\Document;
 
 class NegotiateHttp
 {
@@ -51,7 +52,7 @@ class NegotiateHttp
 
         // if we have bad parameters, kick the request out
         if (count($bad_params) || count($reserved_params)) {
-            (new Response)
+            (new Response(new Document))
                 ->invalidQueryParam($bad_params)
                 ->reservedQueryParam($reserved_params)
                 ->throwResponseIfErrors();
