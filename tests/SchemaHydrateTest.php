@@ -6,7 +6,9 @@ use DialInno\Jaal\Objects\Document;
 use DialInno\Jaal\Response;
 
 // THE SYSTEM SHOULD:
-// - 
+// - validate and sanity check the Resource data
+// - hydrate models from Resources
+// - throw relevant Responsible Exceptions
 class SchemaHydrateTest extends TestCase
 {
     use ValidationExamples;
@@ -58,10 +60,10 @@ class SchemaHydrateTest extends TestCase
      */
     public function testValidationGoodExampleCases($schema, $method, $attr_contains, $attr_cannot_contain, $payload)
     {
-        $this->disableExceptionHandling();
-
         // deserialize; should have no issues
-        $doc = $this->app->make(Document::class)->deserialize($payload);
+            $doc = $this->app
+                ->make(Document::class)
+                ->deserialize($payload);
 
         // instantiate this schema
         $schema = $this->app->make($schema);

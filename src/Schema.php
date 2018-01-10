@@ -31,7 +31,7 @@ abstract class Schema implements HydrateResource
         $this->path = $path;
         $this->method = $method;
 
-        $this->assertResourceIsValid();
+        $this->assertResourceAttributesAreValid();
 
         $resource = $this->createHydrated();
 
@@ -40,24 +40,25 @@ abstract class Schema implements HydrateResource
 
     abstract protected function createHydrated();
 
-    protected function assertResourceIsValid()
+    protected function assertResourceAttributesAreValid()
     {
         $scalar_rules_method = 'scalar'.studly_case($this->method).'Rules';
-        $attr = $this->resource->attributes();
-        $keys = Collection::make(array_keys($attr));
-
-
 
         // if we have rules for this, validate the attributes
         if (method_exists($this, $scalar_rules_method)) {
             $rules = $this->$scalar_rules_method();
             $allowed_keys = array_keys($rules);
 
+            $attr = $this->resource->attributes();
+            $keys = $attr->keys();
+
+            // ensure that only the whitelisted attributes are present
             // an empty set will not add errors
             $this->exception->disallowedKey($keys->diff($allowed_keys));
 
+            // validate the attribute contents
             $validator = Validator::make(
-                $attr,
+                $attr->toArray(),
                 $rules
             );
 
@@ -67,6 +68,33 @@ abstract class Schema implements HydrateResource
                         $this->exception->invalidValue($detail, $this->path);
                     }
                 }
+            }
+        }
+
+
+        $this->exception->throwResponseIfErrors();
+    }
+
+    protected function assertResourceRelationsAreValid()
+    {
+        $relation_map_method = camel_case($this->method).'RelationMap';
+
+        // if we have a map, validate the relationships
+        if (method_exists($this, $relation_map_method)) {
+            $map = $this->$relation_map_method();
+            $allowed_relations = array_keys($map);
+
+            $relations = $this->resource->relations();
+            $rel_keys = Collection::make(array_keys($relations));
+
+            // ensure that only the whitelisted relationships are present
+            // an empty set will not add errors
+            $this->exception->disallowedKey($rel_keys->diff($allowed_relations));
+
+            // validate the relationship contents
+            foreach ($relations as $relation_name => $relationship) {
+                // $map[$relation_name];
+
             }
         }
 

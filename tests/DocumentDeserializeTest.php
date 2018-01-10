@@ -6,7 +6,7 @@ use DialInno\Jaal\Objects\Document;
 use DialInno\Jaal\Response;
 
 // THE SYSTEM SHOULD:
-// - unpack JSON into Objects
+// - deserialize JSON into Objects
 // - validate the structure of the JSON document
 // - throw Responsable Exceptions
 // - contain relevant error information

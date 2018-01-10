@@ -8,9 +8,12 @@ class Resource extends BaseObject
 {
     public function attributes()
     {
-        $attr = $this->get('attributes', null);
+        return $this->get('attributes', []);
+    }
 
-        return is_null($attr) ? [] : $attr->toArray();
+    public function relations()
+    {
+        return $this->get('relationships', []);
     }
 
     /**

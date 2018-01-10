@@ -10,7 +10,7 @@ class AgentSchema extends Schema
     protected function createHydrated()
     {
         // a naive approach to filling out the model
-        $model = (new Agent)->forceFill($this->resource->attributes());
+        $model = (new Agent)->forceFill($this->resource->attributes()->toArray());
 
         return $model;
     }
@@ -23,6 +23,14 @@ class AgentSchema extends Schema
             'job_title' => 'string|min:2|max:31',
             'email' => 'required|email|max:127',
             'password' => ['required','string','min:8','max:120'],
+        ];
+    }
+
+    protected function updateRelationMap()
+    {
+        return [
+            'accounts' => ['account' => AccountSchema::class],
+            'tags' => ['tag' => TagSchema::class]
         ];
     }
 

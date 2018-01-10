@@ -34,7 +34,7 @@ trait DeserializesPayload
             return $payload;
         }
 
-        $jaal_ex = Container::getInstance()->make(Response::class);
+        $jaal_ex = app(Response::class);
 
         // if it is a string, attempt to decode it as JSON before doing anything
         if (is_string($payload)) {
