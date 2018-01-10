@@ -12,8 +12,8 @@ use DialInno\Jaal\Response;
 // - contain relevant error information
 class DocumentDeserializeTest extends TestCase
 {
-    use StandardExamples;
-    use BadExamples;
+    use Data\StandardExamples;
+    use Data\BadExamples;
 
     /**
      * Setup the test environment.

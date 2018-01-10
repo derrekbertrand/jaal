@@ -11,7 +11,7 @@ use DialInno\Jaal\Response;
 // - throw relevant Responsible Exceptions
 class SchemaHydrateTest extends TestCase
 {
-    use ValidationExamples;
+    use Data\ValidationExamples;
 
     /**
      * Setup the test environment.

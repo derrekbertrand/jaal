@@ -1,6 +1,6 @@
 <?php
 
-namespace DialInno\Jaal\Tests;
+namespace DialInno\Jaal\Tests\Data;
 
 use DialInno\Jaal\Tests\Schemas\AgentSchema;
 

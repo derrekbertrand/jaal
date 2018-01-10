@@ -41,14 +41,14 @@ class JaalRouter
                 // This will be completed once the library is in a more finalized state.
                 //------------------------------------------------------------------------------------------------------
 
-                // foreach ($resource['to_one'] ?? [] as $relation) {
-                //     static::defineRelationRoutes($name, $resource['controller'], $relation);
-                // }
+                foreach ($resource['to_one'] ?? [] as $relation) {
+                    static::defineRelationRoutes($name, $resource['controller'], $relation);
+                }
 
-                // foreach ($resource['to_many'] ?? [] as $relation) {
-                //     static::defineRelationRoutes($name, $resource['controller'], $relation);
-                //     static::defineManyRelationRoutes($name, $resource['controller'], $relation);
-                // }
+                foreach ($resource['to_many'] ?? [] as $relation) {
+                    static::defineRelationRoutes($name, $resource['controller'], $relation);
+                    static::defineManyRelationRoutes($name, $resource['controller'], $relation);
+                }
             }
         }
     }
