@@ -6,16 +6,6 @@ use Illuminate\Support\Collection;
 
 class Resource extends BaseObject
 {
-    public function attributes()
-    {
-        return $this->get('attributes', []);
-    }
-
-    public function relations()
-    {
-        return $this->get('relationships', []);
-    }
-
     /**
      * Return a array of keys; the object must contain them all.
      *

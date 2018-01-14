@@ -34,7 +34,7 @@ class SchemaHydrateTest extends TestCase
             $schema = $this->app->make($schema);
 
             // hydrate a class, but it should fail
-            $schema->hydrate($doc->get('data', null), $method, ['data']);
+            $schema->withMethod($method)->hydrate($doc->get('data', null));
 
             throw new \Exception('Failed to abort.');
         } catch (Response $e) {
@@ -60,6 +60,7 @@ class SchemaHydrateTest extends TestCase
      */
     public function testValidationGoodExampleCases($schema, $method, $attr_contains, $attr_cannot_contain, $payload)
     {
+        // try {
         // deserialize; should have no issues
             $doc = $this->app
                 ->make(Document::class)
@@ -69,7 +70,7 @@ class SchemaHydrateTest extends TestCase
         $schema = $this->app->make($schema);
 
         // hydrate a class, but it should fail
-        $res = $schema->hydrate($doc->get('data', null), $method, ['data']);
+        $res = $schema->withMethod($method)->hydrate($doc->get('data', null));
 
         // the attributes should be thus
         foreach($attr_contains as $key => $value) {
@@ -80,5 +81,6 @@ class SchemaHydrateTest extends TestCase
         foreach($attr_cannot_contain as $key => $value) {
             $this->assertNotContains($value, $res->$key);
         }
+        // } catch(\Exception $e) { dd($e); }
     }
 }

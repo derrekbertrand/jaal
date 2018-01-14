@@ -33,17 +33,6 @@ class TestCase extends \Orchestra\Testbench\TestCase
         });
     }
 
-    protected function disableExceptionHandling()
-    {
-        $this->app->instance(LaravelHandler::class, new class extends OrchestraHandler {
-            public function __construct() {}
-            public function report(\Exception $e) {}
-            public function render($request, \Exception $e) {
-                throw $e;
-            }
-        });
-    }
-
     /**
      * Define environment setup.
      *
@@ -53,9 +42,6 @@ class TestCase extends \Orchestra\Testbench\TestCase
      */
     protected function getEnvironmentSetUp($app)
     {
-        //pull in our testing config
-        $app['config']->set('database.connections.mysql.engine', 'MEMORY');
-
         // $app['config']->set('project_json.api_groups', ['v1' => JsonApiV1::class]);
 
         //make sure we use FK when running code

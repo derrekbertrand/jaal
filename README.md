@@ -1,5 +1,5 @@
-<!-- [![Build Status](https://travis-ci.org/dialinno/jaal.svg?branch=dev)][travis-ci-jaal]
-[![Coverage Status](https://coveralls.io/repos/github/dialinno/jaal/badge.svg?branch=dev)][coveralls-jaal] -->
+[![Build Status](https://travis-ci.org/dialinno/jaal.svg?branch=develop)][travis-ci-jaal]
+[![Coverage Status](https://coveralls.io/repos/github/dialinno/jaal/badge.svg?branch=develop)][coveralls-jaal]
 
 # About JAAL
 
@@ -15,5 +15,5 @@ you want to give it a go.
 
 
 [travis-ci-jaal]: https://travis-ci.org/dialinno/jaal
-[coveralls-jaal]: https://coveralls.io/github/dialinno/jaal?branch=dev
+[coveralls-jaal]: https://coveralls.io/github/dialinno/jaal?branch=develop
 [laravel]: http://laravel.com/

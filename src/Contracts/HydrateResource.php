@@ -13,5 +13,9 @@ interface HydrateResource
      *
      * @return mixed
      */
-    public function hydrate(Resource $jaal_resource, string $method, array $path);
+    public function hydrate(Resource $jaal_resource);
+
+    public function withPath(array $path);
+
+    public function withMethod(string $method);
 }

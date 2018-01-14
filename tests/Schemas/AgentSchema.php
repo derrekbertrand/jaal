@@ -10,12 +10,12 @@ class AgentSchema extends Schema
     protected function createHydrated()
     {
         // a naive approach to filling out the model
-        $model = (new Agent)->forceFill($this->resource->attributes()->toArray());
+        $model = (new Agent)->forceFill($this->resource->get('attributes', collect())->toArray());
 
         return $model;
     }
 
-    protected function scalarStoreRules()
+    protected function attributesStoreRules()
     {
         return [
             'first_name' => 'required|string|min:2|max:31',
@@ -26,15 +26,15 @@ class AgentSchema extends Schema
         ];
     }
 
-    protected function updateRelationMap()
+    protected function toManyUpdateMap()
     {
         return [
-            'accounts' => ['account' => AccountSchema::class],
-            'tags' => ['tag' => TagSchema::class]
+            'accounts' => 'account',
+            'tags' => 'tag',
         ];
     }
 
-    protected function scalarUpdateRules()
+    protected function attributesUpdateRules()
     {
         return [
             'first_name' => 'string|min:2|max:31',

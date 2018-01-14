@@ -14,24 +14,39 @@ abstract class Schema implements HydrateResource
 {
     protected $exception = null;
     protected $resource = null;
-    protected $path = null;
-    protected $method = null;
+    protected $path = [];
+    protected $method = '';
 
     public function __construct(Response $exception)
     {
         $this->exception = $exception;
     }
 
+    public function withPath(array $path)
+    {
+        $this->path = $path;
+
+        return $this;
+    }
+
+    public function withMethod(string $method)
+    {
+        $this->method = $method;
+
+        return $this;
+    }
+
     /** 
      * Take a Resource its payload and hydrate it.
      */
-    public function hydrate(Resource $resource, string $method, array $path)
+    public function hydrate(Resource $resource)
     {
         $this->resource = $resource;
-        $this->path = $path;
-        $this->method = $method;
 
         $this->assertResourceAttributesAreValid();
+        $this->assertResourceRelationsAreValid();
+
+        $this->exception->throwResponseIfErrors();
 
         $resource = $this->createHydrated();
 
@@ -42,14 +57,14 @@ abstract class Schema implements HydrateResource
 
     protected function assertResourceAttributesAreValid()
     {
-        $scalar_rules_method = 'scalar'.studly_case($this->method).'Rules';
+        $scalar_rules_method = 'attributes'.studly_case($this->method).'Rules';
 
         // if we have rules for this, validate the attributes
         if (method_exists($this, $scalar_rules_method)) {
             $rules = $this->$scalar_rules_method();
             $allowed_keys = array_keys($rules);
 
-            $attr = $this->resource->attributes();
+            $attr = $this->resource->get('attributes', collect());
             $keys = $attr->keys();
 
             // ensure that only the whitelisted attributes are present
@@ -70,34 +85,62 @@ abstract class Schema implements HydrateResource
                 }
             }
         }
-
-
-        $this->exception->throwResponseIfErrors();
     }
 
     protected function assertResourceRelationsAreValid()
     {
-        $relation_map_method = camel_case($this->method).'RelationMap';
+        $to_many_map_method = 'toMany'.studly_case($this->method).'Map';
+        $to_one_map_method = 'toOne'.studly_case($this->method).'Map';
+        $rules = [];
+        $allowed_relations = [];
+        $relations = $this->resource->get('relationships', collect());
 
-        // if we have a map, validate the relationships
-        if (method_exists($this, $relation_map_method)) {
-            $map = $this->$relation_map_method();
+        // contruct a ruleset and whitelist for toMany
+        if (method_exists($this, $to_many_map_method)) {
+            $map = $this->$to_many_map_method();
             $allowed_relations = array_keys($map);
 
-            $relations = $this->resource->relations();
-            $rel_keys = Collection::make(array_keys($relations));
+            // validate the relationships
+            foreach($map as $rel_name => $rel_allowed) {
+                $rel_allowed = explode('|', $rel_allowed);
 
-            // ensure that only the whitelisted relationships are present
-            // an empty set will not add errors
-            $this->exception->disallowedKey($rel_keys->diff($allowed_relations));
-
-            // validate the relationship contents
-            foreach ($relations as $relation_name => $relationship) {
-                // $map[$relation_name];
-
+                $rules[$rel_name.'.data.*.type'] = 'required_with:'.$rel_name.'.data.*|in:'.implode(',', $rel_allowed);
+                $rules[$rel_name.'.data.*.id'] = 'required_with:'.$rel_name.'.data.*';
             }
         }
 
-        $this->exception->throwResponseIfErrors();
+        // contruct a ruleset and whitelist for toOne
+        if (method_exists($this, $to_one_map_method)) {
+            $map = $this->$to_one_map_method();
+            $allowed_relations = array_merge($allowed_relations, array_keys($map));
+
+            // validate the relationships
+            foreach($map as $rel_name => $rel_allowed) {
+                $rel_allowed = explode('|', $rel_allowed);
+
+                $rules[$rel_name.'.data.type'] = 'required_with:'.$rel_name.'.data|in:'.implode(',', $rel_allowed);
+                $rules[$rel_name.'.data.id'] = 'required_with:'.$rel_name.'.data';
+            }
+        }
+
+        // ensure that only the whitelisted relationships are present
+        // an empty set will not add errors
+        $this->exception->disallowedKey($relations->keys()->diff($allowed_relations));
+
+        if (count($rules)) {
+            // validate the attribute contents
+            $validator = Validator::make(
+                $relations->toArray(),
+                $rules
+            );
+
+            if ($validator->fails()) {
+                foreach($validator->errors()->toArray() as $key => $details) {
+                    foreach($details as $detail) {
+                        $this->exception->invalidValue($detail, $this->path);
+                    }
+                }
+            }
+        }
     }
 }
