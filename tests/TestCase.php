@@ -2,7 +2,7 @@
 
 namespace DialInno\Jaal\Tests;
 
-use DialInno\Jaal\Tests\Api\V1;
+use App\Http\Api\V1;
 use DialInno\Jaal\JaalRouter;
 use Illuminate\Foundation\Testing\TestResponse;
 use Orchestra\Testbench\Exceptions\Handler as OrchestraHandler;
@@ -23,14 +23,6 @@ class TestCase extends \Orchestra\Testbench\TestCase
         $this->loadMigrationsFrom(realpath(__DIR__.'/../database/migrations'));
         //pull in our factories for testing
         $this->withFactories(realpath(__DIR__.'/../database/factories'));
-
-        //set up the routes
-        \Route::group([
-            'prefix' => 'api',
-            'as' => 'api.',
-            ], function () {
-                JaalRouter::routes(V1::class);
-        });
     }
 
     /**
@@ -60,7 +52,7 @@ class TestCase extends \Orchestra\Testbench\TestCase
         return [
             \Orchestra\Database\ConsoleServiceProvider::class,
             //'Cartalyst\Sentry\SentryServiceProvider',
-            \DialInno\Jaal\JaalProvider::class,
+            \App\Providers\ServiceProvider::class,
         ];
     }
 

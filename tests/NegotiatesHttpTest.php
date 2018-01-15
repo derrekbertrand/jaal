@@ -3,9 +3,6 @@
 namespace DialInno\Jaal\Tests;
 
 use DialInno\Jaal\Objects\Document;
-use DialInno\Jaal\Exceptions\BadDocumentException;
-use DialInno\Jaal\Exceptions\KeyException;
-use DialInno\Jaal\Exceptions\ValueException;
 
 // THE SYSTEM SHOULD:
 // - Reject unknown lowercase query parameters
@@ -33,7 +30,7 @@ class NegotiatesHttpTest extends TestCase
      */
     protected function resolveApplicationHttpKernel($app)
     {
-        $app->singleton(\Illuminate\Contracts\Http\Kernel::class, \DialInno\Jaal\Tests\Kernels\NegotiationHttpKernel::class);
+        $app->singleton(\Illuminate\Contracts\Http\Kernel::class, \App\Http\NegotiationHttpKernel::class);
     }
 
     // -------------------------------------------------------------------------
@@ -113,16 +110,5 @@ class NegotiatesHttpTest extends TestCase
         ])->get('/test?'.http_build_query(['foo' => 'bar', 'baz' => 'bax']));
 
         $response->assertStatus(406);
-    }
-
-
-    public function testProviderProvides()
-    {
-        // provides is never really used, but we'll stub a test out to check it is there
-        // get it out of our low coverage listings
-
-        $provider = new \DialInno\Jaal\JaalProvider($this->app);
-
-        $this->assertGreaterThan(0, count($provider->provides()));
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace DialInno\Jaal\Tests\Api;
+namespace App\Http\Api;
 
 use DialInno\Jaal\Jaal;
 

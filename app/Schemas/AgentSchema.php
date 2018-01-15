@@ -1,9 +1,9 @@
 <?php
 
-namespace DialInno\Jaal\Tests\Schemas;
+namespace App\Schemas;
 
 use DialInno\Jaal\Schema;
-use DialInno\Jaal\Tests\Models\Agent;
+use App\Models\Agent;
 
 class AgentSchema extends Schema
 {

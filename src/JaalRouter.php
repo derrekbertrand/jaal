@@ -3,6 +3,7 @@
 namespace DialInno\Jaal;
 
 use Illuminate\Support\Facades\Route;
+use DialInno\Jaal\Jaal;
 
 class JaalRouter
 {

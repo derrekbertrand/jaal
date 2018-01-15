@@ -2,7 +2,7 @@
 
 namespace DialInno\Jaal\Tests\Data;
 
-use DialInno\Jaal\Tests\Schemas\AgentSchema;
+use App\Schemas\AgentSchema;
 
 /**
  * 

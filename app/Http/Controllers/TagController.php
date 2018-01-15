@@ -1,6 +1,6 @@
 <?php
 
-namespace DialInno\Jaal\Tests\Controllers;
+namespace App\Controllers;
 
 use Illuminate\Http\Request;
 

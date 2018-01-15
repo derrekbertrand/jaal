@@ -1,6 +1,6 @@
 <?php
 
-namespace DialInno\Jaal\Tests\Kernels;
+namespace App\Http;
 
 /**
  * We're simply pulling Orchestra's test kernel and adding what we need to it.

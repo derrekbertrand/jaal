@@ -1,11 +1,11 @@
 <?php
 
-namespace DialInno\Jaal\Tests\Models;
+namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Account extends Model
+class Contact extends Model
 {
     use SoftDeletes;
 
@@ -32,13 +32,8 @@ class Account extends Model
         return $this->morphToMany(Tag::class, 'taggable');
     }
 
-    public function agent()
+    public function accounts()
     {
-        return $this->belongsTo(Agent::class);
-    }
-
-    public function contacts()
-    {
-        return $this->belongsToMany(Contact::class);
+        return $this->belongsToMany(Account::class);
     }
 }

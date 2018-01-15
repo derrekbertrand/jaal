@@ -1,6 +1,6 @@
 <?php
 
-namespace DialInno\Jaal\Tests\Models;
+namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\SoftDeletes;

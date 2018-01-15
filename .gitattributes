@@ -2,4 +2,5 @@
 /.coveralls.yml export-ignore
 /.travis.yml export-ignore
 /tests export-ignore
+/app export-ignore
 /database export-ignore

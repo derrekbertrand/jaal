@@ -1,10 +1,11 @@
 <?php
 
-namespace DialInno\Jaal\Tests\Controllers;
+namespace App\Controllers;
 
 use Illuminate\Http\Request;
+use App\Api\V1 as Api;
 
-class AgentController extends Controller
+class AccountController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -13,7 +14,7 @@ class AgentController extends Controller
      */
     public function index(Request $request)
     {
-        ;
+        Api::inferFromRequest($request);
     }
 
     /**
@@ -24,7 +25,7 @@ class AgentController extends Controller
      */
     public function store(Request $request)
     {
-        ;
+        Api::inferFromRequest($request);
     }
 
     /**
@@ -35,7 +36,7 @@ class AgentController extends Controller
      */
     public function show(Request $request)
     {
-        ;
+        Api::inferFromRequest($request)->handle();
     }
 
     /**
