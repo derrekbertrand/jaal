@@ -7,54 +7,27 @@ use DialInno\Jaal\Jaal;
 class V1 extends Jaal
 {
     /**
-     * This array is serailized into every JSON response sent back to the
-     * client. Use it to add copyright and disclaimer data to your APIs
+     * This is the array that should be passed to Route::group().
      *
      * @var array
      **/
-    public static $meta = [
-        'copyright' => "Copyright Your Company"
+    protected static $route_group_settings = ['prefix' => 'v1', 'as' => 'v1.'];
+
+    protected static $route_controllers = [
+        'account' => \App\Http\Controllers\AccountController::class,
+        'agent' => \App\Http\Controllers\AgentController::class,
+        'contact' => \App\Http\Controllers\ContactController::class,
+        'tag' => \App\Http\Controllers\TagController::class,
     ];
 
-    /**
-     * This is the prefix that should be placed in the route names and URI
-     * paths.
-     *
-     * You can use this to name or version your APIs, so that one server can
-     * respond to several sets of endpoints. Maybe you have multiple APIs that
-     * you wish to keep separate, or you want to add an updated implementation
-     * that exposes more features.
-     *
-     * @var string
-     **/
-    public static $api_prefix = 'v1';
+    protected static $route_to_one_relations = [
+        'account' => ['agent'],
+    ];
 
-    /**
-     * This is a list of API resource names and their related configuration.
-     *
-     * @var array
-     **/
-    public static $resources = [
-        'account'  => [
-            'resource' => \DialInno\Jaal\Tests\Resources\AccountResource::class,
-            'controller' => \DialInno\Jaal\Tests\Controllers\AccountController::class,
-            'to_one' => ['agent'],
-            'to_many' => ['contacts', 'tags'],
-        ],
-        'agent'  => [
-            'resource' => \DialInno\Jaal\Tests\Resources\AgentResource::class,
-            'controller' => \DialInno\Jaal\Tests\Controllers\AgentController::class,
-            'to_many' => ['accounts', 'tags'],
-        ],
-        'contact'  => [
-            'resource' => \DialInno\Jaal\Tests\Resources\ContactResource::class,
-            'controller' => \DialInno\Jaal\Tests\Controllers\ContactController::class,
-            'to_many' => ['accounts', 'tags'],
-        ],
-        'tag'  => [
-            'resource' => \DialInno\Jaal\Tests\Resources\TagResource::class,
-            'controller' => \DialInno\Jaal\Tests\Controllers\TagController::class,
-            'to_many' => ['accounts', 'agents', 'contacts'],
-        ],
+    protected static $route_to_many_relations = [
+        'account' => ['contacts', 'tags'],
+        'agent' => ['accounts', 'tags'],
+        'contact' => ['accounts', 'tags'],
+        'tag' => ['accounts', 'agents', 'contacts'],
     ];
 }

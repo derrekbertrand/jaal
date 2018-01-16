@@ -12,24 +12,17 @@ use DialInno\Jaal\Observers\UuidV4Observer;
 class ServiceProvider extends JaalProvider
 {
     /**
-     * Return an array of directories to load.
+     * Get the application path with any segments glued on.
      *
-     * Disable this functionality in production by excluding Jaal from package
-     * discovery. You can also disable package discovery and override the
-     * directories with this method.
-     *
-     * If you don't want to load an entire directory, you can always use
-     * JaalRouter yourself in your routes folder.
-     *
-     * @return array
-     **/
-    protected function getLoaders()
+     * @param string|array $segments
+     * @return string
+     */
+    protected function glueBasePath($segments)
     {
-        // hacky, but this will point to our testing API
-        $this->api_map[\App\Http\Api\V1::class] = 'api';
+        // because of Orchestra we set it differently
+        $this->base_path = realpath(__DIR__.'/..');
 
-        // don't process anything; we already did it by hand
-        return [];
+        return parent::glueBasePath($segments);
     }
 
     /**

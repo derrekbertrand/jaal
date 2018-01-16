@@ -16,6 +16,8 @@ use DialInno\Jaal\Contracts\Jaal as JaalContract;
 
 abstract class Jaal implements JaalContract
 {
+    use Concerns\DefinesRoutes;
+
     protected $request = null;
     protected $request_doc = null;
     protected $request_type = null;
@@ -27,10 +29,10 @@ abstract class Jaal implements JaalContract
     protected $path_model_relation = null;
     protected $path_resource_offset = 2;
 
-    public function __construct(Request $request = null)
+    public function __construct()
     {
-        $this->request = $request;
-        $this->response_doc = new Document;
+        // $this->request = $request;
+        // $this->response_doc = new Document;
     }
 
     public static function fromRequest(Request $request)
