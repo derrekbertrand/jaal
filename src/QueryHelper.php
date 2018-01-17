@@ -4,13 +4,18 @@ namespace DialInno\Jaal;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use DialInno\Jaal\Schema;
 use Route;
+
+use InvalidArgumentException;
+use Illuminate\Database\QueryException;
 
 class QueryHelper
 {
     protected $builder;
     protected $request;
+    protected $field_whitelist = [];
 
     public function __construct(Builder $builder, ?Request $request = null)
     {
@@ -20,10 +25,28 @@ class QueryHelper
 
     public static function fromModel(string $model_name, ?Request $request = null)
     {
-        $uri_params = Route::getCurrentRoute()->parameters();
+        $params = Route::getCurrentRoute()->parameters();
+        $model_id = array_shift($params);
+
+        $model = new $model_name;
+
+        if ($model_id === null) {
+            $builder = $model->query();
+        } else {
+            $builder = $model->where($model->getKeyName(), $model_id);
+        }
+
+        return new static($builder, $request);
     }
 
-    public function paginate(integer $min_limit, integer $max_limit, integer $default_limit)
+    public function setWhitelist(array $whitelist)
+    {
+        $this->field_whitelist = $whitelist;
+
+        return $this;
+    }
+
+    public function paginate(int $min_limit, int $default_limit, int $max_limit)
     {
         // page is now a collection
         $page = collect($this->request->query->get('page', []));
@@ -53,20 +76,21 @@ class QueryHelper
             }
 
             if (is_numeric($page->get('number'))) {
-                $offset = intval($page->get('number'));
+                $offset = intval($page->get('number'))-1;
                 $offset = max($offset, 0);
                 $offset = $offset * $limit;
             }
         }
 
-        $this->builder = $this->builder->skip($offset)->take($limit);
+        $this->builder->skip($offset)->take($limit);
 
         return $this;
     }
 
-    public function sort(array $whitelist){
+    public function sort()
+    {
         // no fields is unsafe, disallow sorting
-        if (!count($whitelist)) {
+        if (!count($this->field_whitelist)) {
             return $this;
         }
 
@@ -77,8 +101,6 @@ class QueryHelper
             return $this;
         }
 
-        $query = $this->builder;
-
         foreach (explode(',', $sort_str) as $sort) {
             // set the order and properly set sort
             if (mb_substr($sort, 0, 1, 'utf-8') !== '-') {
@@ -88,31 +110,40 @@ class QueryHelper
                 $sort = mb_substr($sort, 1, null, 'utf-8');
             }
 
-            if (in_array($sort, $whitelist)) {
-                $query = $query->orderBy($sort, $ord);
-            } else {
-                // one of these is not whitelisted, so ignore the whole shebang
-                return $this;
+            if (in_array($sort, $this->field_whitelist)) {
+                $this->builder->orderBy($sort, $ord);
             }
         }
-
-        // we completed the operation, so update the builder
-        $this->builder = $query;
 
         return $this;
     }
 
-    public function sparse(string $type, array $whitelist, array $mandatory = [])
+    public function sparse(string $type, array $mandatory)
     {
         $sparse_types = $this->request->query->get('fields', []);
 
         if (is_array($sparse_types) && array_key_exists($type, $sparse_types)) {
             $fields = explode(',', $sparse_types[$type]);
-            $fields = array_merge(array_intersect($whitelist, $fields), $mandatory);
-            $this->builder = $this->builder->select($fields);
+            $fields = array_merge(array_intersect($fields, $this->field_whitelist), $mandatory);
+            $this->builder->select($fields);
         }
 
         return $this;
+    }
+
+    public function index()
+    {
+        $result = null;
+
+        try {
+            DB::transaction(function () use (&$result) {
+                $result = $this->builder->get();
+            });
+        } catch (Exception $e) {
+            dd($e); // almost always a 500
+        }
+
+        return $result;
     }
 
     public function getBuilder()
@@ -126,6 +157,4 @@ class QueryHelper
 
         return $this;
     }
-
-
 }

@@ -7,6 +7,8 @@ use App\Models\Agent;
 
 class AgentSchema extends Schema
 {
+    public static $resource_type = 'agent';
+
     protected function createHydrated()
     {
         // a naive approach to filling out the model

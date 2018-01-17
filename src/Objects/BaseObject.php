@@ -11,9 +11,4 @@ abstract class BaseObject extends Collection implements SerializePayload, Deseri
 {
     use Concerns\DeserializesPayload,
         Concerns\SerializesPayload;
-
-    public function __construct($items = [])
-    {
-        parent::__construct($items);
-    }
 }
