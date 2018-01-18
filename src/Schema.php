@@ -7,18 +7,15 @@ use Exception;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\Collection;
 use Illuminate\Container\Container;
-use DialInno\Jaal\Objects\Attributes;
-use DialInno\Jaal\Objects\Document;
-use DialInno\Jaal\Objects\Relationships;
-use DialInno\Jaal\Objects\Relationship;
-use DialInno\Jaal\Objects\Resource;
 use DialInno\Jaal\Contracts\Response;
+use DialInno\Jaal\Objects\Resource;
 use DialInno\Jaal\Contracts\HydrateResource;
 
 abstract class Schema implements HydrateResource
 {
+    use Concerns\Dehydrates;
+
     protected $exception;
-    protected $document;
     protected $resource;
     protected $path = [];
     protected $method = '';
@@ -26,7 +23,6 @@ abstract class Schema implements HydrateResource
 
     public function __construct(Response $exception)
     {
-        $this->document = new Document;
         $this->exception = $exception;
 
         if (!is_string(static::$resource_type)) {
@@ -154,67 +150,5 @@ abstract class Schema implements HydrateResource
                 }
             }
         }
-    }
-
-    /**
-     * Dehydrate a Resource object; pack it into the Document appropriately.
-     **/
-    public function dehydrate($data, bool $is_primary = true)
-    {
-        $resource = new Resource(['type' => static::$resource_type]);
-        $data_id = $this->resourceId($data);
-        $data_attr = new Attributes($this->dehydrateAttributes($data));
-        $related = $this->dehydrateRelationships($data);
-
-        // we may not have an ID, it's odd but possible
-        if (strlen($data_id)) {
-            $resource->put('id', $data_id);
-        }
-
-        // only put attributes if we have any
-        if (count($data_attr)) {
-            $resource->put('attributes', $data_attr);
-        }
-
-        // handle relations if they exist
-        if (count($related)) {
-            //
-        }
-
-        return $resource;
-    }
-
-    protected function dehydrateAttributes($data): array
-    {
-        return $data->attributesToArray();
-    }
-
-    protected function relationshipSchemas(): array
-    {
-        return [];
-    }
-
-    protected function dehydrateRelationships($data)
-    {
-        $schemas = $this->relationshipSchemas();
-        $related = array_intersect_key($data->getRelations(), $schemas);
-        $result = [];
-
-        foreach ($related as $rel_name => $rel_data) {
-            if ($rel_data instanceof Collection) {
-                $result[$rel_name] = $rel_data->map(function ($rel_data_element) use ($schemas, $rel_name) {
-                    return (new $schemas[$rel_name]($this->exception))->dehydrate($rel_data_element, false);
-                })->all();
-            } else {
-                $result[$rel_name] = (new $schemas[$rel_name]($this->exception))->dehydrate($rel_data, false);
-            }
-        }
-
-        return $result;
-    }
-
-    protected function resourceId($data): string
-    {
-        return $data->getKey();
     }
 }

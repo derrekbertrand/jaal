@@ -12,6 +12,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
 
 use DialInno\Jaal\Objects\Document;
+use DialInno\Jaal\Objects\JsonApi;
+use DialInno\Jaal\Objects\Meta;
+use DialInno\Jaal\Objects\Links;
+use DialInno\Jaal\Objects\Link;
 use DialInno\Jaal\Contracts\Jaal as JaalContract;
 
 abstract class Jaal implements JaalContract
@@ -29,9 +33,9 @@ abstract class Jaal implements JaalContract
     protected $path_model_relation = null;
     protected $path_resource_offset = 2;
 
-    public function __construct()
+    public function __construct(Request $request)
     {
-        // $this->request = $request;
+        $this->request = $request;
         // $this->response_doc = new Document;
     }
 
@@ -138,5 +142,35 @@ abstract class Jaal implements JaalContract
         } else {
             return [];
         }
+    }
+
+    public function globalJsonApiObject(): JsonApi
+    {
+        return new JsonApi(['version' => '1.0']);
+    }
+
+    public function globalMetaObject(): Meta
+    {
+        return new Meta;
+    }
+
+    public function globalBaseRoute(): string
+    {
+        $path = 'api.';
+
+        if (isset(static::$route_group_settings['as'])) {
+            $path .= static::$route_group_settings['as'];
+        }
+
+        return $path;
+    }
+
+    public function globalLinksObject(): Links
+    {
+        $links = new Links;
+
+        $links->put('self', url()->full());
+
+        return $links;
     }
 }

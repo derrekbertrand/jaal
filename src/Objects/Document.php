@@ -9,6 +9,8 @@ class Document extends BaseObject implements Responsable
 {
     protected $http_status = 200;
 
+    protected $included_resources = [];
+
     /**
      * Create a new error from properties.
      *
@@ -27,6 +29,27 @@ class Document extends BaseObject implements Responsable
         $this->put('errors', $errors);
 
         return $this;
+    }
+
+    public function includeResource(Resource $resource)
+    {
+        $uniq_id = $resource->get('type').'/'.$resource->get('id');
+
+        // if we don't have that key, set it
+        if (!isset($this->included_resources[$uniq_id])) {
+            $this->included_resources[$uniq_id] = $resource;
+        }
+
+        return $this;
+    }
+
+    public function finalizeIncluded()
+    {
+        $included = array_values($this->included_resources);
+
+        if (count($included)) {
+            $this->put('included', $included);
+        }
     }
 
     public function changeStatus(int $new_status)
@@ -121,7 +144,7 @@ class Document extends BaseObject implements Responsable
             'errors' => Error::class,
             'meta' => Meta::class,
             'jsonapi' => JsonApi::class,
-            'links' => Link::class,
+            'links' => Links::class,
             'included' => Resource::class,
         ];
     }
