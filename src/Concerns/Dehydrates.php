@@ -36,7 +36,7 @@ trait Dehydrates
      * @param Jaal $jaal
      * @return Document
      */
-    public static function dehydrate($data, Jaal $jaal = null): Document
+    public static function dehydrate($data, Jaal $jaal = null, ?int $count = null): Document
     {
         $document = new Document;
         $ex = app(Response::class);
@@ -62,8 +62,8 @@ trait Dehydrates
         // we ned a Jaal instance to have global data
         if ($jaal instanceof Jaal) {
             $document->put('jsonapi', $jaal->globalJsonApiObject());
-            $document->put('meta', $jaal->globalMetaObject());
-            $document->put('links', $jaal->globalLinksObject());
+            $document->put('meta', $jaal->globalMetaObject($count));
+            $document->put('links', $jaal->globalLinksObject($count));
         }
 
         // ask the document to finalize any included Resources
@@ -150,7 +150,7 @@ trait Dehydrates
      *
      * @return array
      */
-    protected function relationshipSchemas(): array
+    public static function relationshipSchemas(): array
     {
         return [];
     }
@@ -162,7 +162,7 @@ trait Dehydrates
      */
     protected function dehydrateRelationships(): Relationships
     {
-        $schemas = $this->relationshipSchemas();
+        $schemas = static::relationshipSchemas();
         $relations = $this->data->getRelations();
         $relationships = new Relationships;
 

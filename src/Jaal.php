@@ -20,128 +20,14 @@ use DialInno\Jaal\Contracts\Jaal as JaalContract;
 
 abstract class Jaal implements JaalContract
 {
-    use Concerns\DefinesRoutes;
+    use Concerns\DefinesRoutes,
+        Concerns\DefersToBuilder;
 
     protected $request = null;
-    protected $request_doc = null;
-    protected $request_type = null;
-
-    protected $response_doc = null;
-
-    protected $path_model_id = null;
-    protected $path_model_type = null;
-    protected $path_model_relation = null;
-    protected $path_resource_offset = 2;
 
     public function __construct(Request $request)
     {
         $this->request = $request;
-        // $this->response_doc = new Document;
-    }
-
-    public static function fromRequest(Request $request)
-    {
-        $that = new static($request);
-
-        $that->inferPathInfo();
-        $that->inferRequestType();
-
-        // unpack the content
-        if ($that->request_type === 'store' || $that->request_type === 'update') {
-            $that->request_doc = Document::unpack($request->getContent());
-        }
-
-        return $that;
-    }
-
-    public function inferRequestType()
-    {
-        $method = $this->request->method();
-
-        if ($method === 'POST') {
-            $this->request_type = 'store';
-        } else if ($method === 'PATCH') {
-            $this->request_type = 'update';
-        } else if ($method === 'DELETE') {
-            $this->request_type = 'destroy';
-        } else if ($method === 'GET') {
-            if ($this->path_model_id !== null) {
-                $this->request_type = 'show';
-            } else {
-                $this->request_type = 'index';
-            }
-        } else {
-            throw \Exception('Unknown HTTP verb.');
-        }
-    }
-
-    public function inferPathInfo()
-    {
-        $params = $this->request->route()->parameters();
-        $route = explode('.',\Route::currentRouteName());
-
-        // set the id to the query param or null
-        $this->path_model_id = array_pop($params);
-
-        // set type or throw an exception
-        $type = $route[$this->path_resource_offset];
-        if (!array_key_exists($type, static::$resources)) {
-            throw new \Exception('This API does not support that resource type.');
-        }
-        $this->path_model_type = $type;
-
-        // if we have an id, we can also check for the relationship via the path
-        if ($this->path_model_id !== null) {
-            ; // grab that later
-        }
-
-        return $this;
-    }
-
-    public function handle()
-    {
-        return $this->{$this->request_type}();
-    }
-
-    public function show()
-    {
-        $resource = $this->getResource();
-
-        $this->response_doc = $resource::showById($this->path_model_id, $this->getIncludeList(), $this->getFieldList());
-
-        return $this;
-    }
-
-    public function getModel()
-    {
-        return static::$resources[$this->path_model_type]['model'];
-    }
-
-    public function getResource()
-    {
-        return static::$resources[$this->path_model_type]['resource'];
-    }
-
-    public function getIncludeList()
-    {
-        $query = $this->request->query->all();
-
-        if (array_key_exists('include', $query)) {
-            ;
-        } else {
-            return [];
-        }
-    }
-
-    public function getFieldList()
-    {
-        $query = $this->request->query->all();
-
-        if (array_key_exists('fields', $query)) {
-            ;
-        } else {
-            return [];
-        }
     }
 
     public function globalJsonApiObject(): JsonApi
@@ -149,9 +35,16 @@ abstract class Jaal implements JaalContract
         return new JsonApi(['version' => '1.0']);
     }
 
-    public function globalMetaObject(): Meta
+    public function globalMetaObject(?int $count = null): Meta
     {
-        return new Meta;
+        $meta = new Meta;
+
+        // if we paginated and kept count, add pagination to the global Meta
+        if ($count !== null && count($this->pagination_settings)) {
+            $meta->put('record_total', $count);
+        }
+
+        return $meta;
     }
 
     public function globalBaseRoute(): string
@@ -165,12 +58,44 @@ abstract class Jaal implements JaalContract
         return $path;
     }
 
-    public function globalLinksObject(): Links
+    public function globalLinksObject(?int $count = null): Links
     {
         $links = new Links;
 
         $links->put('self', url()->full());
 
+        if (count($this->pagination_settings) && isset($this->pagination_settings['number'])) {
+            $q = $this->request->query->all();
+            $q['page']['size'] = $this->pagination_settings['size'];
+            $u = url()->current();
+
+            $temp_q = $q;
+            unset($temp_q['page']['number']);
+            $links->put('first', $this->buildQuery($u, $temp_q));
+
+            if ($this->pagination_settings['number'] > 1) {
+                $temp_q = $q;
+                $temp_q['page']['number'] = $this->pagination_settings['number']-1;
+                $links->put('prev', $this->buildQuery($u, $temp_q));
+            }
+
+            $temp_q = $q;
+            $temp_q['page']['number'] = $this->pagination_settings['number']+1;
+            $links->put('next', $this->buildQuery($u, $temp_q));
+
+            // count is truthy if not 0 or null
+            if ($count) {
+                $temp_q = $q;
+                $temp_q['page']['number'] = ceil($count/$q['page']['size']);
+                $links->put('last', $this->buildQuery($u, $temp_q));
+            }
+        }
+
         return $links;
+    }
+
+    protected function buildQuery(string $base_url, $query_data)
+    {
+        return $base_url.'?'.http_build_query($query_data, '', '&', PHP_QUERY_RFC3986);
     }
 }

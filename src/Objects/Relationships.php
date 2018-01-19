@@ -17,4 +17,14 @@ class Relationships extends BaseObject
 
         return $keys->combine(array_pad([], $keys->count(), Relationship::class))->all();
     }
+
+    /**
+     * Objects that are safe to cull.
+     *
+     * @return array
+     */
+    protected function cullableObjects(): array
+    {
+        return $this->keys()->all();
+    }
 }

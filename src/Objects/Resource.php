@@ -57,4 +57,19 @@ class Resource extends BaseObject
             'meta' => Meta::class,
         ];
     }
+
+    /**
+     * Objects that are safe to cull.
+     *
+     * @return array
+     */
+    protected function cullableObjects(): array
+    {
+        return [
+            'attributes',
+            'links',
+            'meta',
+            'relationships',
+        ];
+    }
 }

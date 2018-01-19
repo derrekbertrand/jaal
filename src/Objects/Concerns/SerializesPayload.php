@@ -5,6 +5,7 @@ namespace DialInno\Jaal\Objects\Concerns;
 use DialInno\Jaal\Contracts\Response;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Container\Container;
+use Illuminate\Support\Collection;
 
 trait SerializesPayload
 {
@@ -15,7 +16,17 @@ trait SerializesPayload
      */
     public function toArray()
     {
-        return $this->map(function ($item, $key) {
+        return $this->filter(function ($item, $key) {
+            $cullable = method_exists($this, 'cullableObjects') ? $this->cullableObjects() : [];
+
+            // if it isn't cullable or it has no content
+            if (in_array($key, $cullable) && $item instanceof Collection && !count($item)) {
+                return false;
+            }
+
+            return true;
+        })
+        ->map(function ($item, $key) {
             if (is_array($item)) {
                 $tmp = [];
 

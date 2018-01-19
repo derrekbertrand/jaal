@@ -20,6 +20,10 @@ abstract class Schema implements HydrateResource
     protected $path = [];
     protected $method = '';
     public static $resource_type;
+    public static $sort_whitelist = [];
+    public static $default_limit = 20;
+    public static $min_limit = 10;
+    public static $max_limit = 50;
 
     public function __construct(Response $exception)
     {
