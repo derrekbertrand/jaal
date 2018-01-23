@@ -18,8 +18,25 @@ use DialInno\Jaal\Jaal;
 
 trait Dehydrates
 {
+    /**
+     * The data to dehydrate; typically returned from Eloquent queries.
+     *
+     * @var mixed
+     */
     protected $data;
+
+    /**
+     * The Jaal API instance. If not set, links and meta data won't be added.
+     *
+     * @var null|Jaal
+     */
     protected $jaal;
+
+    /**
+     * The Document. If not set, included will not be filled out.
+     *
+     * @var null|Document
+     */
     protected $document;
 
     /**
@@ -36,24 +53,19 @@ trait Dehydrates
      * @param Jaal $jaal
      * @return Document
      */
-    public static function dehydrate($data, Jaal $jaal = null, ?int $count = null): Document
+    public static function dehydrate($data, Jaal $jaal = null): Document
     {
         $document = new Document;
-        $ex = app(Response::class);
 
         if ($data instanceof Collection) {
             // the primary data is a Collection of Models
-            $document->put('data', $data->map(function ($data_item) use ($ex, $jaal, $document) {
-                return (new static($ex))->withJaal($jaal)
-                    ->withDocument($document)
-                    ->dehydrateResource($data_item);
+            $document->put('data', $data->map(function ($data_item) use ($jaal, $document) {
+                return (new static)->dehydrateResource($data_item, $document, $jaal);
             })->all());
         } else if($data instanceof Model) {
             // the primary data is a model
             $document->put('data', 
-                (new static($ex))->withJaal($jaal)
-                    ->withDocument($document)
-                    ->dehydrateResource($data)
+                (new static)->dehydrateResource($data, $document, $jaal)
             );
         } else {
             $document->put('data', null);
@@ -62,8 +74,8 @@ trait Dehydrates
         // we ned a Jaal instance to have global data
         if ($jaal instanceof Jaal) {
             $document->put('jsonapi', $jaal->globalJsonApiObject());
-            $document->put('meta', $jaal->globalMetaObject($count));
-            $document->put('links', $jaal->globalLinksObject($count));
+            $document->put('meta', $jaal->globalMetaObject());
+            $document->put('links', $jaal->globalLinksObject());
         }
 
         // ask the document to finalize any included Resources
@@ -73,43 +85,19 @@ trait Dehydrates
     }
 
     /**
-     * Perform the actions with the given API class.
-     *
-     * @param Jaal $jaal
-     * @return static
-     */
-    protected function withJaal(Jaal $jaal = null)
-    {
-        $this->jaal = $jaal;
-
-        return $this;
-    }
-
-    /**
-     * Perform the actions with the given Document class.
-     *
-     * @param Document $document
-     * @return static
-     */
-    protected function withDocument(Document $document = null)
-    {
-        $this->document = $document;
-
-        return $this;
-    }
-
-    /**
      * Dehydrate a Resource object.
      *
      * @param mixed $data
      * @return Resource
      **/
-    protected function dehydrateResource($data): Resource
+    protected function dehydrateResource($data, ?Document $document = null, ?Jaal $jaal = null): Resource
     {
         $this->data = $data;
+        $this->document = $document;
+        $this->jaal = $jaal;
 
         $resource = new Resource([
-            'id' => $this->dataId(),
+            'id' => $this->dehydrateId(),
             'type' => static::$resource_type,
         ]);
 
@@ -118,9 +106,7 @@ trait Dehydrates
         $resource->put('meta', $this->dehydrateMeta());
 
         // add links if we have any
-        if ($this->jaal !== null) {
-            $resource->put('links', $this->dehydrateLinks());
-        }
+        $resource->put('links', $this->dehydrateLinks());
 
         return $resource;
     }
@@ -140,19 +126,6 @@ trait Dehydrates
         unset($attr[$this->data->getKeyName()]);
 
         return new Attributes($attr);
-    }
-
-    /**
-     * Return a map of relation names to Schema classes.
-     *
-     * This is also our whitelist of Schemas, and as a safe default, none are
-     * permitted.
-     *
-     * @return array
-     */
-    public static function relationshipSchemas(): array
-    {
-        return [];
     }
 
     /**
@@ -177,7 +150,6 @@ trait Dehydrates
         return $relationships;
     }
 
-
     /**
      * Dehydrate one relationship.
      *
@@ -192,19 +164,14 @@ trait Dehydrates
 
         // todo: allow each relationship to impart meta objects
 
-        if ($this->jaal !== null) {
-            $relationship->put('links', $this->dehydrateRelationshipLinks($name));
-        }
+        $relationship->put('links', $this->dehydrateRelationshipLinks($name));
 
         if ($data instanceof Collection) {
             // the related data is a collection of models
             // add an array of ResourceIdentifiers as data
             $relationship->put('data',
                 $data->map(function ($data_item) use ($schema) {
-                    $resource = (new $schema($this->exception))
-                        ->withDocument($this->document)
-                        ->withJaal($this->jaal)
-                        ->dehydrateResource($data_item);
+                    $resource = (new $schema)->dehydrateResource($data_item, $this->document, $this->jaal);
 
                     if ($this->document instanceof Document) {
                         $this->document->includeResource($resource);
@@ -216,10 +183,7 @@ trait Dehydrates
         } else if($data instanceof Model) {
             // the data is a singular model
             // add its ResourceIdentifier as data
-            $resource = (new $schema($this->exception))
-                ->withDocument($this->document)
-                ->withJaal($this->jaal)
-                ->dehydrateResource($data);
+            $resource = (new $schema)->dehydrateResource($data, $this->document, $this->jaal);
 
             if ($this->document instanceof Document) {
                 $this->document->includeResource($resource);
@@ -240,10 +204,13 @@ trait Dehydrates
      */
     protected function dehydrateLinks(): Links
     {
-        $base_route = $this->jaal->globalBaseRoute();
         $links = new Links;
 
-        $links->put('self', route($base_route.static::$resource_type.'.show', [$this->dataId()]));
+        if ($this->jaal !== null) {
+            $base_route = $this->jaal->globalBaseRoute();
+
+            $links->put('self', route($base_route.static::$resource_type.'.show', [$this->dehydrateId()]));
+        }
 
         return $links;
     }
@@ -256,13 +223,16 @@ trait Dehydrates
      */
     protected function dehydrateRelationshipLinks(string $name): Links
     {
-        $base_route = $this->jaal->globalBaseRoute();
         $links = new Links;
 
-        $links->put('self',route(
-            $base_route.static::$resource_type.'.relationships.'.$name.'.show',
-            [$this->dataId()]
-        ));
+        if ($this->jaal !== null) {
+            $base_route = $this->jaal->globalBaseRoute();
+
+            $links->put('self',route(
+                $base_route.static::$resource_type.'.relationships.'.$name.'.show',
+                [$this->dehydrateId()]
+            ));
+        }
 
         return $links;
     }
@@ -282,7 +252,7 @@ trait Dehydrates
      *
      * @return string
      */
-    protected function dataId(): string
+    protected function dehydrateId(): string
     {
         return $this->data->getKey();
     }

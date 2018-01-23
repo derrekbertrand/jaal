@@ -31,7 +31,7 @@ trait BadExamples
 }
 EXAMPLE_EOF
 ],
-[ 400, 'Expected value of type object, found integer instead',
+[ 400, 'Expected object, found integer instead',
 <<<'EXAMPLE_EOF'
 42
 EXAMPLE_EOF
@@ -55,7 +55,7 @@ EXAMPLE_EOF
 }
 EXAMPLE_EOF
 ],
-[ 400, 'Expected value of type string, found double instead',
+[ 400, 'Expected string, found double instead',
 <<<'EXAMPLE_EOF'
 {
   "jsonapi": {

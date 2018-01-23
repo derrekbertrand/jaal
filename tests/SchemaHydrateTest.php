@@ -30,11 +30,8 @@ class SchemaHydrateTest extends TestCase
             // deserialize; should have no issues
             $doc = $this->app->make(Document::class)->deserialize($payload);
 
-            // instantiate this schema
-            $schema = $this->app->make($schema);
-
             // hydrate a class, but it should fail
-            $schema->withMethod($method)->hydrate($doc->get('data', null));
+            $schema::hydrate($doc, $method);
 
             throw new \Exception('Failed to abort.');
         } catch (Response $e) {
@@ -66,11 +63,7 @@ class SchemaHydrateTest extends TestCase
                 ->make(Document::class)
                 ->deserialize($payload);
 
-        // instantiate this schema
-        $schema = $this->app->make($schema);
-
-        // hydrate a class, but it should fail
-        $res = $schema->withMethod($method)->hydrate($doc->get('data', null));
+        $res = $schema::hydrate($doc, $method);
 
         // the attributes should be thus
         foreach($attr_contains as $key => $value) {

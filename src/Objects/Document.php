@@ -7,29 +7,9 @@ use Illuminate\Support\Collection;
 
 class Document extends BaseObject implements Responsable
 {
-    protected $http_status = 200;
+    public $http_status = 200;
 
     protected $included_resources = [];
-
-    /**
-     * Create a new error from properties.
-     *
-     * @param mixed $error
-     *
-     * @return Document
-     */
-    public function addError(Error $error)
-    {
-        $errors = $this->get('errors', []);
-        $errors[] = $error;
-        $error_status = intval($error->get('status', 400));
-
-        $this->changeStatus($error_status);
-
-        $this->put('errors', $errors);
-
-        return $this;
-    }
 
     public function includeResource(Resource $resource)
     {
@@ -43,6 +23,17 @@ class Document extends BaseObject implements Responsable
         return $this;
     }
 
+    public function getIncluded(string $type, string $id)
+    {
+        $uniq_id = $resource->get('type').'/'.$resource->get('id');
+
+        if (isset($this->included_resources[$uniq_id])) {
+            return $this->included_resources[$uniq_id];
+        }
+
+        return null;
+    }
+
     public function finalizeIncluded()
     {
         $included = array_values($this->included_resources);
@@ -50,6 +41,10 @@ class Document extends BaseObject implements Responsable
         if (count($included)) {
             $this->put('included', $included);
         }
+
+        $this->included_resources = [];
+
+        return $this;
     }
 
     public function changeStatus(int $new_status)
@@ -68,21 +63,6 @@ class Document extends BaseObject implements Responsable
                 $this->http_status = $new_status;
             }
         }
-    }
-
-    public function hasErrors()
-    {
-        return count($this->get('errors', [])) ? true : false;
-    }
-
-    /**
-     * Determine the status code for this document.
-     *
-     * @return integer
-     */
-    public function httpStatus()
-    {
-        return $this->http_status;
     }
 
     /**
@@ -163,13 +143,28 @@ class Document extends BaseObject implements Responsable
     }
 
     /**
+     * Objects that are safe to cull.
+     *
+     * @return array
+     */
+    protected function cullableObjects(): array
+    {
+        return [
+            'meta',
+            'links',
+            'errors',
+            'included',
+        ];
+    }
+
+    /**
      * Convert this object to a JSON response.
      */
     public function toResponse($request)
     {
         return response(
             $this->toJson(),
-            $this->httpStatus()
+            $this->http_status
             // ['X-Person' => $this->name]
         );
     }

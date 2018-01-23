@@ -13,12 +13,12 @@ use DialInno\Jaal\Contracts\Response as ResponseContract;
  */
 class Response extends Exception implements ResponseContract
 {
-    protected $document = null;
-
-    public function __construct(Document $document)
-    {
-        $this->document = $document;
-    }
+    /**
+     * An array of Error objects.
+     *
+     * @var array
+     */
+    protected $errors = [];
 
     public function throwResponse()
     {
@@ -27,16 +27,44 @@ class Response extends Exception implements ResponseContract
 
     public function throwResponseIfErrors()
     {
-        if($this->document->hasErrors()) {
+        if($this->hasErrors()) {
             $this->throwResponse();
         }
 
         return $this;
     }
 
-    protected function collapsePointer($pointer = null)
+    public function hasErrors()
     {
-        return '/'.implode('/', $pointer);
+        return (bool) count($this->errors);
+    }
+
+    public function addError(Error $e)
+    {
+        $this->errors[] = $e;
+
+        return $this;
+    }
+
+    public function clearErrors()
+    {
+        $this->errors = [];
+
+        return $this;
+    }
+
+    protected function pointerSource(...$path)
+    {
+        $path = collect($path)->flatten()->implode('/');
+
+        return new ErrorSource(['pointer' => '/'.$path]);
+    }
+
+    protected function paramSource(...$path)
+    {
+        $path = collect($path)->flatten()->implode('.');
+
+        return new ErrorSource(['parameter' => $path]);
     }
 
     /**
@@ -64,118 +92,92 @@ class Response extends Exception implements ResponseContract
 
     public function cannotDeserializeJson()
     {
-        $error = new Error([
+        return $this->addError(new Error([
             'status' => '400',
             'title' => 'Bad Payload',
             'detail' => 'Could not deserialize the payload.',
-        ]);
-
-        $this->document->addError($error);
-
-        return $this;
+        ]));
     }
 
     public function cannotSerializeJson()
     {
-        $error = new Error([
+        return $this->addError(new Error([
             'status' => '500',
             'title' => 'Internal Serialization Error',
             'detail' => 'The server could not serialize a response.',
-        ]);
-
-        $this->document->addError($error);
-
-        return $this;
+        ]));
     }
 
-    public function invalidKey($keys)
+    public function invalidKey($keys, ...$path)
     {
         $keys = $this->normalize($keys);
 
         foreach($keys as $key) {
-            $source = new ErrorSource(['pointer' => $key]);
-            $error = new Error([
+            $this->addError(new Error([
                 'status' => '400',
                 'title' => 'Invalid Key',
                 'detail' => $key.' is not a valid key name.',
-                'source' => $source,
-            ]);
-
-            $this->document->addError($error);
+                'source' => $this->pointerSource($path, $key),
+            ]));
         }
 
         return $this;
     }
 
-    public function disallowedKey($keys)
+    public function disallowedKey($keys, ...$path)
     {
         $keys = $this->normalize($keys);
 
         foreach($keys as $key) {
-            $source = new ErrorSource(['pointer' => $key]);
-            $error = new Error([
+            $this->addError(new Error([
                 'status' => '400',
                 'title' => 'Disallowed Key',
                 'detail' => $key.' is not an allowed key in this context.',
-                'source' => $source,
-            ]);
-
-            $this->document->addError($error);
+                'source' => $this->pointerSource($path, $key),
+            ]));
         }
 
         return $this;
     }
 
-    public function requiredKey($keys)
+    public function requiredKey($keys, ...$path)
     {
         $keys = $this->normalize($keys);
 
         foreach($keys as $key) {
-            $source = new ErrorSource(['pointer' => $key]);
-            $error = new Error([
+            $this->addError(new Error([
                 'status' => '400',
                 'title' => 'Required Key',
                 'detail' => $key.' is a required key in this context.',
-                'source' => $source,
-            ]);
-
-            $this->document->addError($error);
+                'source' => $this->pointerSource($path, $key),
+            ]));
         }
 
         return $this;
     }
 
-    public function conflictingKeys($keys)
+    public function conflictingKeys($keys, ...$path)
     {
         $keys = $this->normalize($keys);
-        $source = new ErrorSource(['pointer' => 'BADPOINTER']);
-        $error = new Error([
+
+        return $this->addError(new Error([
             'status' => '400',
             'title' => 'Key Conflict',
             'detail' => 'Cannot have keys together in this context: '.$keys->implode(', '),
-            'source' => $source,
-        ]);
-
-        $this->document->addError($error);
-
-        return $this;
+            'source' => $this->pointerSource($path),
+        ]));
     }
 
-    public function requireOneKey($keys)
+    public function requireOneKey($keys, ...$path)
     {
         $keys = $this->normalize($keys);
-        $source = new ErrorSource(['pointer' => 'BADPOINTER']);
 
-        $error = new Error([
+        return $this->addError(new Error([
             'status' => '400',
             'title' => 'Key Missing',
             'detail' => 'The context requires one of the following keys: '.$keys->implode(', '),
-            'source' => $source,
-        ]);
-
-        $this->document->addError($error);
-
-        return $this;
+            'source' => $this->pointerSource($path),
+        ]));
     }
 
     public function invalidQueryParam($params)
@@ -183,15 +185,12 @@ class Response extends Exception implements ResponseContract
         $params = $this->normalize($params);
 
         foreach($params as $param) {
-            $source = new ErrorSource(['parameter' => $param]);
-            $error = new Error([
+            $this->addError(new Error([
                 'status' => '400',
                 'title' => 'Invalid Query Parameter',
                 'detail' => $param.' is not a valid query parameter for this endpoint.',
-                'source' => $source,
-            ]);
-
-            $this->document->addError($error);
+                'source' => $this->paramSource($param),
+            ]));
         }
 
         return $this;
@@ -202,55 +201,36 @@ class Response extends Exception implements ResponseContract
         $params = $this->normalize($params);
 
         foreach($params as $param) {
-            $source = new ErrorSource(['parameter' => $param]);
-            $error = new Error([
+            $this->addError(new Error([
                 'status' => '400',
                 'title' => 'Reserved Query Parameter',
                 'detail' => $param.' is a reserved query parameter.',
-                'source' => $source,
-            ]);
-
-            $this->document->addError($error);
+                'source' => $this->paramSource($param),
+            ]));
         }
 
         return $this;
     }
 
-    public function invalidValue(string $detail, array $path)
+    public function invalidValue(string $detail, ...$path)
     {
-        $source = new ErrorSource(['pointer' => 'BADPOINTER']);
-        $error = new Error([
+        return $this->addError(new Error([
             'status' => '422',
             'detail' => $detail,
-            'source' => $source,
-        ]);
-
-        $this->document->addError($error);
-
-        return $this;
+            'source' => $this->pointerSource($path),
+        ]));
     }
 
-    public function unexpectedValue(string $expect, string $received = null)
+    public function unexpectedValue($expect, $received, ...$path)
     {
-        $source = new ErrorSource(['pointer' => 'BADPOINTER']);
-        $detail = 'Expected value of type '.$expect;
+        $detail = 'Expected '.strval($expect).', found '.strval($received).' instead.';
 
-        if ($received !== null) {
-            $detail .= ', found '.$received.' instead';
-        }
-
-        $detail .= '.';
-
-        $error = new Error([
+        return $this->addError(new Error([
             'status' => '400',
             'title' => 'Unexpected Value',
             'detail' => $detail,
-            'source' => $source,
-        ]);
-
-        $this->document->addError($error);
-
-        return $this;
+            'source' => $this->pointerSource($path),
+        ]));
     }
 
     /**
@@ -258,6 +238,12 @@ class Response extends Exception implements ResponseContract
      */
     public function toResponse($request)
     {
-        return $this->document->toResponse($request);
+        $doc = new Document(['errors' => $this->errors]);
+
+        foreach ($doc->get('errors', []) as $error) {
+            $doc->changeStatus(intval($error->get('status', 400)));
+        }
+
+        return $doc->toResponse($request);
     }
 }

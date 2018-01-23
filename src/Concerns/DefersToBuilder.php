@@ -21,7 +21,7 @@ trait DefersToBuilder
     protected $schema; // we use this to determine how to handle certain query actions
     protected $pagination_settings = [];
 
-    public function inferPagination()
+    public function inferPagination(bool $save_count = false)
     {
         // page is now a collection
         $page = collect($this->request->query->get('page', []));
@@ -64,6 +64,10 @@ trait DefersToBuilder
                 'size' => $limit, 
                 'number' => intdiv($offset, $limit)+1,
             ];
+        }
+
+        if ($save_count) {
+            $this->pagination_settings['count'] = $this->builder->count();
         }
 
         $this->builder->skip($offset)->take($limit);
@@ -124,45 +128,19 @@ trait DefersToBuilder
         return $this;
     }
 
-    public function index()
+    public function inferId()
     {
-        $result = null;
+        $key_name = $this->schema::$exposed_key;
+        $params = Route::getCurrentRoute()->parameters();
 
-        try {
-            DB::transaction(function () use (&$result) {
-                $result = $this->builder->get();
-            });
-        } catch (Exception $e) {
-            dd($e); // almost always a 500
-        }
+        $this->builder->where($key_name, array_shift($params));
 
-        return $result;
+        return $this;
     }
 
     public function getBuilder()
     {
         return $this->builder;
-    }
-
-    /**
-     * Set the builder.
-     *
-     * It accepts a Model name, a Model instance, or a Builder.
-     *
-     * @param mixed $builder
-     * @return $this
-     */
-    public function withBuilder($builder)
-    {
-        if ($builder instanceof Builder) {
-            $this->builder = $builder;
-        } else if ($builder instanceof Model) {
-            $this->builder = $builder->query();
-        } else {
-            $this->builder = $builder::query();
-        }
-
-        return $this;
     }
 
     /**
@@ -176,6 +154,7 @@ trait DefersToBuilder
     public function withSchema(string $schema)
     {
         $this->schema = $schema;
+        $this->builder = (new $schema::$model)->query();
 
         return $this;
     }

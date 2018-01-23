@@ -8,16 +8,11 @@ use App\Models\Agent;
 class AgentSchema extends Schema
 {
     public static $resource_type = 'agent';
+    public static $model = Agent::class;
+    public static $sort_whitelist = ['first_name', 'last_name', 'job_title'];
+    public static $min_limit = 5;
 
-    protected function createHydrated()
-    {
-        // a naive approach to filling out the model
-        $model = (new Agent)->forceFill($this->resource->get('attributes', collect())->toArray());
-
-        return $model;
-    }
-
-    protected function attributesStoreRules()
+    protected function attributeStoreRules()
     {
         return [
             'first_name' => 'required|string|min:2|max:31',
@@ -28,15 +23,15 @@ class AgentSchema extends Schema
         ];
     }
 
-    protected function toManyUpdateMap()
+    public static function relationshipSchemas(): array
     {
         return [
-            'accounts' => 'account',
-            'tags' => 'tag',
+            'accounts' => AccountSchema::class,
+            'tags' => TagSchema::class,
         ];
     }
 
-    protected function attributesUpdateRules()
+    protected function attributeUpdateRules()
     {
         return [
             'first_name' => 'string|min:2|max:31',

@@ -30,18 +30,89 @@ abstract class Jaal implements JaalContract
         $this->request = $request;
     }
 
+    public function index(string $schema, bool $save_count = false)
+    {
+        $result = null;
+
+        $this->withSchema($schema)
+            ->inferSorting()
+            ->inferIncluded()
+            ->inferPagination($save_count);
+
+        try {
+            DB::transaction(function () use (&$result) {
+                $result = $this->get();
+            });
+        } catch (Exception $e) {
+            throw $e; // almost always a 500
+        }
+
+        return $schema::dehydrate($result, $this);
+    }
+
+    public function show(string $schema)
+    {
+        $result = null;
+
+        $this->withSchema($schema)
+            ->inferId()
+            ->inferIncluded();
+
+        try {
+            DB::transaction(function () use (&$result) {
+                $result = $this->first();
+            });
+        } catch (Exception $e) {
+            throw $e; // almost always a 500
+        }
+
+        if ($result === null) {
+            return response(null, 404);
+        }
+
+        return $schema::dehydrate($result, $this);
+    }
+
+    public function destroy(string $schema)
+    {
+        $result = null;
+
+        $this->withSchema($schema)
+            ->inferId();
+
+        try {
+            DB::transaction(function () use (&$result) {
+                $result = $this->first();
+
+                if ($result !== null) {
+                    $result = $result->delete();
+                }
+            });
+        } catch (Exception $e) {
+            throw $e; // almost always a 500
+        }
+
+        if ($result === null) {
+            return response(null, 404);
+        } if ($result === false) {
+            //todo: we failed to delete for some reason; figure out why and what response is appropriate
+        }
+
+        return response(null, 204);
+    }
+
     public function globalJsonApiObject(): JsonApi
     {
         return new JsonApi(['version' => '1.0']);
     }
 
-    public function globalMetaObject(?int $count = null): Meta
+    public function globalMetaObject(): Meta
     {
         $meta = new Meta;
 
         // if we paginated and kept count, add pagination to the global Meta
-        if ($count !== null && count($this->pagination_settings)) {
-            $meta->put('record_total', $count);
+        if (count($this->pagination_settings) && isset($this->pagination_settings['count'])) {
+            $meta->put('record_total', $this->pagination_settings['count']);
         }
 
         return $meta;
@@ -58,7 +129,7 @@ abstract class Jaal implements JaalContract
         return $path;
     }
 
-    public function globalLinksObject(?int $count = null): Links
+    public function globalLinksObject(): Links
     {
         $links = new Links;
 
@@ -83,10 +154,9 @@ abstract class Jaal implements JaalContract
             $temp_q['page']['number'] = $this->pagination_settings['number']+1;
             $links->put('next', $this->buildQuery($u, $temp_q));
 
-            // count is truthy if not 0 or null
-            if ($count) {
+            if (isset($this->pagination_settings['count'])) {
                 $temp_q = $q;
-                $temp_q['page']['number'] = ceil($count/$q['page']['size']);
+                $temp_q['page']['number'] = ceil($this->pagination_settings['count']/$q['page']['size']);
                 $links->put('last', $this->buildQuery($u, $temp_q));
             }
         }

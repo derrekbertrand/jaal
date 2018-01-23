@@ -98,8 +98,9 @@ class JaalProvider extends ServiceProvider
             $this->mapApi($loader_path, $group_data);
         }
 
+        // we have but one ResponseException
         $this->app->singleton(ResponseContract::class, function ($app) {
-            return new Response($app->make(Document::class));
+            return new Response;
         });
 
         // When a controller typehints Jaal's contract, pass an appropriate class in
